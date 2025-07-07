@@ -43,13 +43,15 @@ export function LuckyWheel({ topics, isSpinning, onSpinEnd }: LuckyWheelProps) {
         const targetAngle = randomIndex * segmentAngle + randomAngleInSegment;
         
         const fullRotations = Math.floor(Math.random() * 2) + 5;
-        const finalRotation = rotation - (rotation % 360) + (360 * fullRotations) - targetAngle;
-
-        setRotation(finalRotation);
+        
+        setRotation((currentRotation) => {
+          const finalRotation = currentRotation - (currentRotation % 360) + (360 * fullRotations) - targetAngle;
+          return finalRotation;
+        });
       };
       spin();
     }
-  }, [isSpinning, numTopics, segmentAngle, rotation]);
+  }, [isSpinning, numTopics, segmentAngle]);
 
   const handleTransitionEnd = () => {
     if (!isSpinning) return;
