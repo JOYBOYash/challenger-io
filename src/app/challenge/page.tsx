@@ -183,7 +183,7 @@ export default function ChallengePage() {
                 <Icons.logo className="h-8 w-8 text-primary" />
                 <span className="font-headline text-3xl font-bold">Challenger.io</span>
             </div>
-            <Card className="w-full shadow-2xl border-primary/20">
+            <Card className="w-full cyber-card">
                 <CardHeader className="text-center">
                     <CardTitle className="font-headline text-2xl">Game Setup</CardTitle>
                     <CardDescription>Configure your challenge session.</CardDescription>
@@ -229,10 +229,10 @@ export default function ChallengePage() {
 
   if (gameState === 'generating') {
     return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background font-body gap-4">
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background font-body gap-4 cyber-grid">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <h1 className="text-2xl font-headline">Generating Challenges...</h1>
-        <p className="text-muted-foreground">Please wait while we craft the perfect problems for your team.</p>
+        <h1 className="text-2xl font-headline text-glow">Generating Challenges...</h1>
+        <p className="text-muted-foreground">The AI is crafting unique problems for your team.</p>
       </div>
     );
   }
@@ -240,13 +240,13 @@ export default function ChallengePage() {
   if (gameState === 'finished') {
     return (
         <div className="container mx-auto max-w-3xl py-8 px-4 font-body flex flex-col items-center text-center">
-            <Trophy className="h-24 w-24 text-amber-400 mb-4" />
-            <h1 className="text-4xl font-bold font-headline">Round Complete!</h1>
+            <Trophy className="h-24 w-24 text-primary mb-4" style={{filter: `drop-shadow(0 0 15px hsl(var(--primary)))`}} />
+            <h1 className="text-4xl font-bold font-headline text-glow">Round Complete!</h1>
             <p className="text-muted-foreground mb-1">Topic: <span className="font-semibold text-primary">{selectedTopic}</span></p>
             <p className="text-muted-foreground mb-8">Here are the assigned challenges:</p>
             <div className="w-full space-y-4">
                 {players.map(player => (
-                    <Card key={player.id} style={{ borderLeft: `4px solid ${player.color}` }} className="text-left">
+                    <Card key={player.id} className="cyber-card text-left border-l-4" style={{ borderLeftColor: player.color }}>
                          <CardContent className="p-4 flex flex-col items-start gap-2">
                             <div className="w-full flex justify-between items-start">
                                 <div>
@@ -256,7 +256,7 @@ export default function ChallengePage() {
                                     <p className="text-muted-foreground">Base Skill: {player.skillLevel}</p>
                                 </div>
                                 <div className="text-right shrink-0 ml-4">
-                                     <p className="font-bold text-xl flex items-center justify-end gap-2">
+                                     <p className="font-bold text-xl flex items-center justify-end gap-2 text-primary">
                                         {player.problem && SKILL_LEVELS[player.problem.forPlayerSkill].icon}
                                         {player.problem?.problem.difficulty}
                                     </p>
@@ -280,11 +280,11 @@ export default function ChallengePage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background font-body">
+    <div className="flex min-h-screen w-full flex-col bg-background font-body cyber-grid">
       <div className="flex-1 overflow-auto p-4 md:p-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2">
           <div className="flex flex-col gap-8">
-            <Card className="border-2 border-primary/20 shadow-lg">
+            <Card className="cyber-card">
                 <CardHeader>
                     <CardTitle className="font-headline text-2xl">Player {currentPlayerIndex + 1}'s Turn</CardTitle>
                     {currentPlayer && (
@@ -327,7 +327,7 @@ export default function ChallengePage() {
           <div className="flex flex-col items-center justify-center gap-6 py-8 lg:py-0">
              <div className="h-24 flex items-center justify-center">
                 {lastSpunQuestion && (
-                    <Card className="text-center animate-in fade-in zoom-in-95 w-full">
+                    <Card className="cyber-card text-center animate-in fade-in zoom-in-95 w-full">
                         <CardHeader>
                             <CardDescription>
                                 {isAutoAssigning ? 'Last challenge automatically assigned to ' : `Challenge #${lastSpunQuestion.displayNumber} Assigned to `}

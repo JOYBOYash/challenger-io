@@ -14,17 +14,17 @@ export default function ContactPage() {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         toast({
-            title: "Message Sent!",
+            title: "Transmission Received",
             description: "Thanks for your feedback. We'll get back to you soon.",
         });
         (e.target as HTMLFormElement).reset();
     };
 
     return (
-        <div className="container max-w-2xl py-12 md:py-20">
-            <Card>
+        <div className="container max-w-2xl py-12 md:py-20 cyber-grid">
+            <Card className="cyber-card">
                 <CardHeader>
-                    <CardTitle className="font-headline text-3xl">Contact Us</CardTitle>
+                    <CardTitle className="font-headline text-3xl text-glow">Contact Us</CardTitle>
                     <CardDescription>
                         Have a question, feedback, or a brilliant idea? We'd love to hear from you.
                     </CardDescription>
