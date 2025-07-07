@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -50,6 +50,8 @@ export function Navbar() {
                     </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="pr-0 bg-background/95 backdrop-blur-sm">
+                    <SheetTitle className="sr-only">Menu</SheetTitle>
+                    <SheetDescription className="sr-only">Main navigation menu</SheetDescription>
                     <Link href="/" className="mr-6 flex items-center space-x-2 mb-6">
                         <Icons.logo className="h-6 w-6 text-primary" />
                         <span className="font-bold">Challenger.io</span>
