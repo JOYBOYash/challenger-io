@@ -17,9 +17,9 @@ const TOPICS = ['Data Structures', 'Algorithms', 'System Design', 'JavaScript', 
 const PLAYER_COLORS = ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'];
 
 const SKILL_LEVELS = {
-    Rookie: { name: 'Rookie', icon: <User className="h-5 w-5" />, wheelIcon: <Code className="h-12 w-12 text-white" /> },
-    Crusader: { name: 'Crusader', icon: <Shield className="h-5 w-5" />, wheelIcon: <CodeXml className="h-12 w-12 text-white" /> },
-    Veteran: { name: 'Veteran', icon: <Crown className="h-5 w-5" />, wheelIcon: <Braces className="h-12 w-12 text-white" /> },
+    Rookie: { name: 'Rookie', icon: <User className="h-5 w-5" />, wheelIcon: <Code className="h-8 w-8 text-white" /> },
+    Crusader: { name: 'Crusader', icon: <Shield className="h-5 w-5" />, wheelIcon: <CodeXml className="h-8 w-8 text-white" /> },
+    Veteran: { name: 'Veteran', icon: <Crown className="h-5 w-5" />, wheelIcon: <Braces className="h-8 w-8 text-white" /> },
 } as const;
 
 type SkillLevel = keyof typeof SKILL_LEVELS;

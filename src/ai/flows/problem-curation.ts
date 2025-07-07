@@ -1,4 +1,3 @@
-// src/ai/flows/problem-curation.ts
 'use server';
 
 /**
@@ -35,18 +34,20 @@ const curateProblemPrompt = ai.definePrompt({
   name: 'curateProblemPrompt',
   input: {schema: CurateProblemInputSchema},
   output: {schema: CurateProblemOutputSchema},
-  prompt: `You are an expert LeetCode problem creator. Given a topic and skill level, you will generate a coding problem that is similar in style and structure to a real LeetCode problem.
+  prompt: `You are an expert and highly creative LeetCode problem creator. Your task is to generate a UNIQUE and interesting coding problem based on a given topic and skill level.
 
-The problem must be appropriate for the user's skill level.
-- 'Rookie' corresponds to LeetCode Easy.
-- 'Crusader' corresponds to LeetCode Medium.
-- 'Veteran' corresponds to LeetCode Hard.
+**CRITICAL INSTRUCTIONS:**
+1.  **DO NOT** generate common, textbook problems. Avoid well-known challenges like "Two Sum", "Reverse a String", "FizzBuzz", or any of the first 20 most popular problems on LeetCode. Your goal is to create something fresh that a user likely hasn't seen before.
+2.  The problem must be similar in style and structure to a real LeetCode problem, with a clear description and at least one concrete example.
+3.  The problem's difficulty **MUST** strictly match the user's skill level:
+    *   'Rookie': Corresponds to LeetCode Easy. Should be solvable with basic data structures and algorithms.
+    *   'Crusader': Corresponds to LeetCode Medium. May require more complex logic or a combination of data structures.
+    *   'Veteran': Corresponds to LeetCode Hard. Should involve clever algorithms, complex data structures, or non-obvious insights.
 
 Topic: {{{topic}}}
 Skill Level: {{{skillLevel}}}
 
-Generate a unique coding problem with a title, a detailed description including one or two examples, the difficulty, and an optimal solution in JavaScript. The difficulty field in the output must match the skill level provided.
-`,
+Generate a unique coding problem with a title, a detailed description including one or two examples, the difficulty, and an optimal solution in JavaScript. The difficulty field in the output **must** match the skill level provided. Be creative!`,
   config: {
     safetySettings: [
       {

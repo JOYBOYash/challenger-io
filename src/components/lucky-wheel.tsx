@@ -89,7 +89,7 @@ export function LuckyWheel({ segments, isSpinning, onSpinEnd }: LuckyWheelProps)
             className="absolute top-0 left-1/2 h-1/2 w-1/2 -translate-x-1/2 origin-bottom-center flex items-start justify-center"
             style={{ transform: `rotate(${i * segmentAngle + segmentAngle / 2}deg)` }}
           >
-            <div className="rotate-[-90deg] pt-6">
+            <div className="rotate-[-90deg] pt-10">
                 {segment.content}
             </div>
           </div>
