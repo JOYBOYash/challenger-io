@@ -1,24 +1,26 @@
-// A new file to handle player setup UI.
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { User, Shield, Crown } from 'lucide-react';
+import { User } from 'lucide-react';
 import type { Player } from '@/app/page';
+
+type SkillLevel = 'Rookie' | 'Crusader' | 'Veteran';
 
 interface PlayerSetupCardProps {
   player: Player;
   onPlayerChange: (player: Player) => void;
+  skillLevels: Record<SkillLevel, { icon: React.ReactNode, wheelIcon: React.ReactNode }>;
 }
 
-export function PlayerSetupCard({ player, onPlayerChange }: PlayerSetupCardProps) {
+export function PlayerSetupCard({ player, onPlayerChange, skillLevels }: PlayerSetupCardProps) {
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onPlayerChange({ ...player, name: e.target.value });
   };
 
-  const handleSkillChange = (skillLevel: 'Rookie' | 'Crusader' | 'Veteran') => {
+  const handleSkillChange = (skillLevel: SkillLevel) => {
     onPlayerChange({ ...player, skillLevel });
   };
 
@@ -40,27 +42,15 @@ export function PlayerSetupCard({ player, onPlayerChange }: PlayerSetupCardProps
         <div className="grid gap-2">
           <Label className="text-sm font-medium">Skill Level</Label>
           <RadioGroup value={player.skillLevel} onValueChange={(val) => handleSkillChange(val as any)} className="flex gap-2">
-            <div className="flex-1">
-                <RadioGroupItem value="Rookie" id={`rookie-${player.id}`} className="peer sr-only" />
-                <Label htmlFor={`rookie-${player.id}`} className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-3 h-full hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                    <User className="mb-2 h-5 w-5" />
-                    Rookie
-                </Label>
-            </div>
-            <div className="flex-1">
-                <RadioGroupItem value="Crusader" id={`crusader-${player.id}`} className="peer sr-only" />
-                <Label htmlFor={`crusader-${player.id}`} className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-3 h-full hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                    <Shield className="mb-2 h-5 w-5" />
-                    Crusader
-                </Label>
-            </div>
-            <div className="flex-1">
-                <RadioGroupItem value="Veteran" id={`veteran-${player.id}`} className="peer sr-only" />
-                <Label htmlFor={`veteran-${player.id}`} className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-3 h-full hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                    <Crown className="mb-2 h-5 w-5" />
-                    Veteran
-                </Label>
-            </div>
+            {(Object.keys(skillLevels) as SkillLevel[]).map(level => (
+                 <div className="flex-1" key={level}>
+                    <RadioGroupItem value={level} id={`${level}-${player.id}`} className="peer sr-only" />
+                    <Label htmlFor={`${level}-${player.id}`} className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-3 h-full hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                        {skillLevels[level].icon}
+                        {level}
+                    </Label>
+                </div>
+            ))}
           </RadioGroup>
         </div>
       </CardContent>
