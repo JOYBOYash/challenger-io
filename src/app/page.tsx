@@ -50,40 +50,50 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl items-start gap-8 py-12 md:grid-cols-3">
-              <div className="grid gap-4 p-6 rounded-lg cyber-card transition-colors duration-300 hover:bg-primary/5">
-                <div className="flex items-center gap-4">
-                    <div className="bg-primary/10 p-3 rounded-full">
-                        <Terminal className="h-6 w-6 text-primary" />
+            <div className="mx-auto grid max-w-5xl items-center gap-8 py-12 lg:grid-cols-2 lg:gap-12">
+                <div className="flex flex-col justify-center space-y-8">
+                    <div className="flex items-start gap-4">
+                        <div className="bg-primary/10 p-3 rounded-full mt-1">
+                            <Terminal className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold font-headline">Infinite Problems</h3>
+                            <p className="text-muted-foreground">
+                              Our AI engine generates a limitless stream of unique coding challenges. Never face the same problem twice.
+                            </p>
+                        </div>
                     </div>
-                    <h3 className="text-lg font-bold font-headline">Infinite Problems</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Our AI engine generates a limitless stream of unique coding challenges. Never face the same problem twice.
-                </p>
-              </div>
-              <div className="grid gap-4 p-6 rounded-lg cyber-card transition-colors duration-300 hover:bg-primary/5">
-                <div className="flex items-center gap-4">
-                    <div className="bg-primary/10 p-3 rounded-full">
-                        <Network className="h-6 w-6 text-primary" />
+                     <div className="flex items-start gap-4">
+                        <div className="bg-primary/10 p-3 rounded-full mt-1">
+                            <Network className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold font-headline">Dynamic Difficulty</h3>
+                            <p className="text-muted-foreground">
+                              From Rookie to Veteran, problems are tailored to each player's skill level, ensuring a meaningful challenge every time.
+                            </p>
+                        </div>
                     </div>
-                    <h3 className="text-lg font-bold font-headline">Dynamic Difficulty</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  From Rookie to Veteran, problems are tailored to each player's skill level, ensuring a meaningful challenge every time.
-                </p>
-              </div>
-              <div className="grid gap-4 p-6 rounded-lg cyber-card transition-colors duration-300 hover:bg-primary/5">
-                 <div className="flex items-center gap-4">
-                    <div className="bg-primary/10 p-3 rounded-full">
-                        <Orbit className="h-6 w-6 text-primary" />
+                     <div className="flex items-start gap-4">
+                        <div className="bg-primary/10 p-3 rounded-full mt-1">
+                            <Orbit className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold font-headline">Wheel of Fate</h3>
+                            <p className="text-muted-foreground">
+                              Embrace the chaos. Spin the wheel to receive your randomly assigned challenge. A true test of adaptability.
+                            </p>
+                        </div>
                     </div>
-                    <h3 className="text-lg font-bold font-headline">Wheel of Fate</h3>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Embrace the chaos. Spin the wheel to receive your randomly assigned challenge. A true test of adaptability.
-                </p>
-              </div>
+                <Image
+                    src="https://placehold.co/800x600.png"
+                    data-ai-hint="abstract code"
+                    width={800}
+                    height={600}
+                    alt="Feature"
+                    className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full border-2 border-primary/20 opacity-75"
+                />
             </div>
           </div>
         </section>
