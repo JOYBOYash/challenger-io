@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { curateProblem, type CurateProblemOutput } from '@/ai/flows/problem-curation';
 
 const TOPICS = ['Data Structures', 'Algorithms', 'System Design', 'JavaScript', 'React', 'SQL'];
-const PLAYER_COLORS = ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'];
+const PLAYER_COLORS = ['#50C878', '#20B2AA', '#66CDAA', '#2E8B57'];
 
 const SKILL_LEVELS = {
     Rookie: { name: 'Rookie', icon: <User className="h-5 w-5" />, wheelIcon: <Code className="h-8 w-8 text-white" /> },
@@ -147,7 +147,7 @@ export default function Home() {
   const currentPlayer = players[currentPlayerIndex];
   const isSetupValid = selectedTopic !== null;
   const unassignedQuestions = questions.filter(q => !players.some(p => p.problem?.id === q.id));
-  const wheelSegments = unassignedQuestions.map(q => ({ id: q.id }));
+  const wheelSegments = unassignedQuestions.map(q => ({ id: q.id, label: String(q.displayNumber) }));
 
 
   if (gameState === 'setup') {

@@ -5,12 +5,12 @@ import { Triangle } from 'lucide-react';
 import { Icons } from '@/components/icons';
 
 interface LuckyWheelProps {
-  segments: { id: string }[];
+  segments: { id: string; label: string }[];
   isSpinning: boolean;
   onSpinEnd: (segmentId: string) => void;
 }
 
-const WHEEL_COLORS = ['#6366F1', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#D946EF'];
+const WHEEL_COLORS = ['#2E8B57', '#3CB371', '#66CDAA', '#8FBC8F', '#20B2AA', '#008080', '#4682B4', '#5F9EA0'];
 
 export function LuckyWheel({ segments, isSpinning, onSpinEnd }: LuckyWheelProps) {
   const [rotation, setRotation] = useState(0);
@@ -20,7 +20,6 @@ export function LuckyWheel({ segments, isSpinning, onSpinEnd }: LuckyWheelProps)
   const segmentAngle = 360 / numSegments;
 
   const conicGradient = useMemo(() => {
-    // Return a single color if there's only one segment to avoid gradient issues
     if (segments.length <= 1) {
         return WHEEL_COLORS[0];
     }
@@ -39,7 +38,6 @@ export function LuckyWheel({ segments, isSpinning, onSpinEnd }: LuckyWheelProps)
         const targetAngle = 360 - (winnerIndex * segmentAngle) - (segmentAngle / 2);
         
         const fullRotations = Math.floor(Math.random() * 3) + 5;
-        // Use a random final angle to make the spin feel more varied
         const finalRotation = (fullRotations * 360) + targetAngle + (Math.random() * segmentAngle * 0.8 - segmentAngle * 0.4);
 
         setRotation(prev => prev + finalRotation);
@@ -51,12 +49,11 @@ export function LuckyWheel({ segments, isSpinning, onSpinEnd }: LuckyWheelProps)
     if (!isSpinning) return;
 
     const currentRotation = rotation % 360;
-    const normalizedRotation = (currentRotation + 360) % 360;
+    const normalizedRotation = (360 - currentRotation) % 360;
 
-    const winningAngle = (270 - normalizedRotation + 360) % 360;
+    const winningAngle = (normalizedRotation + 90) % 360;
     let winnerIndex = Math.floor(winningAngle / segmentAngle);
     
-    // Handle potential floating point inaccuracies
     if (winnerIndex >= segments.length) {
         winnerIndex = segments.length - 1;
     }
@@ -77,7 +74,7 @@ export function LuckyWheel({ segments, isSpinning, onSpinEnd }: LuckyWheelProps)
         <Triangle className="h-10 w-10 fill-white stroke-neutral-700 stroke-[1.5]" style={{ transform: 'rotate(180deg)' }} />
       </div>
       <div
-        className="relative aspect-square w-80 md:w-96 rounded-full border-8 border-white bg-white/30 shadow-2xl transition-transform duration-[7000ms] ease-out"
+        className="relative aspect-square w-80 md:w-96 rounded-full border-8 border-white bg-white/30 shadow-2xl transition-transform duration-[7000ms]"
         style={{
           transform: `rotate(${rotation}deg)`,
           transitionTimingFunction: 'cubic-bezier(0.1, 1, 0.2, 1)',
@@ -88,6 +85,19 @@ export function LuckyWheel({ segments, isSpinning, onSpinEnd }: LuckyWheelProps)
             className="absolute inset-0 rounded-full"
             style={{background: `conic-gradient(from -90deg, ${conicGradient})`}}
         ></div>
+         {segments.map((segment, index) => (
+          <div
+            key={segment.id}
+            className="absolute top-0 left-0 w-full h-full"
+            style={{ transform: `rotate(${index * segmentAngle + segmentAngle / 2}deg)` }}
+          >
+            <div
+              className="absolute top-4 left-1/2 -translate-x-1/2 text-white font-bold text-2xl"
+              style={{ transform: `rotate(${-90}deg)` }}
+            >
+            </div>
+          </div>
+        ))}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-white border-4 border-neutral-300 shadow-inner flex items-center justify-center">
             <Icons.logo className="h-10 w-10 text-primary" />
         </div>
