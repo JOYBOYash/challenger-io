@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import { Menu } from 'lucide-react';
+import { Menu, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -19,11 +19,11 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-primary/10 bg-background/80 backdrop-blur-sm">
-      <div className="container flex h-14 max-w-screen-2xl items-center">
+      <div className="container flex h-16 max-w-screen-2xl items-center">
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Icons.logo className="h-6 w-6 text-primary" />
-            <span className="hidden font-bold sm:inline-block">Challenger.io</span>
+            <span className="font-bold font-headline text-glow text-lg">Challenger.io</span>
           </Link>
           <nav className="flex items-center gap-6 text-sm">
             {NAV_ITEMS.map((item) => (
@@ -31,8 +31,8 @@ export function Navbar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'transition-colors hover:text-primary',
-                  pathname === item.href ? 'text-primary font-semibold' : 'text-foreground/60'
+                  'transition-colors hover:text-primary font-medium text-base',
+                  pathname === item.href ? 'text-primary' : 'text-foreground/80'
                 )}
               >
                 {item.label}
@@ -67,8 +67,11 @@ export function Navbar() {
             </Sheet>
           </div>
           <nav className="hidden md:flex items-center">
-            <Button asChild>
-              <Link href="/challenge">Start Challenge</Link>
+            <Button asChild className="font-bold group">
+              <Link href="/challenge">
+                Start Challenge
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Link>
             </Button>
           </nav>
         </div>

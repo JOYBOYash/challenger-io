@@ -50,8 +50,8 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl items-center gap-8 py-12 sm:grid-cols-1 md:grid-cols-3 lg:gap-12">
-              <div className="grid gap-4 p-6 rounded-lg cyber-card transition-all duration-300 hover:border-primary/50 hover:scale-105">
+            <div className="mx-auto grid max-w-5xl items-start gap-8 py-12 md:grid-cols-3">
+              <div className="grid gap-4 p-6 rounded-lg cyber-card transition-colors duration-300 hover:bg-primary/5">
                 <div className="flex items-center gap-4">
                     <div className="bg-primary/10 p-3 rounded-full">
                         <Terminal className="h-6 w-6 text-primary" />
@@ -62,7 +62,7 @@ export default function HomePage() {
                   Our AI engine generates a limitless stream of unique coding challenges. Never face the same problem twice.
                 </p>
               </div>
-              <div className="grid gap-4 p-6 rounded-lg cyber-card transition-all duration-300 hover:border-primary/50 hover:scale-105 md:translate-y-8">
+              <div className="grid gap-4 p-6 rounded-lg cyber-card transition-colors duration-300 hover:bg-primary/5">
                 <div className="flex items-center gap-4">
                     <div className="bg-primary/10 p-3 rounded-full">
                         <Network className="h-6 w-6 text-primary" />
@@ -73,7 +73,7 @@ export default function HomePage() {
                   From Rookie to Veteran, problems are tailored to each player's skill level, ensuring a meaningful challenge every time.
                 </p>
               </div>
-              <div className="grid gap-4 p-6 rounded-lg cyber-card transition-all duration-300 hover:border-primary/50 hover:scale-105">
+              <div className="grid gap-4 p-6 rounded-lg cyber-card transition-colors duration-300 hover:bg-primary/5">
                  <div className="flex items-center gap-4">
                     <div className="bg-primary/10 p-3 rounded-full">
                         <Orbit className="h-6 w-6 text-primary" />

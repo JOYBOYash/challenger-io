@@ -21,14 +21,14 @@ export default function ContactPage() {
     };
 
     return (
-        <div className="container max-w-4xl py-12 md:py-20 cyber-grid">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="space-y-4">
-                    <h1 className="font-headline text-4xl font-bold text-glow">Connect with Us</h1>
+        <div className="container max-w-5xl py-12 md:py-20 cyber-grid">
+            <div className="grid md:grid-cols-2 gap-16 items-start">
+                <div className="space-y-6">
+                    <h1 className="font-headline text-4xl font-bold text-glow sm:text-5xl">Connect with Us</h1>
                     <p className="text-muted-foreground md:text-lg">
                         Your feedback is the compiler for our next iteration. Have a suggestion, a bug to report, or just want to talk tech? Drop us a line. We're always listening for the next great idea.
                     </p>
-                    <div className="text-muted-foreground pt-4 space-y-1 text-sm">
+                    <div className="text-muted-foreground pt-4 space-y-2 text-base">
                         <p><span className="text-primary font-semibold">Transmission Channel:</span> Open</p>
                         <p><span className="text-primary font-semibold">Response Time:</span> Asynchronous</p>
                         <p><span className="text-primary font-semibold">Encryption:</span> Standard</p>
