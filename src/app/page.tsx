@@ -7,40 +7,34 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen cyber-grid">
       <main className="flex-1">
-        <section className="w-full py-24 md:py-32 lg:py-40">
-          <div className="container px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12">
-              <div className="flex flex-col justify-center space-y-4">
-                <div className="space-y-4">
-                   <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm text-primary font-medium">
-                    From Rookie to Veteran
-                  </div>
-                  <h1 className="text-4xl font-bold tracking-tighter font-headline sm:text-6xl xl:text-7xl/none text-glow">
-                    Enter the Coding Arena
-                  </h1>
-                  <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                    Face off against AI-generated challenges. Spin the wheel of fate, test your skills, and dominate the leaderboard. Your evolution starts now.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Button asChild size="lg" className="font-bold group">
-                    <Link href="/challenge">
-                      Launch Challenge
-                      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                    </Link>
-                  </Button>
-                </div>
+        <section className="relative w-full h-[80vh] flex items-center justify-center text-center overflow-hidden">
+          <Image
+            src="https://placehold.co/1920x1080.png"
+            alt="Hero Background"
+            data-ai-hint="cyberpunk code city"
+            fill
+            sizes="100vw"
+            className="absolute inset-0 z-0 object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10"></div>
+          <div className="container relative z-20 px-4 md:px-6">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm text-primary font-medium">
+                From Rookie to Veteran
               </div>
-              <div className="relative flex items-center justify-center">
-                 <Image
-                    src="https://placehold.co/600x400.png"
-                    width="600"
-                    height="400"
-                    alt="Hero"
-                    data-ai-hint="cyberpunk code"
-                    className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full lg:order-last opacity-50"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+              <h1 className="text-5xl font-bold tracking-tighter font-headline sm:text-7xl xl:text-8xl/none text-glow">
+                Enter the Coding Arena
+              </h1>
+              <p className="max-w-[700px] text-muted-foreground md:text-xl">
+                Face off against AI-generated challenges. Spin the wheel of fate, test your skills, and dominate the leaderboard. Your evolution starts now.
+              </p>
+              <div className="flex flex-col gap-2 min-[400px]:flex-row pt-4">
+                <Button asChild size="lg" className="font-bold group">
+                  <Link href="/challenge">
+                    Launch Challenge
+                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </Button>
               </div>
             </div>
           </div>
@@ -56,8 +50,8 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl items-start gap-8 py-12 lg:grid-cols-3 lg:gap-12">
-              <div className="grid gap-4 cyber-card p-6 rounded-lg">
+            <div className="mx-auto grid max-w-5xl items-center gap-8 py-12 sm:grid-cols-1 md:grid-cols-3 lg:gap-12">
+              <div className="grid gap-4 p-6 rounded-lg cyber-card transition-all duration-300 hover:border-primary/50 hover:scale-105">
                 <div className="flex items-center gap-4">
                     <div className="bg-primary/10 p-3 rounded-full">
                         <Terminal className="h-6 w-6 text-primary" />
@@ -68,7 +62,7 @@ export default function HomePage() {
                   Our AI engine generates a limitless stream of unique coding challenges. Never face the same problem twice.
                 </p>
               </div>
-              <div className="grid gap-4 cyber-card p-6 rounded-lg">
+              <div className="grid gap-4 p-6 rounded-lg cyber-card transition-all duration-300 hover:border-primary/50 hover:scale-105 md:translate-y-8">
                 <div className="flex items-center gap-4">
                     <div className="bg-primary/10 p-3 rounded-full">
                         <Network className="h-6 w-6 text-primary" />
@@ -79,7 +73,7 @@ export default function HomePage() {
                   From Rookie to Veteran, problems are tailored to each player's skill level, ensuring a meaningful challenge every time.
                 </p>
               </div>
-              <div className="grid gap-4 cyber-card p-6 rounded-lg">
+              <div className="grid gap-4 p-6 rounded-lg cyber-card transition-all duration-300 hover:border-primary/50 hover:scale-105">
                  <div className="flex items-center gap-4">
                     <div className="bg-primary/10 p-3 rounded-full">
                         <Orbit className="h-6 w-6 text-primary" />
