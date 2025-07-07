@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,9 +7,12 @@ import { Label } from '@/components/ui/label';
 import { LuckyWheel } from '@/components/lucky-wheel';
 import { PlayerSetupCard } from '@/components/player-setup-card';
 import { Icons } from '@/components/icons';
-import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy } from 'lucide-react';
+import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, Loader2 } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
+import { useToast } from "@/hooks/use-toast";
+import { curateProblem, type CurateProblemOutput } from '@/ai/flows/problem-curation';
+import { ProblemDisplay } from '@/components/problem-display';
 
 const TOPICS = ['Data Structures', 'Algorithms', 'System Design', 'JavaScript', 'React', 'SQL'];
 const PLAYER_COLORS = ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'];
@@ -20,6 +23,7 @@ export type Player = {
   skillLevel: 'Rookie' | 'Crusader' | 'Veteran';
   assignedTopic: string | null;
   color: string;
+  problem: CurateProblemOutput | null;
 };
 
 const SKILL_ICONS = {
@@ -29,12 +33,14 @@ const SKILL_ICONS = {
 };
 
 export default function Home() {
-  const [gameState, setGameState] = useState<'setup' | 'playing' | 'finished'>('setup');
+  const [gameState, setGameState] = useState<'setup' | 'playing' | 'problem' | 'finished'>('setup');
   const [numPlayers, setNumPlayers] = useState(1);
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [lastWinnerTopic, setLastWinnerTopic] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     setPlayers(
@@ -44,6 +50,7 @@ export default function Home() {
         skillLevel: 'Rookie',
         assignedTopic: null,
         color: PLAYER_COLORS[i % PLAYER_COLORS.length],
+        problem: null,
       }))
     );
   }, [numPlayers]);
@@ -55,30 +62,55 @@ export default function Home() {
   const handleStartGame = () => {
     setGameState('playing');
     setCurrentPlayerIndex(0);
+    setLastWinnerTopic(null);
   };
 
   const handleSpinClick = () => {
-    if (isSpinning) return;
+    if (isSpinning || isGenerating) return;
     setLastWinnerTopic(null);
     setIsSpinning(true);
   };
 
-  const handleSpinEnd = (topic: string) => {
-    setPlayers(prev => {
-        const newPlayers = [...prev];
-        newPlayers[currentPlayerIndex].assignedTopic = topic;
-        return newPlayers;
-    });
-    setLastWinnerTopic(topic);
+  const handleSpinEnd = async (topic: string) => {
     setIsSpinning(false);
-    
-    setTimeout(() => {
-        if (currentPlayerIndex < players.length - 1) {
-            setCurrentPlayerIndex(prev => prev + 1);
-        } else {
-            setGameState('finished');
-        }
-    }, 1000);
+    setLastWinnerTopic(topic);
+    setIsGenerating(true);
+
+    try {
+        const problem = await curateProblem({
+            topic,
+            skillLevel: players[currentPlayerIndex].skillLevel,
+        });
+        
+        setPlayers(prev => {
+            const newPlayers = [...prev];
+            newPlayers[currentPlayerIndex].assignedTopic = topic;
+            newPlayers[currentPlayerIndex].problem = problem;
+            return newPlayers;
+        });
+        
+        setGameState('problem');
+    } catch (error) {
+        console.error("Failed to generate problem", error);
+        toast({
+            title: "Error Generating Challenge",
+            description: "There was an issue creating a problem. Please spin again.",
+            variant: "destructive",
+        });
+        setLastWinnerTopic(null);
+    } finally {
+        setIsGenerating(false);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentPlayerIndex < players.length - 1) {
+        setCurrentPlayerIndex(prev => prev + 1);
+        setGameState('playing');
+        setLastWinnerTopic(null);
+    } else {
+        setGameState('finished');
+    }
   };
   
   const handleResetGame = () => {
@@ -87,6 +119,7 @@ export default function Home() {
     setPlayers([]);
     setCurrentPlayerIndex(0);
     setIsSpinning(false);
+    setIsGenerating(false);
     setLastWinnerTopic(null);
   };
 
@@ -133,26 +166,44 @@ export default function Home() {
     );
   }
 
+  if (gameState === 'problem' && currentPlayer?.problem) {
+    return (
+        <ProblemDisplay
+            problem={currentPlayer.problem}
+            onNext={handleNext}
+            isLastPlayer={currentPlayerIndex === players.length - 1}
+        />
+    )
+  }
+
   if (gameState === 'finished') {
     return (
-        <main className="container mx-auto max-w-2xl py-8 px-4 font-body flex flex-col items-center text-center">
+        <main className="container mx-auto max-w-3xl py-8 px-4 font-body flex flex-col items-center text-center">
             <Trophy className="h-24 w-24 text-amber-400 mb-4" />
             <h1 className="text-4xl font-bold font-headline">Round Complete!</h1>
-            <p className="text-muted-foreground mb-8">Here are the assigned challenges:</p>
+            <p className="text-muted-foreground mb-8">Here are the generated challenges:</p>
             <div className="w-full space-y-4">
                 {players.map(player => (
                     <Card key={player.id} style={{ borderLeft: `4px solid ${player.color}` }} className="text-left">
-                         <CardContent className="p-4 flex justify-between items-center">
-                            <div>
-                                <p className="font-bold text-lg flex items-center gap-2" style={{ color: player.color }}>
-                                    {SKILL_ICONS[player.skillLevel]} {player.name}
-                                </p>
-                                <p className="text-muted-foreground">Skill: {player.skillLevel}</p>
+                         <CardContent className="p-4 flex flex-col items-start gap-2">
+                            <div className="w-full flex justify-between items-start">
+                                <div>
+                                    <p className="font-bold text-lg flex items-center gap-2" style={{ color: player.color }}>
+                                        {SKILL_ICONS[player.skillLevel]} {player.name}
+                                    </p>
+                                    <p className="text-muted-foreground">Skill: {player.skillLevel}</p>
+                                </div>
+                                <div className="text-right shrink-0 ml-4">
+                                    <p className="text-sm text-muted-foreground">Topic</p>
+                                    <p className="font-bold text-xl">{player.assignedTopic}</p>
+                                </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-sm text-muted-foreground">Topic</p>
-                                <p className="font-bold text-xl">{player.assignedTopic}</p>
-                            </div>
+                            {player.problem && (
+                                <div className="w-full pt-3 mt-3 border-t">
+                                    <p className="font-semibold text-primary">{player.problem.problemTitle}</p>
+                                    <p className="text-sm text-muted-foreground line-clamp-2">{player.problem.problemDescription}</p>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 ))}
@@ -185,9 +236,11 @@ export default function Home() {
                                         <p className="text-sm text-muted-foreground">{p.skillLevel}</p>
                                     </div>
                                 </div>
-                                <div>
-                                    {p.assignedTopic ? (
-                                        <span className="font-bold text-primary">{p.assignedTopic}</span>
+                                <div className="text-right">
+                                    {p.problem ? (
+                                        <span className="font-bold text-primary">{p.problem.problemTitle}</span>
+                                    ) : p.assignedTopic ? (
+                                        <span className="text-sm font-semibold text-primary/80">{p.assignedTopic}</span>
                                     ) : (
                                         <span className="text-sm text-muted-foreground">Waiting...</span>
                                     )}
@@ -202,10 +255,19 @@ export default function Home() {
             </Button>
           </div>
           <div className="flex flex-col items-center justify-center gap-6 py-8 lg:py-0">
-             {lastWinnerTopic && (
-                <div className="text-center animate-in fade-in zoom-in-95">
-                    <p className="text-muted-foreground">The wheel has chosen...</p>
-                    <h2 className="text-4xl font-bold font-headline text-primary">{lastWinnerTopic}</h2>
+             {isGenerating ? (
+                <div className="text-center animate-in fade-in zoom-in-95 flex flex-col items-center gap-4 h-24">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <p className="text-muted-foreground font-semibold">Generating your challenge...</p>
+                </div>
+            ): (
+                <div className="h-24 flex items-center justify-center">
+                    {lastWinnerTopic && !isSpinning && (
+                        <div className="text-center animate-in fade-in zoom-in-95">
+                            <p className="text-muted-foreground">The wheel has chosen...</p>
+                            <h2 className="text-4xl font-bold font-headline text-primary">{lastWinnerTopic}</h2>
+                        </div>
+                    )}
                 </div>
             )}
             <LuckyWheel
@@ -217,10 +279,10 @@ export default function Home() {
               size="lg"
               className="font-headline text-xl font-bold w-72 h-16"
               onClick={handleSpinClick}
-              disabled={isSpinning}
+              disabled={isSpinning || isGenerating}
             >
-              <Zap className="mr-2 h-6 w-6" />
-              {isSpinning ? 'Spinning...' : 'Spin the Wheel'}
+              {isSpinning || isGenerating ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Zap className="mr-2 h-6 w-6" />}
+              {isSpinning ? 'Spinning...' : isGenerating ? 'Generating...' : 'Spin the Wheel'}
             </Button>
              <Button variant="ghost" className="hidden lg:flex" onClick={handleResetGame}>
                 <RotateCw className="mr-2" /> Reset Game

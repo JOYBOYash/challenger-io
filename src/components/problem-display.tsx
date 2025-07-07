@@ -7,18 +7,19 @@ import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Code, BookOpen, Lightbulb } from 'lucide-react';
+import { Code, BookOpen, Lightbulb, ArrowRight } from 'lucide-react';
 
 interface ProblemDisplayProps {
   problem: CurateProblemOutput;
-  onPlayAgain: () => void;
+  onNext: () => void;
+  isLastPlayer: boolean;
 }
 
-export function ProblemDisplay({ problem, onPlayAgain }: ProblemDisplayProps) {
+export function ProblemDisplay({ problem, onNext, isLastPlayer }: ProblemDisplayProps) {
   const getBadgeVariant = (difficulty: string) => {
     switch(difficulty?.toLowerCase()) {
         case 'rookie': return 'default';
-        case 'intermediate': return 'secondary';
+        case 'crusader': return 'secondary';
         case 'veteran': return 'destructive';
         default: return 'outline';
     }
@@ -35,7 +36,10 @@ export function ProblemDisplay({ problem, onPlayAgain }: ProblemDisplayProps) {
                     <Badge variant={getBadgeVariant(problem.difficulty)}>{problem.difficulty}</Badge>
                 </div>
             </div>
-            <Button onClick={onPlayAgain}>Play Again</Button>
+            <Button onClick={onNext}>
+              {isLastPlayer ? 'View Results' : 'Next Player'}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
         </div>
 
         <Card>
