@@ -29,6 +29,7 @@ export type GameQuestion = {
     problem: CurateProblemOutput;
     forPlayerSkill: SkillLevel;
     icon: React.ReactNode;
+    displayNumber: number;
 };
 
 export type Player = {
@@ -88,7 +89,8 @@ export default function Home() {
             id: nanoid(),
             problem: problem,
             forPlayerSkill: players[index].skillLevel,
-            icon: SKILL_LEVELS[players[index].skillLevel].wheelIcon
+            icon: SKILL_LEVELS[players[index].skillLevel].wheelIcon,
+            displayNumber: index + 1,
         }));
 
         setQuestions(gameQuestions);
@@ -147,7 +149,7 @@ export default function Home() {
   const currentPlayer = players[currentPlayerIndex];
   const isSetupValid = selectedTopic !== null;
   const unassignedQuestions = questions.filter(q => !players.some(p => p.problem?.id === q.id));
-  const wheelSegments = unassignedQuestions.map(q => ({ id: q.id, content: q.icon }));
+  const wheelSegments = unassignedQuestions.map(q => ({ id: q.id, content: q.displayNumber }));
 
 
   if (gameState === 'setup') {
@@ -238,7 +240,7 @@ export default function Home() {
                             </div>
                             {player.problem && (
                                 <div className="w-full pt-3 mt-3 border-t">
-                                    <p className="font-semibold text-primary">{player.problem.problem.problemTitle}</p>
+                                    <p className="font-semibold text-primary">Challenge #{player.problem.displayNumber}: {player.problem.problem.problemTitle}</p>
                                     <p className="text-sm text-muted-foreground line-clamp-2">{player.problem.problem.problemDescription}</p>
                                 </div>
                             )}
@@ -283,7 +285,7 @@ export default function Home() {
                                 <div className="text-right">
                                     {p.problem ? (
                                         <span className="font-semibold text-primary flex items-center gap-2 justify-end">
-                                            {SKILL_LEVELS[p.problem.forPlayerSkill].icon} {p.problem.problem.difficulty}
+                                            #{p.problem.displayNumber} - {p.problem.problem.difficulty}
                                         </span>
                                     ) : (
                                         <span className="text-sm text-muted-foreground">Waiting...</span>
@@ -303,7 +305,7 @@ export default function Home() {
                 {lastSpunQuestion && !isSpinning && (
                     <Card className="text-center animate-in fade-in zoom-in-95 w-full">
                         <CardHeader>
-                             <CardDescription>Challenge Assigned to <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.name}</span>!</CardDescription>
+                             <CardDescription>Challenge #{lastSpunQuestion.displayNumber} Assigned to <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.name}</span>!</CardDescription>
                             <CardTitle className="font-headline text-primary">{lastSpunQuestion.problem.problemTitle}</CardTitle>
                         </CardHeader>
                         <CardContent>

@@ -5,7 +5,7 @@ import { Triangle } from 'lucide-react';
 import { Icons } from '@/components/icons';
 
 interface LuckyWheelProps {
-  segments: { id: string; content: React.ReactNode }[];
+  segments: { id: string; content: number }[];
   isSpinning: boolean;
   onSpinEnd: (segmentId: string) => void;
 }
@@ -54,7 +54,12 @@ export function LuckyWheel({ segments, isSpinning, onSpinEnd }: LuckyWheelProps)
     const normalizedRotation = (currentRotation + 360) % 360;
 
     const winningAngle = (270 - normalizedRotation + 360) % 360;
-    const winnerIndex = Math.floor(winningAngle / segmentAngle);
+    let winnerIndex = Math.floor(winningAngle / segmentAngle);
+    
+    // Handle potential floating point inaccuracies
+    if (winnerIndex >= segments.length) {
+        winnerIndex = segments.length - 1;
+    }
     
     const winningSegment = segments[winnerIndex];
     if (winningSegment) {
@@ -89,8 +94,13 @@ export function LuckyWheel({ segments, isSpinning, onSpinEnd }: LuckyWheelProps)
             className="absolute top-0 left-1/2 h-1/2 w-1/2 -translate-x-1/2 origin-bottom-center flex items-start justify-center"
             style={{ transform: `rotate(${i * segmentAngle + segmentAngle / 2}deg)` }}
           >
-            <div className="rotate-[-90deg] pt-10">
-                {segment.content}
+            <div className="rotate-[-90deg] pt-8">
+                <span
+                    className="text-4xl font-bold text-white"
+                    style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+                >
+                    {segment.content}
+                </span>
             </div>
           </div>
         ))}
