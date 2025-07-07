@@ -7,51 +7,47 @@ import { Label } from '@/components/ui/label';
 import { LuckyWheel } from '@/components/lucky-wheel';
 import { PlayerSetupCard } from '@/components/player-setup-card';
 import { Icons } from '@/components/icons';
-import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, Loader2, BookCopy } from 'lucide-react';
+import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, Loader2, BookCopy, Code, CodeXml, Braces } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import { curateProblem, type CurateProblemOutput } from '@/ai/flows/problem-curation';
-import { ProblemDisplay } from '@/components/problem-display';
 
 const TOPICS = ['Data Structures', 'Algorithms', 'System Design', 'JavaScript', 'React', 'SQL'];
 const PLAYER_COLORS = ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'];
 
 const SKILL_LEVELS = {
-    Rookie: { icon: <User className="h-5 w-5" />, wheelIcon: <User className="h-10 w-10 text-white" /> },
-    Crusader: { icon: <Shield className="h-5 w-5" />, wheelIcon: <Shield className="h-10 w-10 text-white" /> },
-    Veteran: { icon: <Crown className="h-5 w-5" />, wheelIcon: <Crown className="h-10 w-10 text-white" /> },
+    Rookie: { name: 'Rookie', icon: <User className="h-5 w-5" />, wheelIcon: <Code className="h-12 w-12 text-white" /> },
+    Crusader: { name: 'Crusader', icon: <Shield className="h-5 w-5" />, wheelIcon: <CodeXml className="h-12 w-12 text-white" /> },
+    Veteran: { name: 'Veteran', icon: <Crown className="h-5 w-5" />, wheelIcon: <Braces className="h-12 w-12 text-white" /> },
 } as const;
 
 type SkillLevel = keyof typeof SKILL_LEVELS;
 
-const WHEEL_SEGMENTS = [
-    { id: 'Rookie', content: SKILL_LEVELS.Rookie.wheelIcon },
-    { id: 'Crusader', content: SKILL_LEVELS.Crusader.wheelIcon },
-    { id: 'Veteran', content: SKILL_LEVELS.Veteran.wheelIcon },
-    { id: 'Rookie', content: SKILL_LEVELS.Rookie.wheelIcon },
-    { id: 'Crusader', content: SKILL_LEVELS.Crusader.wheelIcon },
-    { id: 'Veteran', content: SKILL_LEVELS.Veteran.wheelIcon },
-];
+export type GameQuestion = {
+    id: string;
+    problem: CurateProblemOutput;
+    forPlayerSkill: SkillLevel;
+    icon: React.ReactNode;
+};
 
 export type Player = {
   id: string;
   name: string;
   skillLevel: SkillLevel;
   color: string;
-  problem: CurateProblemOutput | null;
-  spunDifficulty: SkillLevel | null;
+  problem: GameQuestion | null;
 };
 
 export default function Home() {
-  const [gameState, setGameState] = useState<'setup' | 'playing' | 'problem' | 'finished'>('setup');
+  const [gameState, setGameState] = useState<'setup' | 'generating' | 'playing' | 'finished'>('setup');
   const [numPlayers, setNumPlayers] = useState(1);
   const [players, setPlayers] = useState<Player[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<GameQuestion[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [lastWinner, setLastWinner] = useState<SkillLevel | null>(null);
+  const [lastSpunQuestion, setLastSpunQuestion] = useState<GameQuestion | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -62,7 +58,6 @@ export default function Home() {
         skillLevel: 'Rookie',
         color: PLAYER_COLORS[i % PLAYER_COLORS.length],
         problem: null,
-        spunDifficulty: null,
       }))
     );
   }, [numPlayers]);
@@ -71,7 +66,7 @@ export default function Home() {
     setPlayers(players.map(p => p.id === updatedPlayer.id ? updatedPlayer : p));
   };
   
-  const handleStartGame = () => {
+  const handleStartGame = async () => {
     if (!selectedTopic) {
         toast({
             title: "No Topic Selected",
@@ -80,54 +75,60 @@ export default function Home() {
         });
         return;
     }
-    setGameState('playing');
-    setCurrentPlayerIndex(0);
-    setLastWinner(null);
-  };
-
-  const handleSpinClick = () => {
-    if (isSpinning || isGenerating) return;
-    setLastWinner(null);
-    setIsSpinning(true);
-  };
-
-  const handleSpinEnd = async (spunDifficulty: string) => {
-    setIsSpinning(false);
-    setLastWinner(spunDifficulty as SkillLevel);
-    setIsGenerating(true);
-
+    setGameState('generating');
     try {
-        const problem = await curateProblem({
-            topic: selectedTopic!,
-            skillLevel: spunDifficulty,
-        });
+        const promises = players.map(player => curateProblem({
+            topic: selectedTopic,
+            skillLevel: player.skillLevel
+        }));
         
-        setPlayers(prev => {
-            const newPlayers = [...prev];
-            newPlayers[currentPlayerIndex].spunDifficulty = spunDifficulty as SkillLevel;
-            newPlayers[currentPlayerIndex].problem = problem;
-            return newPlayers;
-        });
-        
-        setGameState('problem');
+        const results = await Promise.all(promises);
+
+        const gameQuestions: GameQuestion[] = results.map((problem, index) => ({
+            id: nanoid(),
+            problem: problem,
+            forPlayerSkill: players[index].skillLevel,
+            icon: SKILL_LEVELS[players[index].skillLevel].wheelIcon
+        }));
+
+        setQuestions(gameQuestions);
+        setCurrentPlayerIndex(0);
+        setLastSpunQuestion(null);
+        setGameState('playing');
+
     } catch (error) {
-        console.error("Failed to generate problem", error);
+        console.error("Failed to generate problems", error);
         toast({
-            title: "Error Generating Challenge",
-            description: "There was an issue creating a problem. Please spin again.",
+            title: "Error Generating Challenges",
+            description: "There was an issue creating the problems. Please try again.",
             variant: "destructive",
         });
-        setLastWinner(null);
-    } finally {
-        setIsGenerating(false);
+        setGameState('setup');
     }
   };
 
-  const handleNext = () => {
+  const handleSpinClick = () => {
+    if (isSpinning || lastSpunQuestion) return;
+    setIsSpinning(true);
+  };
+
+  const handleSpinEnd = async (questionId: string) => {
+    const winningQuestion = questions.find(q => q.id === questionId);
+    if (winningQuestion) {
+        setLastSpunQuestion(winningQuestion);
+        setPlayers(prev => {
+            const newPlayers = [...prev];
+            newPlayers[currentPlayerIndex].problem = winningQuestion;
+            return newPlayers;
+        });
+    }
+    setIsSpinning(false);
+  };
+
+  const handleNextPlayer = () => {
     if (currentPlayerIndex < players.length - 1) {
         setCurrentPlayerIndex(prev => prev + 1);
-        setGameState('playing');
-        setLastWinner(null);
+        setLastSpunQuestion(null);
     } else {
         setGameState('finished');
     }
@@ -136,16 +137,18 @@ export default function Home() {
   const handleResetGame = () => {
     setGameState('setup');
     setNumPlayers(1);
-    setPlayers([]);
     setSelectedTopic(null);
+    setQuestions([]);
     setCurrentPlayerIndex(0);
     setIsSpinning(false);
-    setIsGenerating(false);
-    setLastWinner(null);
+    setLastSpunQuestion(null);
   };
 
   const currentPlayer = players[currentPlayerIndex];
   const isSetupValid = selectedTopic !== null;
+  const unassignedQuestions = questions.filter(q => !players.some(p => p.problem?.id === q.id));
+  const wheelSegments = unassignedQuestions.map(q => ({ id: q.id, content: q.icon }));
+
 
   if (gameState === 'setup') {
     return (
@@ -198,14 +201,14 @@ export default function Home() {
     );
   }
 
-  if (gameState === 'problem' && currentPlayer?.problem) {
+  if (gameState === 'generating') {
     return (
-        <ProblemDisplay
-            problem={currentPlayer.problem}
-            onNext={handleNext}
-            isLastPlayer={currentPlayerIndex === players.length - 1}
-        />
-    )
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background font-body gap-4">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        <h1 className="text-2xl font-headline">Generating Challenges...</h1>
+        <p className="text-muted-foreground">Please wait while we craft the perfect problems for your team.</p>
+      </div>
+    );
   }
 
   if (gameState === 'finished') {
@@ -214,7 +217,7 @@ export default function Home() {
             <Trophy className="h-24 w-24 text-amber-400 mb-4" />
             <h1 className="text-4xl font-bold font-headline">Round Complete!</h1>
             <p className="text-muted-foreground mb-1">Topic: <span className="font-semibold text-primary">{selectedTopic}</span></p>
-            <p className="text-muted-foreground mb-8">Here are the generated challenges:</p>
+            <p className="text-muted-foreground mb-8">Here are the assigned challenges:</p>
             <div className="w-full space-y-4">
                 {players.map(player => (
                     <Card key={player.id} style={{ borderLeft: `4px solid ${player.color}` }} className="text-left">
@@ -227,17 +230,16 @@ export default function Home() {
                                     <p className="text-muted-foreground">Base Skill: {player.skillLevel}</p>
                                 </div>
                                 <div className="text-right shrink-0 ml-4">
-                                    <p className="text-sm text-muted-foreground">Spun Difficulty</p>
-                                    <p className="font-bold text-xl flex items-center justify-end gap-2">
-                                        {player.spunDifficulty && SKILL_LEVELS[player.spunDifficulty].icon}
-                                        {player.spunDifficulty}
+                                     <p className="font-bold text-xl flex items-center justify-end gap-2">
+                                        {player.problem && SKILL_LEVELS[player.problem.forPlayerSkill].icon}
+                                        {player.problem?.problem.difficulty}
                                     </p>
                                 </div>
                             </div>
                             {player.problem && (
                                 <div className="w-full pt-3 mt-3 border-t">
-                                    <p className="font-semibold text-primary">{player.problem.problemTitle}</p>
-                                    <p className="text-sm text-muted-foreground line-clamp-2">{player.problem.problemDescription}</p>
+                                    <p className="font-semibold text-primary">{player.problem.problem.problemTitle}</p>
+                                    <p className="text-sm text-muted-foreground line-clamp-2">{player.problem.problem.problemDescription}</p>
                                 </div>
                             )}
                         </CardContent>
@@ -261,7 +263,7 @@ export default function Home() {
                     <CardTitle className="font-headline text-2xl">Player {currentPlayerIndex + 1}'s Turn</CardTitle>
                     {currentPlayer && (
                         <CardDescription>
-                            Time for <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.name}</span> to spin for a difficulty level!
+                            Time for <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.name}</span> to spin for a challenge!
                             <br/>
                             Topic for this round is <span className="font-bold text-primary">{selectedTopic}</span>.
                         </CardDescription>
@@ -274,14 +276,14 @@ export default function Home() {
                                 <div className="flex items-center gap-3">
                                     <div className="font-bold text-lg" style={{ color: p.color }}>{index + 1}</div>
                                     <div>
-                                        <p className="font-semibold flex items-center gap-2">{p.name} {SKILL_LEVELS[p.skillLevel].icon}</p>
-                                        <p className="text-sm text-muted-foreground">Skill: {p.skillLevel}</p>
+                                        <p className="font-semibold flex items-center gap-2">{p.name}</p>
+                                        <p className="text-sm text-muted-foreground flex items-center gap-1">{SKILL_LEVELS[p.skillLevel].icon} {p.skillLevel}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
                                     {p.problem ? (
-                                        <span className="font-bold text-primary flex items-center gap-2 justify-end">
-                                            {SKILL_LEVELS[p.spunDifficulty!].icon} {p.spunDifficulty}
+                                        <span className="font-semibold text-primary flex items-center gap-2 justify-end">
+                                            {SKILL_LEVELS[p.problem.forPlayerSkill].icon} {p.problem.problem.difficulty}
                                         </span>
                                     ) : (
                                         <span className="text-sm text-muted-foreground">Waiting...</span>
@@ -297,38 +299,39 @@ export default function Home() {
             </Button>
           </div>
           <div className="flex flex-col items-center justify-center gap-6 py-8 lg:py-0">
-             {isGenerating ? (
-                <div className="text-center animate-in fade-in zoom-in-95 flex flex-col items-center gap-4 h-24">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                    <p className="text-muted-foreground font-semibold">Generating your challenge...</p>
-                </div>
-            ): (
-                <div className="h-24 flex items-center justify-center">
-                    {lastWinner && !isSpinning && (
-                        <div className="text-center animate-in fade-in zoom-in-95">
-                            <p className="text-muted-foreground">The wheel has chosen...</p>
-                            <h2 className="text-4xl font-bold font-headline text-primary flex items-center gap-3">
-                                {SKILL_LEVELS[lastWinner].icon}
-                                {lastWinner}
-                            </h2>
-                        </div>
-                    )}
-                </div>
-            )}
+             <div className="h-24 flex items-center justify-center">
+                {lastSpunQuestion && !isSpinning && (
+                    <Card className="text-center animate-in fade-in zoom-in-95 w-full">
+                        <CardHeader>
+                             <CardDescription>Challenge Assigned to <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.name}</span>!</CardDescription>
+                            <CardTitle className="font-headline text-primary">{lastSpunQuestion.problem.problemTitle}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                           <Button onClick={handleNextPlayer}>
+                                {currentPlayerIndex === players.length - 1 ? 'Finish & View Results' : 'Next Player'} <ArrowRight className="ml-2" />
+                            </Button>
+                        </CardContent>
+                    </Card>
+                )}
+            </div>
+            
             <LuckyWheel
-              segments={WHEEL_SEGMENTS}
+              key={currentPlayerIndex}
+              segments={wheelSegments}
               isSpinning={isSpinning}
               onSpinEnd={handleSpinEnd}
             />
+
             <Button
               size="lg"
               className="font-headline text-xl font-bold w-72 h-16"
               onClick={handleSpinClick}
-              disabled={isSpinning || isGenerating}
+              disabled={isSpinning || !!lastSpunQuestion}
             >
-              {isSpinning || isGenerating ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Zap className="mr-2 h-6 w-6" />}
-              {isSpinning ? 'Spinning...' : isGenerating ? 'Generating...' : 'Spin the Wheel'}
+              {isSpinning ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Zap className="mr-2 h-6 w-6" />}
+              {isSpinning ? 'Spinning...' : 'Spin for a Challenge'}
             </Button>
+
              <Button variant="ghost" className="hidden lg:flex" onClick={handleResetGame}>
                 <RotateCw className="mr-2" /> Reset Game
             </Button>

@@ -12,7 +12,7 @@ type SkillLevel = 'Rookie' | 'Crusader' | 'Veteran';
 interface PlayerSetupCardProps {
   player: Player;
   onPlayerChange: (player: Player) => void;
-  skillLevels: Record<SkillLevel, { icon: React.ReactNode, wheelIcon: React.ReactNode }>;
+  skillLevels: Record<SkillLevel, { icon: React.ReactNode }>;
 }
 
 export function PlayerSetupCard({ player, onPlayerChange, skillLevels }: PlayerSetupCardProps) {

@@ -9,7 +9,7 @@ interface LuckyWheelProps {
   onSpinEnd: (segmentId: string) => void;
 }
 
-const WHEEL_COLORS = ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+const WHEEL_COLORS = ['#6366F1', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#D946EF'];
 
 export function LuckyWheel({ segments, isSpinning, onSpinEnd }: LuckyWheelProps) {
   const [rotation, setRotation] = useState(0);
@@ -19,6 +19,10 @@ export function LuckyWheel({ segments, isSpinning, onSpinEnd }: LuckyWheelProps)
   const segmentAngle = 360 / numSegments;
 
   const conicGradient = useMemo(() => {
+    // Return a single color if there's only one segment to avoid gradient issues
+    if (segments.length <= 1) {
+        return WHEEL_COLORS[0];
+    }
     return segments.map((_, i) => {
       const color = WHEEL_COLORS[i % WHEEL_COLORS.length];
       const startAngle = i * segmentAngle;
@@ -31,28 +35,23 @@ export function LuckyWheel({ segments, isSpinning, onSpinEnd }: LuckyWheelProps)
     if (isSpinning && !shouldSpin) {
         setShouldSpin(true);
         const winnerIndex = Math.floor(Math.random() * numSegments);
-        // Correctly center the pointer on the middle of the winning segment
         const targetAngle = 360 - (winnerIndex * segmentAngle) - (segmentAngle / 2);
         
         const fullRotations = Math.floor(Math.random() * 3) + 5;
-        const finalRotation = (fullRotations * 360) + targetAngle;
+        // Use a random final angle to make the spin feel more varied
+        const finalRotation = (fullRotations * 360) + targetAngle + (Math.random() * segmentAngle * 0.8 - segmentAngle * 0.4);
 
-        // Use a functional update to ensure we're always rotating from the current position
         setRotation(prev => prev + finalRotation);
     }
   }, [isSpinning, shouldSpin, numSegments, segmentAngle]);
 
 
   const handleTransitionEnd = () => {
-    // Only trigger onSpinEnd if the wheel was meant to be spinning
     if (!isSpinning) return;
 
     const currentRotation = rotation % 360;
-    // Normalize rotation to avoid floating point issues and ensure it's within [0, 360)
     const normalizedRotation = (currentRotation + 360) % 360;
 
-    // The winning angle is what's under the pointer (at the top, 270deg or -90deg in CSS conic-gradient space)
-    // We adjust for the initial -90deg rotation of the gradient
     const winningAngle = (270 - normalizedRotation + 360) % 360;
     const winnerIndex = Math.floor(winningAngle / segmentAngle);
     
@@ -72,31 +71,31 @@ export function LuckyWheel({ segments, isSpinning, onSpinEnd }: LuckyWheelProps)
         <Triangle className="h-10 w-10 fill-white stroke-neutral-700 stroke-[1.5]" style={{ transform: 'rotate(180deg)' }} />
       </div>
       <div
-        className="relative aspect-square w-80 md:w-96 rounded-full border-8 border-white bg-white/30 shadow-2xl transition-transform duration-[6000ms] ease-out"
+        className="relative aspect-square w-80 md:w-96 rounded-full border-8 border-white bg-white/30 shadow-2xl transition-transform duration-[7000ms] ease-out"
         style={{
           transform: `rotate(${rotation}deg)`,
-          // Using a more suitable timing function for a spin
-          transitionTimingFunction: 'cubic-bezier(0.25, 1, 0.5, 1)',
+          transitionTimingFunction: 'cubic-bezier(0.1, 1, 0.2, 1)',
         }}
         onTransitionEnd={handleTransitionEnd}
       >
         <div 
             className="absolute inset-0 rounded-full"
-            // Start gradient from the top (-90deg)
             style={{background: `conic-gradient(from -90deg, ${conicGradient})`}}
         ></div>
         {segments.map((segment, i) => (
           <div
             key={i}
-            className="absolute top-0 left-1/2 h-1/2 w-1/2 -translate-x-1/2 origin-bottom-center flex items-center justify-center"
+            className="absolute top-0 left-1/2 h-1/2 w-1/2 -translate-x-1/2 origin-bottom-center flex items-start justify-center"
             style={{ transform: `rotate(${i * segmentAngle + segmentAngle / 2}deg)` }}
           >
-            <div className="rotate-[-90deg] -translate-y-16">
+            <div className="rotate-[-90deg] pt-6">
                 {segment.content}
             </div>
           </div>
         ))}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-white border-4 border-neutral-300 shadow-inner"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-white border-4 border-neutral-300 shadow-inner flex items-center justify-center">
+            <Icons.logo className="h-10 w-10 text-primary" />
+        </div>
       </div>
     </div>
   );
