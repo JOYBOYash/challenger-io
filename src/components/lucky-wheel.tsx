@@ -88,22 +88,29 @@ export function LuckyWheel({ segments, isSpinning, onSpinEnd }: LuckyWheelProps)
             className="absolute inset-0 rounded-full"
             style={{background: `conic-gradient(from -90deg, ${conicGradient})`}}
         ></div>
-        {segments.map((segment, i) => (
-          <div
-            key={i}
-            className="absolute top-0 left-1/2 h-1/2 w-1/2 -translate-x-1/2 origin-bottom-center flex items-start justify-center"
-            style={{ transform: `rotate(${i * segmentAngle + segmentAngle / 2}deg)` }}
-          >
-            <div className="rotate-[-90deg] pt-8">
-                <span
-                    className="text-4xl font-bold text-white"
-                    style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
-                >
-                    {segment.content}
-                </span>
+        {segments.map((segment, i) => {
+          const angle = i * segmentAngle + segmentAngle / 2;
+          return (
+            <div
+              key={i}
+              className="absolute top-0 left-1/2 h-1/2 w-1/2 -translate-x-1/2 origin-bottom-center flex items-start justify-center"
+              style={{ transform: `rotate(${angle}deg)` }}
+            >
+              <div className="pt-8">
+                  <span
+                      className="text-4xl font-bold text-white"
+                      style={{
+                        textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                        display: 'inline-block',
+                        transform: `rotate(-${angle}deg)`,
+                      }}
+                  >
+                      {segment.content}
+                  </span>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-white border-4 border-neutral-300 shadow-inner flex items-center justify-center">
             <Icons.logo className="h-10 w-10 text-primary" />
         </div>
