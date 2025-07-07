@@ -44,8 +44,11 @@ export function LuckyWheel({ topics, isSpinning, onSpinEnd }: LuckyWheelProps) {
     if (!isSpinning) return;
 
     const currentAngle = rotation % 360;
-    const normalizedAngle = (360 - currentAngle + 90 + segmentAngle/2) % 360;
-    const winnerIndex = Math.floor(normalizedAngle / segmentAngle);
+    // The pointer is at the top (0 degrees in the conic gradient).
+    // The wheel rotated by `currentAngle`, so the part of the wheel at the top
+    // was originally at `(360 - currentAngle) % 360`.
+    const winningAngle = (360 - currentAngle) % 360;
+    const winnerIndex = Math.floor(winningAngle / segmentAngle);
     
     const winningTopic = topics[winnerIndex];
     if (winningTopic) {
@@ -81,7 +84,7 @@ export function LuckyWheel({ topics, isSpinning, onSpinEnd }: LuckyWheelProps) {
             style={{ transform: `rotate(${i * segmentAngle + segmentAngle / 2}deg)` }}
           >
             <span
-              className="text-white font-headline font-bold text-sm tracking-wider uppercase -translate-y-12 rotate-[-90deg] md:text-base md:-translate-y-16"
+              className="text-white font-body font-bold text-xs tracking-normal uppercase -translate-y-10 rotate-[-90deg] md:text-sm md:-translate-y-14"
             >
               {topic}
             </span>
