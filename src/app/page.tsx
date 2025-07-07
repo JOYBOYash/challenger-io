@@ -78,20 +78,18 @@ export default function Home() {
     }
     setGameState('generating');
     try {
-        const promises = players.map(player => curateProblem({
+        const promises = players.map((player, index) => curateProblem({
             topic: selectedTopic,
             skillLevel: player.skillLevel
-        }));
-        
-        const results = await Promise.all(promises);
-
-        const gameQuestions: GameQuestion[] = results.map((problem, index) => ({
+        }).then(problem => ({
             id: nanoid(),
             problem: problem,
-            forPlayerSkill: players[index].skillLevel,
-            icon: SKILL_LEVELS[players[index].skillLevel].wheelIcon,
+            forPlayerSkill: player.skillLevel,
+            icon: SKILL_LEVELS[player.skillLevel].wheelIcon,
             displayNumber: index + 1,
-        }));
+        })));
+        
+        const gameQuestions = await Promise.all(promises);
 
         setQuestions(gameQuestions);
         setCurrentPlayerIndex(0);
@@ -149,7 +147,7 @@ export default function Home() {
   const currentPlayer = players[currentPlayerIndex];
   const isSetupValid = selectedTopic !== null;
   const unassignedQuestions = questions.filter(q => !players.some(p => p.problem?.id === q.id));
-  const wheelSegments = unassignedQuestions.map(q => ({ id: q.id, content: q.displayNumber }));
+  const wheelSegments = unassignedQuestions.map(q => ({ id: q.id }));
 
 
   if (gameState === 'setup') {
