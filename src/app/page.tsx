@@ -49,6 +49,7 @@ export default function Home() {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [lastSpunQuestion, setLastSpunQuestion] = useState<GameQuestion | null>(null);
+  const [isAutoAssigning, setIsAutoAssigning] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -62,6 +63,30 @@ export default function Home() {
       }))
     );
   }, [numPlayers]);
+
+  const unassignedQuestions = questions.filter(q => !players.some(p => p.problem?.id === q.id));
+
+  useEffect(() => {
+    // If there's only one player left to spin, automatically assign the last question.
+    if (gameState === 'playing' && unassignedQuestions.length === 1 && !lastSpunQuestion && !isSpinning) {
+      const lastQuestion = unassignedQuestions[0];
+      
+      setIsAutoAssigning(true);
+      const timer = setTimeout(() => {
+        setLastSpunQuestion(lastQuestion);
+        setPlayers(prev => {
+            const newPlayers = [...prev];
+            if(newPlayers[currentPlayerIndex] && !newPlayers[currentPlayerIndex].problem) {
+               newPlayers[currentPlayerIndex].problem = lastQuestion;
+            }
+            return newPlayers;
+        });
+      }, 1200);
+
+      return () => clearTimeout(timer);
+    }
+  }, [gameState, questions, players, lastSpunQuestion, currentPlayerIndex, isSpinning, unassignedQuestions]);
+
 
   const handlePlayerChange = (updatedPlayer: Player) => {
     setPlayers(players.map(p => p.id === updatedPlayer.id ? updatedPlayer : p));
@@ -108,7 +133,7 @@ export default function Home() {
   };
 
   const handleSpinClick = () => {
-    if (isSpinning || lastSpunQuestion) return;
+    if (isSpinning || lastSpunQuestion || isAutoAssigning) return;
     setIsSpinning(true);
   };
 
@@ -129,6 +154,7 @@ export default function Home() {
     if (currentPlayerIndex < players.length - 1) {
         setCurrentPlayerIndex(prev => prev + 1);
         setLastSpunQuestion(null);
+        setIsAutoAssigning(false);
     } else {
         setGameState('finished');
     }
@@ -142,11 +168,11 @@ export default function Home() {
     setCurrentPlayerIndex(0);
     setIsSpinning(false);
     setLastSpunQuestion(null);
+    setIsAutoAssigning(false);
   };
 
   const currentPlayer = players[currentPlayerIndex];
   const isSetupValid = selectedTopic !== null;
-  const unassignedQuestions = questions.filter(q => !players.some(p => p.problem?.id === q.id));
   const wheelSegments = unassignedQuestions.map(q => ({ id: q.id, label: String(q.displayNumber) }));
 
 
@@ -300,10 +326,13 @@ export default function Home() {
           </div>
           <div className="flex flex-col items-center justify-center gap-6 py-8 lg:py-0">
              <div className="h-24 flex items-center justify-center">
-                {lastSpunQuestion && !isSpinning && (
+                {lastSpunQuestion && (
                     <Card className="text-center animate-in fade-in zoom-in-95 w-full">
                         <CardHeader>
-                             <CardDescription>Challenge #{lastSpunQuestion.displayNumber} Assigned to <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.name}</span>!</CardDescription>
+                            <CardDescription>
+                                {isAutoAssigning ? 'Last challenge automatically assigned to ' : `Challenge #${lastSpunQuestion.displayNumber} Assigned to `}
+                                <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.name}</span>!
+                            </CardDescription>
                             <CardTitle className="font-headline text-primary">{lastSpunQuestion.problem.problemTitle}</CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -326,10 +355,10 @@ export default function Home() {
               size="lg"
               className="font-headline text-xl font-bold w-72 h-16"
               onClick={handleSpinClick}
-              disabled={isSpinning || !!lastSpunQuestion}
+              disabled={isSpinning || !!lastSpunQuestion || isAutoAssigning}
             >
-              {isSpinning ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Zap className="mr-2 h-6 w-6" />}
-              {isSpinning ? 'Spinning...' : 'Spin for a Challenge'}
+              {isSpinning || isAutoAssigning ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Zap className="mr-2 h-6 w-6" />}
+              {isAutoAssigning ? 'Assigning...' : (isSpinning ? 'Spinning...' : 'Spin for a Challenge')}
             </Button>
 
              <Button variant="ghost" className="hidden lg:flex" onClick={handleResetGame}>
