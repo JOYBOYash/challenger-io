@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Triangle } from 'lucide-react';
+import { Icons } from '@/components/icons';
 
 interface LuckyWheelProps {
   segments: { id: string; content: React.ReactNode }[];
