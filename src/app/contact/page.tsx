@@ -23,7 +23,7 @@ export default function ContactPage() {
     return (
         <div className="cyber-grid flex-1">
             <div className="container max-w-2xl px-4 md:px-6 py-12 md:py-20">
-                <div className="text-center space-y-6">
+                <div className="text-center space-y-4">
                     <h1 className="font-headline text-4xl font-bold text-glow sm:text-5xl">Connect with Us</h1>
                     <p className="text-muted-foreground md:text-lg">
                         Your feedback is the compiler for our next iteration. Have a suggestion, a bug to report, or just want to talk tech? Drop us a line. We're always listening for the next great idea.
