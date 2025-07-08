@@ -2,8 +2,8 @@ import Image from 'next/image';
 
 export default function AboutPage() {
   return (
-    <div className="cyber-grid">
-      <div className="container max-w-5xl py-12 md:py-20">
+    <div className="cyber-grid flex-1">
+      <div className="container max-w-5xl px-4 md:px-6 py-12 md:py-20">
         <div className="text-center">
           <h1 className="text-4xl font-bold font-headline tracking-tighter sm:text-5xl text-glow">About Challenger.io</h1>
           <p className="mt-4 text-muted-foreground md:text-lg max-w-3xl mx-auto">
