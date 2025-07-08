@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -19,21 +18,21 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-background/90 backdrop-blur-sm shadow-lg shadow-primary/5">
-      <div className="container flex h-20 items-center justify-between">
-        <div className="flex items-center gap-6 md:gap-10">
+    <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-background/90 backdrop-blur-sm">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center space-x-2">
-              <Icons.logo className="h-8 w-8 text-primary" />
-              <span className="hidden sm:inline-block font-bold font-headline text-glow text-xl">Challenger.io</span>
+              <Icons.logo className="h-7 w-7 text-primary" />
+              <span className="hidden sm:inline-block font-bold font-headline text-glow text-lg">Challenger.io</span>
             </Link>
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden items-center gap-8 md:flex">
               {NAV_ITEMS.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'transition-colors hover:text-primary text-base font-medium',
-                    pathname === item.href ? 'text-primary text-glow' : 'text-muted-foreground'
+                    'transition-colors hover:text-primary/90 text-sm font-medium',
+                    pathname === item.href ? 'text-primary' : 'text-muted-foreground'
                   )}
                 >
                   {item.label}
@@ -44,10 +43,10 @@ export function Navbar() {
         
         <div className="flex items-center gap-4">
             <div className="hidden md:flex">
-                <Button asChild size="lg" className="font-bold group">
+                <Button asChild>
                   <Link href="/challenge">
                     Start Challenge
-                    <Zap className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
+                    <Zap className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
             </div>
@@ -72,7 +71,7 @@ export function Navbar() {
                                 key={item.href} 
                                 href={item.href} 
                                 className={cn(
-                                    "text-lg font-medium transition-colors hover:text-primary", 
+                                    "text-base font-medium transition-colors hover:text-primary/90", 
                                     pathname === item.href ? 'text-primary' : 'text-muted-foreground'
                                 )}
                               >
@@ -81,10 +80,10 @@ export function Navbar() {
                             ))}
                         </div>
                          <div className="mt-8">
-                            <Button asChild size="lg" className="font-bold group w-full">
+                            <Button asChild size="lg" className="w-full">
                               <Link href="/challenge">
                                 Start Challenge
-                                <Zap className="ml-2 h-5 w-5" />
+                                <Zap className="ml-2 h-4 w-4" />
                               </Link>
                             </Button>
                         </div>
