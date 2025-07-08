@@ -25,7 +25,7 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-primary/30 bg-background">
+    <header className="sticky md:px-12 top-0 z-50 w-full border-b border-primary/30 bg-background">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-10">
           <Link href="/" className="flex items-center space-x-2 group">
@@ -104,7 +104,7 @@ export function Navbar() {
                   <Button
                     asChild
                     size="lg"
-                    className="w-full font-bold tracking-wider"
+                    className="w-fit font-bold tracking-wider"
                   >
                     <Link href="/challenge">
                       Start Challenge
