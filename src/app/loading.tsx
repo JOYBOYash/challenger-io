@@ -35,7 +35,7 @@ const AnimatedLogo = (props: SVGProps<SVGSVGElement>) => (
 
 export default function Loading() {
   return (
-    <div className="flex flex-1 items-center justify-center cyber-grid">
+    <div className="flex h-full items-center justify-center cyber-grid">
       <AnimatedLogo 
         className="h-24 w-24 text-primary animate-loader-shake"
         style={{filter: `drop-shadow(0 0 15px hsl(var(--primary)))`}} 
