@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type SVGProps } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { LuckyWheel } from '@/components/lucky-wheel';
 import { PlayerSetupCard } from '@/components/player-setup-card';
 import { Icons } from '@/components/icons';
-import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, Loader2, BookCopy, Code, CodeXml, Braces } from 'lucide-react';
+import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
@@ -39,6 +39,38 @@ export type Player = {
   color: string;
   problem: GameQuestion | null;
 };
+
+// Custom inline SVG for loading animation
+const AnimatedLogo = (props: SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path
+      className="animate-loader-fill"
+      style={{ strokeDasharray: 63, strokeDashoffset: 63, animationDelay: '0s' } as React.CSSProperties}
+      d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
+    />
+    <path
+      className="animate-loader-fill"
+      style={{ strokeDasharray: 10, strokeDashoffset: 10, animationDelay: '0.4s' } as React.CSSProperties}
+      d="m9.09 9.91 1.63.54c.22.07.36.29.3.5l-.54 1.63c-.07.22-.29.36-.5.3l-1.63-.54c-.22-.07-.36-.29-.3-.5l.54-1.63c.07-.22.29-.36.5-.3z"
+    />
+    <path
+      className="animate-loader-fill"
+      style={{ strokeDasharray: 20, strokeDashoffset: 20, animationDelay: '0.2s' } as React.CSSProperties}
+      d="M12 22c-3.314 0-6-2.686-6-6"
+    />
+  </svg>
+);
 
 export default function ChallengePage() {
   const [gameState, setGameState] = useState<'setup' | 'generating' | 'playing' | 'finished'>('setup');
@@ -230,7 +262,10 @@ export default function ChallengePage() {
   if (gameState === 'generating') {
     return (
       <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background font-body gap-4 cyber-grid">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        <AnimatedLogo 
+          className="h-24 w-24 text-primary animate-loader-shake"
+          style={{filter: `drop-shadow(0 0 15px hsl(var(--primary)))`}} 
+        />
         <h1 className="text-2xl font-headline text-glow">Generating Challenges...</h1>
         <p className="text-muted-foreground">The AI is crafting unique problems for your team.</p>
       </div>
@@ -357,7 +392,7 @@ export default function ChallengePage() {
               onClick={handleSpinClick}
               disabled={isSpinning || !!lastSpunQuestion || isAutoAssigning}
             >
-              {isSpinning || isAutoAssigning ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Zap className="mr-2 h-6 w-6" />}
+              {isSpinning || isAutoAssigning ? <Icons.animatedLogo className="mr-2 h-6 w-6 animate-loader-shake" /> : <Zap className="mr-2 h-6 w-6" />}
               {isAutoAssigning ? 'Assigning...' : (isSpinning ? 'Spinning...' : 'Spin for a Challenge')}
             </Button>
 
