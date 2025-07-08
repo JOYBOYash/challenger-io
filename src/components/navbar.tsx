@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -25,14 +26,14 @@ export function Navbar() {
               <Icons.logo className="h-8 w-8 text-primary" />
               <span className="hidden sm:inline-block font-bold font-headline text-glow text-xl">Challenger.io</span>
             </Link>
-            <nav className="hidden md:flex items-center gap-6 text-sm">
+            <nav className="hidden md:flex items-center gap-6">
               {NAV_ITEMS.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
                     'transition-colors hover:text-primary text-base font-medium',
-                    pathname === item.href ? 'text-primary' : 'text-foreground/80'
+                    pathname === item.href ? 'text-primary text-glow' : 'text-muted-foreground'
                   )}
                 >
                   {item.label}
@@ -67,7 +68,14 @@ export function Navbar() {
                         </Link>
                         <div className="flex flex-col space-y-4">
                             {NAV_ITEMS.map((item) => (
-                              <Link key={item.href} href={item.href} className={cn("text-lg", pathname === item.href ? 'text-primary font-semibold' : 'text-foreground/80')}>
+                              <Link 
+                                key={item.href} 
+                                href={item.href} 
+                                className={cn(
+                                    "text-lg font-medium transition-colors hover:text-primary", 
+                                    pathname === item.href ? 'text-primary' : 'text-muted-foreground'
+                                )}
+                              >
                                 {item.label}
                               </Link>
                             ))}
