@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, Lightbulb, ArrowLeft } from 'lucide-react';
+import { BookOpen, Lightbulb, ArrowLeft, ExternalLink } from 'lucide-react';
 
 interface ProblemDisplayProps {
   problem: Problem;
@@ -22,6 +22,8 @@ export function ProblemDisplay({ problem, onBack }: ProblemDisplayProps) {
         default: return 'outline';
     }
   }
+
+  const isPlatformProblem = problem.url && !problem.solutions;
     
   return (
     <main className="container mx-auto max-w-4xl py-8 px-4 font-body">
@@ -48,10 +50,17 @@ export function ProblemDisplay({ problem, onBack }: ProblemDisplayProps) {
           </CardHeader>
           <CardContent>
             <p className="whitespace-pre-wrap text-foreground/90 leading-relaxed">{problem.problemDescription}</p>
+            {isPlatformProblem && (
+                 <Button asChild className="mt-4">
+                    <a href={problem.url} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="mr-2"/> View Problem on Platform
+                    </a>
+                </Button>
+            )}
           </CardContent>
         </Card>
         
-        {solutionsVisible ? (
+        {solutionsVisible && !isPlatformProblem ? (
             <Card className="cyber-card animate-in fade-in">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 font-headline"><Lightbulb className="text-primary" /> Optimal Solutions</CardTitle>
@@ -97,11 +106,13 @@ export function ProblemDisplay({ problem, onBack }: ProblemDisplayProps) {
                 </CardContent>
             </Card>
         ) : (
-             <div className="text-center">
-                <Button size="lg" onClick={() => setSolutionsVisible(true)}>
-                    <Lightbulb className="mr-2" /> View Optimal Solutions
-                </Button>
-            </div>
+             !isPlatformProblem && (
+                <div className="text-center">
+                    <Button size="lg" onClick={() => setSolutionsVisible(true)}>
+                        <Lightbulb className="mr-2" /> View Optimal Solutions
+                    </Button>
+                </div>
+             )
         )}
       </div>
     </main>

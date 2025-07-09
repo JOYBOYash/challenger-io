@@ -11,14 +11,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { LuckyWheel } from '@/components/lucky-wheel';
 import { ProblemDisplay } from '@/components/problem-display';
 import { Icons } from '@/components/icons';
-import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft, X, UserPlus, Search, Bookmark } from 'lucide-react';
+import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft, X, UserPlus, Search, Bookmark, ExternalLink } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import { curateProblems, type Problem } from '@/ai/flows/problem-curation';
-import { curatePlatformInspiredProblems } from '@/ai/flows/platformInspiredProblemCuration';
+import { fetchPlatformProblems } from '@/ai/flows/platformInspiredProblemCuration';
 import { useAuth, type UserProfile } from '@/context/auth-context';
-import { getConnectedUsers, saveChallenge } from '@/app/actions/user';
+import { getConnectedUsers, saveChallenge, updateUserProfile } from '@/app/actions/user';
 import Loading from '@/app/loading';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -191,20 +191,31 @@ export default function ChallengePage() {
         toast({ title: "No Topic Selected", description: "Please select a topic for the challenge round.", variant: "destructive" });
         return;
     }
+     if (!user) return;
+
     setGameState('generating');
     try {
         const playerInputs = players.map(player => ({ skillLevel: player.skillLevel }));
         
         let problems: Problem[];
 
-        if (problemSource === 'classics') {
-            const result = await curatePlatformInspiredProblems({
+        if (problemSource === 'gauntlet') {
+             const now = new Date();
+             const lastDate = user.lastAiChallengeTimestamp ? new Date(user.lastAiChallengeTimestamp) : new Date(0);
+
+             if (now.toDateString() === lastDate.toDateString()) {
+                 toast({ title: "AI Limit Reached", description: "You can generate one AI challenge per day. Try the Arena Classics or come back tomorrow!", variant: "destructive" });
+                 setGameState('setup');
+                 return;
+             }
+            const result = await curateProblems({
                 topic: selectedTopic,
                 players: playerInputs,
             });
+            await updateUserProfile(user.uid, { lastAiChallengeTimestamp: Date.now() });
             problems = result.problems;
         } else {
-            const result = await curateProblems({
+            const result = await fetchPlatformProblems({
                 topic: selectedTopic,
                 players: playerInputs,
             });
@@ -504,9 +515,17 @@ export default function ChallengePage() {
                                             <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{player.problem.problem.problemDescription}</p>
                                         </div>
                                         <div className="flex gap-2 w-full mt-4">
-                                            <Button className="w-full" onClick={() => setViewedProblem(player.problem)}>
-                                                View Challenge <ArrowRight />
-                                            </Button>
+                                            {player.problem.problem.url ? (
+                                                <Button asChild className="w-full">
+                                                    <a href={player.problem.problem.url} target="_blank" rel="noopener noreferrer">
+                                                        View on Platform <ExternalLink className="ml-2" />
+                                                    </a>
+                                                </Button>
+                                            ) : (
+                                                <Button className="w-full" onClick={() => setViewedProblem(player.problem)}>
+                                                    View Challenge <ArrowRight />
+                                                </Button>
+                                            )}
                                             <Button 
                                                 size="icon" 
                                                 variant={isSaved ? "secondary" : "outline"}

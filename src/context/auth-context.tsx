@@ -17,6 +17,7 @@ export type UserProfile = {
     domain?: string;
     skills?: string[];
     savedChallenges?: Problem[];
+    lastAiChallengeTimestamp?: number;
 };
 
 interface AuthContextType {

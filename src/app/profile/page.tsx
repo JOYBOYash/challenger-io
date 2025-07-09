@@ -15,7 +15,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { updateUserProfile, removeChallenge } from '@/app/actions/user';
-import { Edit, Save, Trash2, X, Eye } from 'lucide-react';
+import { Edit, Save, Trash2, X, Eye, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ProblemDisplay } from '@/components/problem-display';
 import type { Problem } from '@/ai/flows/problem-curation';
@@ -169,26 +169,30 @@ export default function ProfilePage() {
                                         <CardDescription>{problem.topic} - <span className="font-medium text-primary">{problem.difficulty}</span></CardDescription>
                                     </CardHeader>
                                     <CardContent className="flex-grow">
-                                        {problem.problemDescription ? (
-                                            <p className="text-muted-foreground line-clamp-3">{problem.problemDescription}</p>
-                                        ) : (
-                                            <p className="text-muted-foreground text-sm">This is a platform challenge. Click View to see the original problem.</p>
-                                        )}
+                                        <p className="text-muted-foreground line-clamp-3">{problem.problemDescription}</p>
                                     </CardContent>
                                     <div className="p-4 pt-0 flex gap-2">
-                                         <Dialog>
-                                            <DialogTrigger asChild>
-                                                <Button className="w-full"><Eye className="mr-2"/> View</Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-                                                <DialogHeader>
-                                                    <DialogTitle>{problem.problemTitle}</DialogTitle>
-                                                </DialogHeader>
-                                                <div className="overflow-y-auto">
-                                                    <ProblemDisplay problem={problem} />
-                                                </div>
-                                            </DialogContent>
-                                        </Dialog>
+                                         {problem.url ? (
+                                            <Button asChild className="w-full">
+                                                <a href={problem.url} target="_blank" rel="noopener noreferrer">
+                                                    <ExternalLink className="mr-2"/> View on Platform
+                                                </a>
+                                            </Button>
+                                         ) : (
+                                             <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Button className="w-full"><Eye className="mr-2"/> View</Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+                                                    <DialogHeader>
+                                                        <DialogTitle>{problem.problemTitle}</DialogTitle>
+                                                    </DialogHeader>
+                                                    <div className="overflow-y-auto">
+                                                        <ProblemDisplay problem={problem} />
+                                                    </div>
+                                                </DialogContent>
+                                            </Dialog>
+                                         )}
                                         <Button variant="destructive" size="icon" onClick={() => handleRemoveChallenge(problem)}>
                                             <Trash2 />
                                         </Button>
