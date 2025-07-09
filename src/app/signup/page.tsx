@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   username: z.string().min(3, { message: 'Username must be at least 3 characters.' }).max(20, { message: 'Username must be less than 20 characters.' })
@@ -26,6 +27,7 @@ const formSchema = z.object({
 
 export default function SignUpPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -34,6 +36,17 @@ export default function SignUpPage() {
     defaultValues: { username: '', email: '', password: '' },
     mode: 'onChange',
   });
+
+  useEffect(() => {
+    const from = searchParams.get('from');
+    if (from === 'login-fail') {
+        toast({
+            title: "Account Not Found",
+            description: "No account exists with those login details. Please create a new account.",
+            variant: "destructive"
+        });
+    }
+  }, [searchParams, toast]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
@@ -123,6 +136,7 @@ export default function SignUpPage() {
                 )}
               />
               <Button type="submit" className="w-full font-bold" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isLoading ? 'Creating Account...' : 'Sign Up'}
               </Button>
             </form>

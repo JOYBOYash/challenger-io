@@ -10,10 +10,9 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ArrowRight } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -49,13 +48,18 @@ export default function LoginPage() {
       toast({ title: 'Login Successful', description: "Welcome back!" });
       router.push('/challenge');
     } catch (error: any) {
-      toast({
-        title: 'Login Failed',
-        description: error.message || 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
+      // The 'auth/invalid-credential' error is thrown for wrong password or non-existent user
+      // to prevent user enumeration attacks.
+      if (error.code === 'auth/invalid-credential') {
+        router.push('/signup?from=login-fail');
+      } else {
+        toast({
+          title: 'Login Failed',
+          description: error.message || 'An unexpected error occurred.',
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+      }
     }
   };
 
@@ -96,6 +100,7 @@ export default function LoginPage() {
                 )}
               />
               <Button type="submit" className="w-full font-bold" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isLoading ? 'Logging in...' : 'Login'}
               </Button>
             </form>
