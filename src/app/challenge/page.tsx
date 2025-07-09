@@ -402,7 +402,7 @@ export default function ChallengePage() {
             </Button>
           </div>
           <div className="flex flex-col items-center justify-center gap-6 py-8 lg:py-0">
-             <div className="min-h-24 flex items-center justify-center">
+             <div className="flex min-h-[6rem] items-center justify-center">
                 {lastSpunQuestion && (
                     <div className="cyber-card text-center animate-in fade-in zoom-in-95 w-full">
                         <p className="text-muted-foreground">

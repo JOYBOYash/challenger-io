@@ -1,5 +1,5 @@
 'use client';
-
+import { useState } from 'react';
 import { type CurateProblemOutput } from '@/ai/flows/problem-curation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ interface ProblemDisplayProps {
 }
 
 export function ProblemDisplay({ problem, onBack }: ProblemDisplayProps) {
+  const [solutionsVisible, setSolutionsVisible] = useState(false);
   const getBadgeVariant = (difficulty: string) => {
     switch(difficulty?.toLowerCase()) {
         case 'rookie': return 'default';
@@ -48,48 +49,56 @@ export function ProblemDisplay({ problem, onBack }: ProblemDisplayProps) {
           </CardContent>
         </Card>
         
-        <Card className="cyber-card">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-headline"><Lightbulb className="text-primary" /> Optimal Solutions</CardTitle>
-                <CardDescription>Here are the optimal solutions in various languages.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <Tabs defaultValue="javascript" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
-                        <TabsTrigger value="javascript">JavaScript</TabsTrigger>
-                        <TabsTrigger value="python">Python</TabsTrigger>
-                        <TabsTrigger value="java">Java</TabsTrigger>
-                        <TabsTrigger value="csharp">C#</TabsTrigger>
-                        <TabsTrigger value="go">Go</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="javascript">
-                        <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
-                        <code className="font-mono text-sm">{problem.solutions.javascript}</code>
-                        </pre>
-                    </TabsContent>
-                    <TabsContent value="python">
-                        <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
-                        <code className="font-mono text-sm">{problem.solutions.python}</code>
-                        </pre>
-                    </TabsContent>
-                    <TabsContent value="java">
-                        <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
-                        <code className="font-mono text-sm">{problem.solutions.java}</code>
-                        </pre>
-                    </TabsContent>
-                    <TabsContent value="csharp">
-                        <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
-                        <code className="font-mono text-sm">{problem.solutions.csharp}</code>
-                        </pre>
-                    </TabsContent>
-                    <TabsContent value="go">
-                        <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
-                        <code className="font-mono text-sm">{problem.solutions.go}</code>
-                        </pre>
-                    </TabsContent>
-                </Tabs>
-            </CardContent>
-        </Card>
+        {solutionsVisible ? (
+            <Card className="cyber-card animate-in fade-in">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 font-headline"><Lightbulb className="text-primary" /> Optimal Solutions</CardTitle>
+                    <CardDescription>Here are the optimal solutions in various languages.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Tabs defaultValue="javascript" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
+                            <TabsTrigger value="javascript">JavaScript</TabsTrigger>
+                            <TabsTrigger value="python">Python</TabsTrigger>
+                            <TabsTrigger value="java">Java</TabsTrigger>
+                            <TabsTrigger value="csharp">C#</TabsTrigger>
+                            <TabsTrigger value="go">Go</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="javascript">
+                            <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
+                            <code className="font-mono text-sm">{problem.solutions.javascript}</code>
+                            </pre>
+                        </TabsContent>
+                        <TabsContent value="python">
+                            <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
+                            <code className="font-mono text-sm">{problem.solutions.python}</code>
+                            </pre>
+                        </TabsContent>
+                        <TabsContent value="java">
+                            <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
+                            <code className="font-mono text-sm">{problem.solutions.java}</code>
+                            </pre>
+                        </TabsContent>
+                        <TabsContent value="csharp">
+                            <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
+                            <code className="font-mono text-sm">{problem.solutions.csharp}</code>
+                            </pre>
+                        </TabsContent>
+                        <TabsContent value="go">
+                            <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
+                            <code className="font-mono text-sm">{problem.solutions.go}</code>
+                            </pre>
+                        </TabsContent>
+                    </Tabs>
+                </CardContent>
+            </Card>
+        ) : (
+             <div className="text-center">
+                <Button size="lg" onClick={() => setSolutionsVisible(true)}>
+                    <Lightbulb className="mr-2" /> View Optimal Solutions
+                </Button>
+            </div>
+        )}
       </div>
     </main>
   );
