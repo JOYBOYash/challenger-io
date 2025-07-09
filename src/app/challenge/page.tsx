@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, type SVGProps } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { LuckyWheel } from '@/components/lucky-wheel';
 import { PlayerSetupCard } from '@/components/player-setup-card';
 import { Icons } from '@/components/icons';
-import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces } from 'lucide-react';
+import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
@@ -70,6 +71,23 @@ const AnimatedLogo = (props: SVGProps<SVGSVGElement>) => (
       d="M12 22c-3.314 0-6-2.686-6-6"
     />
   </svg>
+);
+
+const ChallengeHeader = () => (
+    <header className="w-full">
+        <div className="container mx-auto flex items-center justify-between p-4 md:px-6">
+            <div className="flex items-center gap-2 font-semibold">
+                <Icons.logo className="h-8 w-8 text-primary" />
+                <span className="font-headline text-2xl font-bold hidden sm:inline">Challenger.io</span>
+            </div>
+            <Button asChild variant="outline" className="bg-card/80">
+                <Link href="/">
+                    <ChevronLeft className="mr-2 h-4 w-4" />
+                    Exit Challenge
+                </Link>
+            </Button>
+        </div>
+    </header>
 );
 
 export default function ChallengePage() {
@@ -210,49 +228,52 @@ export default function ChallengePage() {
 
   if (gameState === 'setup') {
     return (
-        <div className="container mx-auto max-w-2xl py-8 px-4 font-body flex flex-col items-center">
-            <div className="flex items-center gap-2 font-semibold mb-4">
-                <Icons.logo className="h-8 w-8 text-primary" />
-                <span className="font-headline text-3xl font-bold">Challenger.io</span>
-            </div>
-            <div className="w-full cyber-card">
-                <div className="text-center">
-                    <h2 className="font-headline text-2xl">Game Setup</h2>
-                    <p>Configure your challenge session.</p>
+        <div className="flex flex-col min-h-screen">
+            <ChallengeHeader />
+            <div className="container mx-auto max-w-2xl py-8 px-4 font-body flex flex-col items-center flex-1">
+                <div className="flex items-center gap-2 font-semibold mb-4">
+                    <Icons.logo className="h-8 w-8 text-primary" />
+                    <span className="font-headline text-3xl font-bold">Challenger.io</span>
                 </div>
-                <div className="grid gap-6 mt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="grid gap-3">
-                            <Label htmlFor="player-count" className="font-medium text-base flex items-center gap-2"><Users /> Players</Label>
-                            <Select value={String(numPlayers)} onValueChange={(val) => setNumPlayers(Number(val))}>
-                                <SelectTrigger id="player-count" className="w-full">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {[1,2,3,4].map(n => <SelectItem key={n} value={String(n)}>{n} Player{n > 1 ? 's' : ''}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="grid gap-3">
-                             <Label htmlFor="topic" className="font-medium text-base flex items-center gap-2"><BookCopy /> Topic</Label>
-                             <Select value={selectedTopic || ''} onValueChange={setSelectedTopic}>
-                                <SelectTrigger id="topic" className="w-full">
-                                    <SelectValue placeholder="Select a topic" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {TOPICS.map(topic => <SelectItem key={topic} value={topic}>{topic}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                <div className="w-full cyber-card">
+                    <div className="text-center">
+                        <h2 className="font-headline text-2xl">Game Setup</h2>
+                        <p>Configure your challenge session.</p>
                     </div>
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {players.map(player => (
-                            <PlayerSetupCard key={player.id} player={player} onPlayerChange={handlePlayerChange} skillLevels={SKILL_LEVELS} />
-                        ))}
+                    <div className="grid gap-6 mt-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid gap-3">
+                                <Label htmlFor="player-count" className="font-medium text-base flex items-center gap-2"><Users /> Players</Label>
+                                <Select value={String(numPlayers)} onValueChange={(val) => setNumPlayers(Number(val))}>
+                                    <SelectTrigger id="player-count" className="w-full">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {[1,2,3,4].map(n => <SelectItem key={n} value={String(n)}>{n} Player{n > 1 ? 's' : ''}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-3">
+                                 <Label htmlFor="topic" className="font-medium text-base flex items-center gap-2"><BookCopy /> Topic</Label>
+                                 <Select value={selectedTopic || ''} onValueChange={setSelectedTopic}>
+                                    <SelectTrigger id="topic" className="w-full">
+                                        <SelectValue placeholder="Select a topic" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {TOPICS.map(topic => <SelectItem key={topic} value={topic}>{topic}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {players.map(player => (
+                                <PlayerSetupCard key={player.id} player={player} onPlayerChange={handlePlayerChange} skillLevels={SKILL_LEVELS} />
+                            ))}
+                        </div>
+                        <Button size="lg" className="w-full font-bold text-lg" onClick={handleStartGame} disabled={!isSetupValid}>
+                            Start Game <ArrowRight className="ml-2" />
+                        </Button>
                     </div>
-                    <Button size="lg" className="w-full font-bold text-lg" onClick={handleStartGame} disabled={!isSetupValid}>
-                        Start Game <ArrowRight className="ml-2" />
-                    </Button>
                 </div>
             </div>
         </div>
@@ -274,48 +295,52 @@ export default function ChallengePage() {
 
   if (gameState === 'finished') {
     return (
-        <div className="container mx-auto max-w-3xl py-8 px-4 font-body flex flex-col items-center text-center">
-            <Trophy className="h-24 w-24 text-primary mb-4" style={{filter: `drop-shadow(0 0 15px hsl(var(--primary)))`}} />
-            <h1 className="text-4xl font-bold font-headline text-glow">Round Complete!</h1>
-            <p className="text-muted-foreground mb-1">Topic: <span className="font-semibold text-primary">{selectedTopic}</span></p>
-            <p className="text-muted-foreground mb-8">Here are the assigned challenges:</p>
-            <div className="w-full space-y-4">
-                {players.map(player => (
-                    <div key={player.id} className="cyber-card text-left border-l-4" style={{ borderLeftColor: player.color }}>
-                         <div className="flex flex-col items-start gap-2">
-                            <div className="w-full flex justify-between items-start">
-                                <div>
-                                    <p className="font-bold text-lg flex items-center gap-2" style={{ color: player.color }}>
-                                        {SKILL_LEVELS[player.skillLevel].icon} {player.name}
-                                    </p>
-                                    <p className="text-muted-foreground">Base Skill: {player.skillLevel}</p>
+        <div className="flex flex-col min-h-screen">
+            <ChallengeHeader />
+            <div className="container mx-auto max-w-3xl py-8 px-4 font-body flex flex-col items-center text-center flex-1">
+                <Trophy className="h-24 w-24 text-primary mb-4" style={{filter: `drop-shadow(0 0 15px hsl(var(--primary)))`}} />
+                <h1 className="text-4xl font-bold font-headline text-glow">Round Complete!</h1>
+                <p className="text-muted-foreground mb-1">Topic: <span className="font-semibold text-primary">{selectedTopic}</span></p>
+                <p className="text-muted-foreground mb-8">Here are the assigned challenges:</p>
+                <div className="w-full space-y-4">
+                    {players.map(player => (
+                        <div key={player.id} className="cyber-card text-left border-l-4" style={{ borderLeftColor: player.color }}>
+                             <div className="flex flex-col items-start gap-2">
+                                <div className="w-full flex justify-between items-start">
+                                    <div>
+                                        <p className="font-bold text-lg flex items-center gap-2" style={{ color: player.color }}>
+                                            {SKILL_LEVELS[player.skillLevel].icon} {player.name}
+                                        </p>
+                                        <p className="text-muted-foreground">Base Skill: {player.skillLevel}</p>
+                                    </div>
+                                    <div className="text-right shrink-0 ml-4">
+                                         <p className="font-bold text-xl flex items-center justify-end gap-2 text-primary">
+                                            {player.problem && SKILL_LEVELS[player.problem.forPlayerSkill].icon}
+                                            {player.problem?.problem.difficulty}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="text-right shrink-0 ml-4">
-                                     <p className="font-bold text-xl flex items-center justify-end gap-2 text-primary">
-                                        {player.problem && SKILL_LEVELS[player.problem.forPlayerSkill].icon}
-                                        {player.problem?.problem.difficulty}
-                                    </p>
-                                </div>
+                                {player.problem && (
+                                    <div className="w-full pt-3 mt-3 border-t">
+                                        <p className="font-semibold text-primary">Challenge #{player.problem.displayNumber}: {player.problem.problem.problemTitle}</p>
+                                        <p className="text-sm text-muted-foreground line-clamp-2">{player.problem.problem.problemDescription}</p>
+                                    </div>
+                                )}
                             </div>
-                            {player.problem && (
-                                <div className="w-full pt-3 mt-3 border-t">
-                                    <p className="font-semibold text-primary">Challenge #{player.problem.displayNumber}: {player.problem.problem.problemTitle}</p>
-                                    <p className="text-sm text-muted-foreground line-clamp-2">{player.problem.problem.problemDescription}</p>
-                                </div>
-                            )}
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
+                <Button size="lg" className="mt-8 font-bold" onClick={handleResetGame}>
+                    <RotateCw className="mr-2" /> Play Again
+                </Button>
             </div>
-            <Button size="lg" className="mt-8 font-bold" onClick={handleResetGame}>
-                <RotateCw className="mr-2" /> Play Again
-            </Button>
         </div>
     )
   }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-body cyber-grid">
+      <ChallengeHeader />
       <div className="flex-1 overflow-auto p-4 md:p-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2">
           <div className="flex flex-col gap-8">
