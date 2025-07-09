@@ -1,5 +1,3 @@
-'use server';
-
 /**
  * @fileOverview Shared types and schemas for problem curation flows.
  */
