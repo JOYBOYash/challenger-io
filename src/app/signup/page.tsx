@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
@@ -87,13 +88,13 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="cyber-grid flex-1 flex items-center justify-center">
-      <div className="container mx-auto max-w-sm px-4 md:px-6 py-12">
-        <div className="text-center space-y-2 mb-8">
-            <h1 className="font-headline text-4xl font-bold text-glow">Create Account</h1>
-            <p className="text-muted-foreground">Join the arena and start your journey.</p>
-        </div>
-        <div className="cyber-card">
+    <div className="cyber-grid flex-1 flex items-center justify-center p-4">
+       <Card className="w-full max-w-sm p-6 shadow-2xl">
+        <CardHeader className="text-center p-0 mb-6">
+            <CardTitle className="text-3xl font-bold font-headline">Create Account</CardTitle>
+            <CardDescription>Join the arena and start your journey.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -147,8 +148,8 @@ export default function SignUpPage() {
               Login
             </Link>
           </p>
-        </div>
-      </div>
+        </CardContent>
+       </Card>
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
@@ -48,8 +49,6 @@ export default function LoginPage() {
       toast({ title: 'Login Successful', description: "Welcome back!" });
       router.push('/challenge');
     } catch (error: any) {
-      // The 'auth/invalid-credential' error is thrown for wrong password or non-existent user
-      // to prevent user enumeration attacks.
       if (error.code === 'auth/invalid-credential') {
         router.push('/signup?from=login-fail');
       } else {
@@ -64,13 +63,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="cyber-grid flex-1 flex items-center justify-center">
-      <div className="container mx-auto max-w-sm px-4 md:px-6 py-12">
-        <div className="text-center space-y-2 mb-8">
-            <h1 className="font-headline text-4xl font-bold text-glow">Login</h1>
-            <p className="text-muted-foreground">Access your account to start a new challenge.</p>
-        </div>
-        <div className="cyber-card">
+    <div className="cyber-grid flex-1 flex items-center justify-center p-4">
+      <Card className="w-full max-w-sm p-6 shadow-2xl">
+        <CardHeader className="text-center p-0 mb-6">
+            <CardTitle className="text-3xl font-bold font-headline">Login</CardTitle>
+            <CardDescription>Access your account to start a new challenge.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -111,8 +110,8 @@ export default function LoginPage() {
               Sign Up
             </Link>
           </p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
