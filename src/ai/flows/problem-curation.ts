@@ -37,7 +37,7 @@ const ProblemSchema = z.object({
 });
 export type Problem = z.infer<typeof ProblemSchema>;
 
-const CurateProblemsOutputSchema = z.object({
+export const CurateProblemsOutputSchema = z.object({
     problems: z.array(ProblemSchema).describe('An array of generated coding problems, one for each player input.'),
 });
 export type CurateProblemsOutput = z.infer<typeof CurateProblemsOutputSchema>;
