@@ -9,8 +9,8 @@
  */
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import type { CurateProblemsInput, CurateProblemsOutput, Problem } from './problem-curation';
-import { CurateProblemsOutputSchema } from './problem-curation';
+import type { CurateProblemsInput, CurateProblemsOutput, Problem } from './problem-types';
+import { CurateProblemsOutputSchema } from './problem-types';
 
 // Re-exporting types for consistency
 export type { CurateProblemsInput, CurateProblemsOutput, Problem };
