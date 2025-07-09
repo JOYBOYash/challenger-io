@@ -25,7 +25,7 @@ export const ProblemSchema = z.object({
     csharp: z.string().describe('The optimal solution to the coding problem in C# (C-sharp).'),
     go: z.string().describe('The optimal solution to the coding problem in Go.'),
   }).describe('An object containing the optimal solution in various programming languages.'),
-  url: z.string().url().describe("The URL to the original problem if sourced from a platform.").optional(),
+  url: z.string().describe("The URL to the original problem if sourced from a platform.").optional(),
 });
 export type Problem = z.infer<typeof ProblemSchema>;
 
