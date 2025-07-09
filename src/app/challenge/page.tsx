@@ -360,7 +360,7 @@ export default function ChallengePage() {
             </Button>
           </div>
           <div className="flex flex-col items-center justify-center gap-6 py-8 lg:py-0">
-             <div className="h-24 flex items-center justify-center">
+             <div className="min-h-24 flex items-center justify-center">
                 {lastSpunQuestion && (
                     <Card className="cyber-card text-center animate-in fade-in zoom-in-95 w-full">
                         <CardHeader>
@@ -372,7 +372,8 @@ export default function ChallengePage() {
                         </CardHeader>
                         <CardContent>
                            <Button onClick={handleNextPlayer}>
-                                {currentPlayerIndex === players.length - 1 ? 'Finish & View Results' : 'Next Player'} <ArrowRight className="ml-2" />
+                                <span>{currentPlayerIndex === players.length - 1 ? 'Finish & View Results' : 'Next Player'}</span>
+                                <ArrowRight />
                             </Button>
                         </CardContent>
                     </Card>
