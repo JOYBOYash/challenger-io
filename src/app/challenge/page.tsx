@@ -11,12 +11,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { LuckyWheel } from '@/components/lucky-wheel';
 import { ProblemDisplay } from '@/components/problem-display';
 import { Icons } from '@/components/icons';
-import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft, X, UserPlus, Search, Bookmark, Telescope, Database } from 'lucide-react';
+import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft, X, UserPlus, Search, Bookmark } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import { curateProblems, type Problem } from '@/ai/flows/problem-curation';
-import { fetchPlatformProblems } from '@/ai/flows/platformInspiredProblemCuration';
+import { curatePlatformInspiredProblems } from '@/ai/flows/platformInspiredProblemCuration';
 import { useAuth, type UserProfile } from '@/context/auth-context';
 import { getConnectedUsers, saveChallenge } from '@/app/actions/user';
 import Loading from '@/app/loading';
@@ -105,7 +105,7 @@ export default function ChallengePage() {
   const [connections, setConnections] = useState<UserProfile[]>([]);
   const [isFetchingConnections, setIsFetchingConnections] = useState(true);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-  const [problemSource, setProblemSource] = useState<'ai' | 'platform'>('ai');
+  const [problemSource, setProblemSource] = useState<'gauntlet' | 'classics'>('gauntlet');
   const [questions, setQuestions] = useState<GameQuestion[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -197,8 +197,8 @@ export default function ChallengePage() {
         
         let problems: Problem[];
 
-        if (problemSource === 'platform') {
-            const result = await fetchPlatformProblems({
+        if (problemSource === 'classics') {
+            const result = await curatePlatformInspiredProblems({
                 topic: selectedTopic,
                 players: playerInputs,
             });
@@ -325,31 +325,31 @@ export default function ChallengePage() {
                         </Select>
                     </div>
                      <div className="grid gap-3">
-                        <Label className="font-medium text-lg flex items-center gap-2"><Telescope className="text-primary"/> Problem Source</Label>
+                        <Label className="font-medium text-lg flex items-center gap-2"><Trophy className="text-primary"/> Challenge Mode</Label>
                         <RadioGroup
-                            defaultValue="ai"
+                            defaultValue="gauntlet"
                             value={problemSource}
-                            onValueChange={(value: 'ai' | 'platform') => setProblemSource(value)}
+                            onValueChange={(value: 'gauntlet' | 'classics') => setProblemSource(value)}
                             className="grid grid-cols-2 gap-4"
                         >
                             <div>
-                            <RadioGroupItem value="ai" id="ai" className="peer sr-only" />
+                            <RadioGroupItem value="gauntlet" id="gauntlet" className="peer sr-only" />
                             <Label
-                                htmlFor="ai"
+                                htmlFor="gauntlet"
                                 className="flex flex-col items-center justify-center text-center rounded-md border-2 border-muted bg-card p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                             >
                                 <Zap className="mb-3 h-6 w-6" />
-                                AI Generated
+                                AI Gauntlet
                             </Label>
                             </div>
                             <div>
-                            <RadioGroupItem value="platform" id="platform" className="peer sr-only" />
+                            <RadioGroupItem value="classics" id="classics" className="peer sr-only" />
                             <Label
-                                htmlFor="platform"
+                                htmlFor="classics"
                                 className="flex flex-col items-center justify-center text-center rounded-md border-2 border-muted bg-card p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                             >
-                                <Database className="mb-3 h-6 w-6" />
-                                Platform Direct
+                                <Trophy className="mb-3 h-6 w-6" />
+                                Arena Classics
                             </Label>
                             </div>
                         </RadioGroup>

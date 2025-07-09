@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, Lightbulb, ArrowLeft, Database, ArrowUpRight } from 'lucide-react';
-import Link from 'next/link';
+import { BookOpen, Lightbulb, ArrowLeft } from 'lucide-react';
 
 interface ProblemDisplayProps {
   problem: Problem;
@@ -22,45 +21,6 @@ export function ProblemDisplay({ problem, onBack }: ProblemDisplayProps) {
         case 'veteran': return 'destructive';
         default: return 'outline';
     }
-  }
-
-  const isPlatformProblem = !!problem.url && !problem.problemDescription;
-
-  if (isPlatformProblem) {
-    return (
-       <main className="container mx-auto max-w-4xl py-8 px-4 font-body">
-         <div className="flex justify-between items-start flex-wrap gap-4 mb-8">
-            <div>
-                <h1 className="text-3xl font-bold font-headline text-primary">{problem.problemTitle}</h1>
-                <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="outline">{problem.topic}</Badge>
-                    <Badge variant={getBadgeVariant(problem.difficulty)}>{problem.difficulty}</Badge>
-                </div>
-            </div>
-            {onBack && (
-                <Button onClick={onBack}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                </Button>
-            )}
-        </div>
-        <Card className="cyber-card text-center">
-            <CardHeader>
-                <CardTitle className="flex items-center justify-center gap-2 font-headline">
-                    <Database className="text-primary"/> Platform Problem
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-muted-foreground mb-6">This problem is sourced directly from Codeforces. View the full description and submit your solution on their platform.</p>
-                <Button asChild size="lg">
-                    <Link href={problem.url!} target="_blank" rel="noopener noreferrer">
-                        View on Codeforces <ArrowUpRight className="ml-2"/>
-                    </Link>
-                </Button>
-            </CardContent>
-        </Card>
-      </main>
-    );
   }
     
   return (
