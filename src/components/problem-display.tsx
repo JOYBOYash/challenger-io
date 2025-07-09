@@ -7,15 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Code, BookOpen, Lightbulb, ArrowRight } from 'lucide-react';
+import { Code, BookOpen, Lightbulb, ArrowLeft } from 'lucide-react';
 
 interface ProblemDisplayProps {
   problem: CurateProblemOutput;
-  onNext: () => void;
-  isLastPlayer: boolean;
+  onBack: () => void;
 }
 
-export function ProblemDisplay({ problem, onNext, isLastPlayer }: ProblemDisplayProps) {
+export function ProblemDisplay({ problem, onBack }: ProblemDisplayProps) {
   const getBadgeVariant = (difficulty: string) => {
     switch(difficulty?.toLowerCase()) {
         case 'rookie': return 'default';
@@ -36,24 +35,24 @@ export function ProblemDisplay({ problem, onNext, isLastPlayer }: ProblemDisplay
                     <Badge variant={getBadgeVariant(problem.difficulty)}>{problem.difficulty}</Badge>
                 </div>
             </div>
-            <Button onClick={onNext}>
-              {isLastPlayer ? 'View Results' : 'Next Player'}
-              <ArrowRight className="ml-2 h-4 w-4" />
+            <Button onClick={onBack}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
             </Button>
         </div>
 
-        <Card>
+        <Card className="cyber-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-headline"><BookOpen className="text-accent" /> Problem Description</CardTitle>
+            <CardTitle className="flex items-center gap-2 font-headline"><BookOpen className="text-primary" /> Problem Description</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="whitespace-pre-wrap text-foreground/90 leading-relaxed">{problem.problemDescription}</p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="cyber-card">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-headline"><Code className="text-accent" /> Your Code</CardTitle>
+                <CardTitle className="flex items-center gap-2 font-headline"><Code className="text-primary" /> Your Code</CardTitle>
                 <CardDescription>Select a language and write your solution below.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -79,13 +78,13 @@ export function ProblemDisplay({ problem, onNext, isLastPlayer }: ProblemDisplay
         </Card>
 
         {problem.solution && (
-            <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="item-1">
-                    <AccordionTrigger className="text-lg font-headline flex items-center gap-2 hover:no-underline">
-                        <Lightbulb className="text-accent" />
+            <Accordion type="single" collapsible className="w-full cyber-card p-0">
+                <AccordionItem value="item-1" className="border-b-0">
+                    <AccordionTrigger className="text-lg font-headline flex items-center gap-2 hover:no-underline px-6">
+                        <Lightbulb className="text-primary" />
                         View Optimal Solution
                     </AccordionTrigger>
-                    <AccordionContent>
+                    <AccordionContent className="px-6">
                         <pre className="bg-muted p-4 rounded-md overflow-x-auto">
                             <code className="font-mono text-sm">{problem.solution}</code>
                         </pre>

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { LuckyWheel } from '@/components/lucky-wheel';
 import { PlayerSetupCard } from '@/components/player-setup-card';
+import { ProblemDisplay } from '@/components/problem-display';
 import { Icons } from '@/components/icons';
 import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft } from 'lucide-react';
 import { nanoid } from 'nanoid';
@@ -100,6 +101,7 @@ export default function ChallengePage() {
   const [isSpinning, setIsSpinning] = useState(false);
   const [lastSpunQuestion, setLastSpunQuestion] = useState<GameQuestion | null>(null);
   const [isAutoAssigning, setIsAutoAssigning] = useState(false);
+  const [viewedProblem, setViewedProblem] = useState<GameQuestion | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -219,6 +221,7 @@ export default function ChallengePage() {
     setIsSpinning(false);
     setLastSpunQuestion(null);
     setIsAutoAssigning(false);
+    setViewedProblem(null);
   };
 
   const currentPlayer = players[currentPlayerIndex];
@@ -294,18 +297,29 @@ export default function ChallengePage() {
   }
 
   if (gameState === 'finished') {
+    if (viewedProblem) {
+        return (
+            <div className="flex flex-col min-h-screen cyber-grid">
+                <ChallengeHeader />
+                <ProblemDisplay 
+                    problem={viewedProblem.problem}
+                    onBack={() => setViewedProblem(null)}
+                />
+            </div>
+        )
+    }
     return (
         <div className="flex flex-col min-h-screen">
             <ChallengeHeader />
-            <div className="container mx-auto max-w-3xl py-8 px-4 font-body flex flex-col items-center text-center flex-1">
+            <div className="container mx-auto max-w-5xl py-8 px-4 font-body flex flex-col items-center text-center flex-1">
                 <Trophy className="h-24 w-24 text-primary mb-4" style={{filter: `drop-shadow(0 0 15px hsl(var(--primary)))`}} />
-                <h1 className="text-4xl font-bold font-headline text-glow">Round Complete!</h1>
+                <h1 className="text-4xl font-bold font-headline text-glow">Challenge Dashboard</h1>
                 <p className="text-muted-foreground mb-1">Topic: <span className="font-semibold text-primary">{selectedTopic}</span></p>
-                <p className="text-muted-foreground mb-8">Here are the assigned challenges:</p>
-                <div className="w-full space-y-4">
+                <p className="text-muted-foreground mb-8">View your assigned problems below.</p>
+                <div className="w-full grid md:grid-cols-2 gap-6">
                     {players.map(player => (
-                        <div key={player.id} className="cyber-card text-left border-l-4" style={{ borderLeftColor: player.color }}>
-                             <div className="flex flex-col items-start gap-2">
+                        <div key={player.id} className="cyber-card text-left flex flex-col" style={{ borderLeftColor: player.color, borderLeftWidth: '4px' }}>
+                             <div className="flex flex-col items-start gap-2 flex-1">
                                 <div className="w-full flex justify-between items-start">
                                     <div>
                                         <p className="font-bold text-lg flex items-center gap-2" style={{ color: player.color }}>
@@ -321,9 +335,14 @@ export default function ChallengePage() {
                                     </div>
                                 </div>
                                 {player.problem && (
-                                    <div className="w-full pt-3 mt-3 border-t">
-                                        <p className="font-semibold text-primary">Challenge #{player.problem.displayNumber}: {player.problem.problem.problemTitle}</p>
-                                        <p className="text-sm text-muted-foreground line-clamp-2">{player.problem.problem.problemDescription}</p>
+                                    <div className="w-full pt-3 mt-3 border-t flex-1 flex flex-col justify-between">
+                                        <div>
+                                            <p className="font-semibold text-primary">Challenge #{player.problem.displayNumber}: {player.problem.problem.problemTitle}</p>
+                                            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{player.problem.problem.problemDescription}</p>
+                                        </div>
+                                        <Button className="w-full mt-4" onClick={() => setViewedProblem(player.problem)}>
+                                            View Challenge <ArrowRight />
+                                        </Button>
                                     </div>
                                 )}
                             </div>
