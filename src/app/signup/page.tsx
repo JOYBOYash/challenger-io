@@ -1,0 +1,140 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { initializeFirebase } from '@/lib/firebase';
+import { isUsernameTaken } from '@/app/actions/user';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+
+const formSchema = z.object({
+  username: z.string().min(3, { message: 'Username must be at least 3 characters.' }).max(20, { message: 'Username must be less than 20 characters.' })
+    .refine(async (username) => !(await isUsernameTaken(username)), {
+        message: 'This username is already taken.',
+    }),
+  email: z.string().email({ message: 'Please enter a valid email.' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+});
+
+export default function SignUpPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { username: '', email: '', password: '' },
+    mode: 'onChange',
+  });
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsLoading(true);
+
+    const { auth, db, error } = initializeFirebase();
+    if (error || !auth || !db) {
+        toast({
+            title: 'Configuration Error',
+            description: 'Firebase is not configured correctly. Check the console for more details.',
+            variant: 'destructive',
+        });
+        console.error(error);
+        setIsLoading(false);
+        return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        username: values.username,
+        email: values.email,
+      });
+      
+      toast({ title: 'Account Created!', description: 'Welcome to Challenger.io!' });
+      router.push('/challenge');
+    } catch (error: any) {
+      toast({
+        title: 'Sign Up Failed',
+        description: error.message || 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="cyber-grid flex-1 flex items-center justify-center">
+      <div className="container mx-auto max-w-sm px-4 md:px-6 py-12">
+        <div className="text-center space-y-2 mb-8">
+            <h1 className="font-headline text-4xl font-bold text-glow">Create Account</h1>
+            <p className="text-muted-foreground">Join the arena and start your journey.</p>
+        </div>
+        <div className="cyber-card">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your Coder Alias" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="your@email.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full font-bold" disabled={isLoading}>
+                {isLoading ? 'Creating Account...' : 'Sign Up'}
+              </Button>
+            </form>
+          </Form>
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            Already have an account?{' '}
+            <Link href="/login" className="font-semibold text-primary hover:underline">
+              Login
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

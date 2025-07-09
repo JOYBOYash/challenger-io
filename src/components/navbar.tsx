@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,8 +11,22 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import { Menu, Zap } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Menu, Zap, LogOut, User as UserIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/auth-context';
+import { signOut } from 'firebase/auth';
+import { initializeFirebase } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 const NAV_ITEMS = [
   { href: '/challenge', label: 'Challenge' },
@@ -22,6 +36,26 @@ const NAV_ITEMS = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, firebaseUser } = useAuth();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    const { auth, error } = initializeFirebase();
+    if (error || !auth) {
+        toast({ title: "Logout Failed", description: "Firebase not configured.", variant: "destructive" });
+        console.error(error);
+        return;
+    }
+
+    try {
+        await signOut(auth);
+        toast({ title: "Logged Out", description: "You have been successfully logged out." });
+        router.push('/');
+    } catch (error) {
+        toast({ title: "Logout Failed", description: "There was an error logging out.", variant: "destructive" });
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-background/80 backdrop-blur-sm">
@@ -54,15 +88,36 @@ export function Navbar() {
 
         <div className="flex items-center gap-4">
           <div className="hidden md:flex">
-            <Button
-              asChild
-              className="font-extrabold tracking-wider bg-primary hover:bg-primary/90 text-background shadow-md shadow-primary/40 transition-transform duration-200 hover:scale-105"
-            >
-              <Link href="/challenge">
-                Start Challenge
-                <Zap className="ml-2 h-4 w-4 animate-pulse" />
-              </Link>
-            </Button>
+            {user ? (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                       <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                         <Avatar className="h-8 w-8">
+                            {/* <AvatarImage src="/avatars/01.png" alt={user.username} /> */}
+                            <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+                         </Avatar>
+                       </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end" forceMount>
+                        <DropdownMenuLabel className="font-normal">
+                          <div className="flex flex-col space-y-1">
+                            <p className="text-sm font-medium leading-none">{user.username}</p>
+                            <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                          </div>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>Log out</span>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            ) : (
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" asChild><Link href="/login">Login</Link></Button>
+                    <Button asChild className="font-bold"><Link href="/signup">Sign Up</Link></Button>
+                </div>
+            )}
           </div>
 
           <div className="md:hidden">
@@ -99,17 +154,25 @@ export function Navbar() {
                   ))}
                 </div>
 
-                <div className="mt-10">
-                  <Button
-                    asChild
-                    size="lg"
-                    className="w-fit font-bold tracking-widest bg-primary hover:bg-primary/90 shadow-md shadow-primary/20"
-                  >
-                    <Link href="/challenge">
-                      Start Challenge
-                      <Zap className="ml-2 h-4 w-4 animate-pulse" />
-                    </Link>
-                  </Button>
+                <div className="mt-10 pt-6 border-t border-muted">
+                  {user ? (
+                      <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                             <Avatar>
+                                <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+                             </Avatar>
+                             <div>
+                                <p className="font-semibold">{user.username}</p>
+                             </div>
+                          </div>
+                          <Button variant="ghost" size="icon" onClick={handleLogout}><LogOut /></Button>
+                      </div>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                        <Button asChild size="lg" className="w-full"><Link href="/login">Login</Link></Button>
+                        <Button asChild size="lg" variant="secondary" className="w-full"><Link href="/signup">Sign Up</Link></Button>
+                    </div>
+                  )}
                 </div>
               </SheetContent>
             </Sheet>

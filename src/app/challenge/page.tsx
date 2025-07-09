@@ -1,21 +1,25 @@
 'use client';
 import { useState, useEffect, type SVGProps } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { LuckyWheel } from '@/components/lucky-wheel';
-import { PlayerSetupCard } from '@/components/player-setup-card';
 import { ProblemDisplay } from '@/components/problem-display';
 import { Icons } from '@/components/icons';
-import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft } from 'lucide-react';
+import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft, X, UserPlus } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import { curateProblems, type Problem } from '@/ai/flows/problem-curation';
+import { useAuth, type UserProfile } from '@/context/auth-context';
+import { findUserByUsername } from '@/app/actions/user';
+import Loading from '@/app/loading';
 
-const TOPICS = ['Data Structures', 'Algorithms', 'System Design', 'JavaScript', 'React', 'SQL'];
+
 const PLAYER_COLORS = ['#50C878', '#20B2AA', '#66CDAA', '#2E8B57'];
 
 const SKILL_LEVELS = {
@@ -35,8 +39,7 @@ export type GameQuestion = {
 };
 
 export type Player = {
-  id: string;
-  name: string;
+  profile: UserProfile;
   skillLevel: SkillLevel;
   color: string;
   problem: GameQuestion | null;
@@ -92,9 +95,12 @@ const ChallengeHeader = () => (
 );
 
 export default function ChallengePage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const [gameState, setGameState] = useState<'setup' | 'generating' | 'playing' | 'finished'>('setup');
-  const [numPlayers, setNumPlayers] = useState(1);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [invitedPlayerUsername, setInvitedPlayerUsername] = useState('');
+  const [isAddingPlayer, setIsAddingPlayer] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [questions, setQuestions] = useState<GameQuestion[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
@@ -105,21 +111,22 @@ export default function ChallengePage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    setPlayers(
-      Array.from({ length: numPlayers }, (_, i) => ({
-        id: nanoid(5),
-        name: `Player ${i + 1}`,
-        skillLevel: 'Rookie',
-        color: PLAYER_COLORS[i % PLAYER_COLORS.length],
-        problem: null,
-      }))
-    );
-  }, [numPlayers]);
+    if (!loading && !user) {
+      router.push('/login');
+    }
+    if (user && players.length === 0) {
+        setPlayers([{
+            profile: user,
+            skillLevel: 'Rookie',
+            color: PLAYER_COLORS[0],
+            problem: null,
+        }]);
+    }
+  }, [user, loading, router, players.length]);
 
   const unassignedQuestions = questions.filter(q => !players.some(p => p.problem?.id === q.id));
 
   useEffect(() => {
-    // If there's only one player left to spin, automatically assign the last question.
     if (gameState === 'playing' && unassignedQuestions.length === 1 && !lastSpunQuestion && !isSpinning) {
       const lastQuestion = unassignedQuestions[0];
       
@@ -139,18 +146,49 @@ export default function ChallengePage() {
     }
   }, [gameState, questions, players, lastSpunQuestion, currentPlayerIndex, isSpinning, unassignedQuestions]);
 
-
-  const handlePlayerChange = (updatedPlayer: Player) => {
-    setPlayers(players.map(p => p.id === updatedPlayer.id ? updatedPlayer : p));
+  const handleSkillChange = (playerId: string, skillLevel: SkillLevel) => {
+    setPlayers(players.map(p => p.profile.uid === playerId ? { ...p, skillLevel } : p));
   };
+
+  const handleAddPlayer = async () => {
+    if (players.length >= 4) {
+        toast({ title: 'Maximum Players Reached', description: 'You can only have up to 4 players.', variant: 'destructive' });
+        return;
+    }
+    if (!invitedPlayerUsername) {
+        toast({ title: 'No Username Entered', description: 'Please enter a username to invite.', variant: 'destructive' });
+        return;
+    }
+    if (players.some(p => p.profile.username === invitedPlayerUsername)) {
+        toast({ title: 'Player Already Added', description: 'This user is already in the challenge.', variant: 'destructive' });
+        return;
+    }
+
+    setIsAddingPlayer(true);
+    const foundUser = await findUserByUsername(invitedPlayerUsername);
+    setIsAddingPlayer(false);
+
+    if (foundUser) {
+        const newPlayer: Player = {
+            profile: foundUser,
+            skillLevel: 'Rookie',
+            color: PLAYER_COLORS[players.length % PLAYER_COLORS.length],
+            problem: null
+        };
+        setPlayers([...players, newPlayer]);
+        setInvitedPlayerUsername('');
+    } else {
+        toast({ title: 'User Not Found', description: `No user with the username "${invitedPlayerUsername}" exists.`, variant: 'destructive' });
+    }
+  };
+
+  const handleRemovePlayer = (uid: string) => {
+    setPlayers(players.filter(p => p.profile.uid !== uid));
+  }
   
   const handleStartGame = async () => {
     if (!selectedTopic) {
-        toast({
-            title: "No Topic Selected",
-            description: "Please select a topic for the challenge round.",
-            variant: "destructive",
-        });
+        toast({ title: "No Topic Selected", description: "Please select a topic for the challenge round.", variant: "destructive" });
         return;
     }
     setGameState('generating');
@@ -184,11 +222,7 @@ export default function ChallengePage() {
 
     } catch (error) {
         console.error("Failed to generate problems", error);
-        toast({
-            title: "Error Generating Challenges",
-            description: "There was an issue creating the problems. Please try again.",
-            variant: "destructive",
-        });
+        toast({ title: "Error Generating Challenges", description: "There was an issue creating the problems. Please try again.", variant: "destructive" });
         setGameState('setup');
     }
   };
@@ -223,7 +257,7 @@ export default function ChallengePage() {
   
   const handleResetGame = () => {
     setGameState('setup');
-    setNumPlayers(1);
+    setPlayers(user ? [{ profile: user, skillLevel: 'Rookie', color: PLAYER_COLORS[0], problem: null }] : []);
     setSelectedTopic(null);
     setQuestions([]);
     setCurrentPlayerIndex(0);
@@ -232,6 +266,10 @@ export default function ChallengePage() {
     setIsAutoAssigning(false);
     setViewedProblem(null);
   };
+
+  if (loading || !user) {
+    return <Loading />;
+  }
 
   const currentPlayer = players[currentPlayerIndex];
   const isSetupValid = selectedTopic !== null;
@@ -246,23 +284,12 @@ export default function ChallengePage() {
             <div className="text-center mb-12">
               <h1 className="text-4xl font-bold font-headline tracking-tighter sm:text-5xl">Challenge Setup</h1>
               <p className="mt-4 text-muted-foreground md:text-lg max-w-2xl mx-auto">
-                Configure your session. Select the number of players, choose a topic, and set each player's skill level.
+                Configure your session. Invite other players, choose a topic, and set each player's skill level.
               </p>
             </div>
 
             <div className="cyber-card p-8">
                 <div className="grid md:grid-cols-2 gap-8 mb-8">
-                    <div className="grid gap-3">
-                        <Label htmlFor="player-count" className="font-medium text-lg flex items-center gap-2"><Users className="text-primary"/> Number of Players</Label>
-                        <Select value={String(numPlayers)} onValueChange={(val) => setNumPlayers(Number(val))}>
-                            <SelectTrigger id="player-count" className="w-full">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {[1,2,3,4].map(n => <SelectItem key={n} value={String(n)}>{n} Player{n > 1 ? 's' : ''}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
                     <div className="grid gap-3">
                          <Label htmlFor="topic" className="font-medium text-lg flex items-center gap-2"><BookCopy className="text-primary"/> Challenge Topic</Label>
                          <Select value={selectedTopic || ''} onValueChange={setSelectedTopic}>
@@ -270,7 +297,7 @@ export default function ChallengePage() {
                                 <SelectValue placeholder="Select a topic" />
                             </SelectTrigger>
                             <SelectContent>
-                                {TOPICS.map(topic => <SelectItem key={topic} value={topic}>{topic}</SelectItem>)}
+                                {['Data Structures', 'Algorithms', 'System Design', 'JavaScript', 'React', 'SQL'].map(topic => <SelectItem key={topic} value={topic}>{topic}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
@@ -278,9 +305,52 @@ export default function ChallengePage() {
                 
                 <div className="mb-8">
                     <h3 className="font-headline text-2xl mb-4">Player Configuration</h3>
-                    <div className="grid gap-6 md:grid-cols-2">
+                    <div className="mb-6 p-4 border rounded-lg">
+                        <Label htmlFor="player-invite" className="font-medium text-lg flex items-center gap-2"><UserPlus className="text-primary"/> Invite Players</Label>
+                        <p className="text-muted-foreground text-sm mb-4">Add other registered users to the challenge by their username.</p>
+                        <div className="flex gap-2">
+                            <Input id="player-invite" placeholder="Enter username..." value={invitedPlayerUsername} onChange={e => setInvitedPlayerUsername(e.target.value)} disabled={isAddingPlayer || players.length >=4}/>
+                            <Button onClick={handleAddPlayer} disabled={isAddingPlayer || players.length >=4}>
+                                {isAddingPlayer ? 'Adding...' : 'Add Player'}
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
                         {players.map(player => (
-                            <PlayerSetupCard key={player.id} player={player} onPlayerChange={handlePlayerChange} skillLevels={SKILL_LEVELS} />
+                           <div key={player.profile.uid} className="cyber-card p-4 w-full flex items-center justify-between" style={{ borderLeft: `4px solid ${player.color}` }}>
+                             <div className="flex items-center gap-3">
+                                 <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: player.color }}>
+                                     <User className="h-5 w-5 text-white" />
+                                 </div>
+                                 <div>
+                                    <p className="text-lg font-semibold">{player.profile.username}</p>
+                                    <p className="text-sm text-muted-foreground">{player.profile.uid === user.uid ? '(You)' : ''}</p>
+                                 </div>
+                             </div>
+                             <div className="flex items-center gap-2">
+                                <Select value={player.skillLevel} onValueChange={(val) => handleSkillChange(player.profile.uid, val as any)}>
+                                    <SelectTrigger className="w-[120px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {(Object.keys(SKILL_LEVELS) as SkillLevel[]).map(level => (
+                                            <SelectItem key={level} value={level}>
+                                                <div className="flex items-center gap-2">
+                                                    {SKILL_LEVELS[level].icon}
+                                                    <span>{level}</span>
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {player.profile.uid !== user.uid && (
+                                    <Button variant="ghost" size="icon" onClick={() => handleRemovePlayer(player.profile.uid)}>
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                )}
+                             </div>
+                           </div>
                         ))}
                     </div>
                 </div>
@@ -329,12 +399,12 @@ export default function ChallengePage() {
                 <p className="text-muted-foreground mb-8">View your assigned problems below.</p>
                 <div className="w-full grid md:grid-cols-2 gap-6">
                     {players.map(player => (
-                        <div key={player.id} className="cyber-card text-left flex flex-col" style={{ borderLeftColor: player.color, borderLeftWidth: '4px' }}>
+                        <div key={player.profile.uid} className="cyber-card text-left flex flex-col" style={{ borderLeftColor: player.color, borderLeftWidth: '4px' }}>
                              <div className="flex flex-col items-start gap-2 flex-1">
                                 <div className="w-full flex justify-between items-start">
                                     <div>
                                         <p className="font-bold text-lg flex items-center gap-2" style={{ color: player.color }}>
-                                            {SKILL_LEVELS[player.skillLevel].icon} {player.name}
+                                            {SKILL_LEVELS[player.skillLevel].icon} {player.profile.username}
                                         </p>
                                         <p className="text-muted-foreground">Base Skill: {player.skillLevel}</p>
                                     </div>
@@ -378,18 +448,18 @@ export default function ChallengePage() {
                 <h2 className="font-headline text-2xl">Player {currentPlayerIndex + 1}'s Turn</h2>
                 {currentPlayer && (
                     <p className="text-muted-foreground">
-                        Time for <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.name}</span> to spin for a challenge!
+                        Time for <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.profile.username}</span> to spin for a challenge!
                         <br/>
                         Topic for this round is <span className="font-bold text-primary">{selectedTopic}</span>.
                     </p>
                 )}
                 <ul className="space-y-3 mt-6">
                     {players.map((p, index) => (
-                       <li key={p.id} className={cn("flex items-center justify-between p-3 rounded-lg transition-all", index === currentPlayerIndex ? 'bg-primary/10' : '')}>
+                       <li key={p.profile.uid} className={cn("flex items-center justify-between p-3 rounded-lg transition-all", index === currentPlayerIndex ? 'bg-primary/10' : '')}>
                             <div className="flex items-center gap-3">
                                 <div className="font-bold text-lg" style={{ color: p.color }}>{index + 1}</div>
                                 <div>
-                                    <p className="font-semibold flex items-center gap-2">{p.name}</p>
+                                    <p className="font-semibold flex items-center gap-2">{p.profile.username}</p>
                                     <p className="text-sm text-muted-foreground flex items-center gap-1">{SKILL_LEVELS[p.skillLevel].icon} {p.skillLevel}</p>
                                  </div>
                             </div>
@@ -416,7 +486,7 @@ export default function ChallengePage() {
                     <div className="cyber-card text-center animate-in fade-in zoom-in-95 w-full">
                         <p className="text-muted-foreground">
                             {isAutoAssigning ? 'Last challenge automatically assigned to ' : `Challenge #${lastSpunQuestion.displayNumber} Assigned to `}
-                            <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.name}</span>!
+                            <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.profile.username}</span>!
                         </p>
                         <h3 className="font-headline text-primary text-xl mt-1">{lastSpunQuestion.problem.problemTitle}</h3>
                        <Button onClick={handleNextPlayer} className="mt-4">
