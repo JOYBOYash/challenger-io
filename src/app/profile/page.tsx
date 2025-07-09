@@ -42,15 +42,13 @@ export default function ProfilePage() {
         }
     });
 
-    const handleEditToggle = () => {
-        if (isEditing) {
-            form.reset({
-                bio: user?.bio || '',
-                domain: user?.domain || '',
-                skills: user?.skills?.join(', ') || '',
-            });
-        }
-        setIsEditing(!isEditing);
+    const handleCancelEdit = () => {
+        form.reset({
+            bio: user?.bio || '',
+            domain: user?.domain || '',
+            skills: user?.skills?.join(', ') || '',
+        });
+        setIsEditing(false);
     };
 
     const onSubmit = async (data: ProfileFormValues) => {
@@ -94,16 +92,27 @@ export default function ProfilePage() {
                                 <AvatarImage src={user.photoURL} alt={user.username} />
                                 <AvatarFallback className="text-4xl">{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
                            </Avatar>
-                           <Button variant="outline" className="mt-4 w-full" disabled>Change Picture</Button>
-                           <p className="text-xs text-muted-foreground mt-2">Feature coming soon</p>
                         </div>
                         <div className="w-full">
                             <form onSubmit={form.handleSubmit(onSubmit)}>
                                 <div className="flex justify-between items-center mb-4">
                                     <h1 className="text-3xl font-bold font-headline">{user.username}</h1>
-                                    <Button type={isEditing ? 'submit' : 'button'} onClick={handleEditToggle}>
-                                        {isEditing ? <><Save className="mr-2" /> Save</> : <><Edit className="mr-2" /> Edit Profile</>}
-                                    </Button>
+                                    <div className="flex items-center gap-2">
+                                        {isEditing ? (
+                                            <>
+                                                <Button type="button" variant="ghost" onClick={handleCancelEdit}>
+                                                    <X className="mr-2 h-4 w-4" /> Cancel
+                                                </Button>
+                                                <Button type="submit">
+                                                    <Save className="mr-2 h-4 w-4" /> Save
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <Button type="button" onClick={() => setIsEditing(true)}>
+                                                <Edit className="mr-2 h-4 w-4" /> Edit Profile
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
                                 <p className="text-muted-foreground mb-6">{user.email}</p>
 

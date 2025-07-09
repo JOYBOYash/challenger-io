@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { initializeFirebase } from '@/lib/firebase';
 import { isUsernameTaken } from '@/app/actions/user';
@@ -68,12 +68,22 @@ export default function SignUpPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
+      // Generate a photoURL from the username
+      const photoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(values.username)}&background=random&color=fff`;
+
+      // Update the user's profile in Firebase Auth
+      await updateProfile(user, {
+          displayName: values.username,
+          photoURL,
+      });
+
+      // Create the user document in Firestore
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         username: values.username,
         email: values.email,
         connections: [],
-        photoURL: '',
+        photoURL: photoURL,
         bio: '',
         domain: '',
         skills: [],
