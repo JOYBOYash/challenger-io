@@ -2,7 +2,7 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User } from 'lucide-react';
 import type { Player } from '@/app/challenge/page';
 
@@ -24,7 +24,7 @@ export function PlayerSetupCard({ player, onPlayerChange, skillLevels }: PlayerS
   };
 
   return (
-    <div className="cyber-card w-full" style={{ borderLeft: `4px solid ${player.color}` }}>
+    <div className="cyber-card p-4 w-full" style={{ borderLeft: `4px solid ${player.color}` }}>
       <div className="grid gap-4">
         <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: player.color }}>
@@ -39,18 +39,22 @@ export function PlayerSetupCard({ player, onPlayerChange, skillLevels }: PlayerS
             />
         </div>
         <div className="grid gap-2">
-          <Label className="text-sm font-medium">Skill Level</Label>
-          <RadioGroup value={player.skillLevel} onValueChange={(val) => handleSkillChange(val as any)} className="flex gap-2">
-            {(Object.keys(skillLevels) as SkillLevel[]).map(level => (
-                 <div className="flex-1" key={level}>
-                    <RadioGroupItem value={level} id={`${level}-${player.id}`} className="peer sr-only" />
-                    <Label htmlFor={`${level}-${player.id}`} className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-3 h-full hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
-                        {skillLevels[level].icon}
-                        {level}
-                    </Label>
-                </div>
-            ))}
-          </RadioGroup>
+          <Label htmlFor={`skill-level-${player.id}`} className="text-sm font-medium">Skill Level</Label>
+          <Select value={player.skillLevel} onValueChange={(val) => handleSkillChange(val as any)}>
+            <SelectTrigger id={`skill-level-${player.id}`} className="w-full">
+                <SelectValue placeholder="Select skill level" />
+            </SelectTrigger>
+            <SelectContent>
+                {(Object.keys(skillLevels) as SkillLevel[]).map(level => (
+                    <SelectItem key={level} value={level}>
+                        <div className="flex items-center gap-2">
+                            {skillLevels[level].icon}
+                            <span>{level}</span>
+                        </div>
+                    </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>

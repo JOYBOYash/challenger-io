@@ -231,55 +231,57 @@ export default function ChallengePage() {
 
   if (gameState === 'setup') {
     return (
-        <div className="flex flex-col min-h-screen">
-            <ChallengeHeader />
-            <div className="container mx-auto max-w-2xl py-8 px-4 font-body flex flex-col items-center flex-1">
-                <div className="flex items-center gap-2 font-semibold mb-4">
-                    <Icons.logo className="h-8 w-8 text-primary" />
-                    <span className="font-headline text-3xl font-bold">Challenger.io</span>
-                </div>
-                <div className="w-full cyber-card">
-                    <div className="text-center">
-                        <h2 className="font-headline text-2xl">Game Setup</h2>
-                        <p>Configure your challenge session.</p>
+      <div className="flex flex-col min-h-screen cyber-grid">
+        <ChallengeHeader />
+        <div className="container mx-auto max-w-5xl px-4 md:px-6 py-12 md:py-20">
+            <div className="text-center mb-12">
+              <h1 className="text-4xl font-bold font-headline tracking-tighter sm:text-5xl">Challenge Setup</h1>
+              <p className="mt-4 text-muted-foreground md:text-lg max-w-2xl mx-auto">
+                Configure your session. Select the number of players, choose a topic, and set each player's skill level.
+              </p>
+            </div>
+
+            <div className="cyber-card p-8">
+                <div className="grid md:grid-cols-2 gap-8 mb-8">
+                    <div className="grid gap-3">
+                        <Label htmlFor="player-count" className="font-medium text-lg flex items-center gap-2"><Users className="text-primary"/> Number of Players</Label>
+                        <Select value={String(numPlayers)} onValueChange={(val) => setNumPlayers(Number(val))}>
+                            <SelectTrigger id="player-count" className="w-full">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {[1,2,3,4].map(n => <SelectItem key={n} value={String(n)}>{n} Player{n > 1 ? 's' : ''}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
                     </div>
-                    <div className="grid gap-6 mt-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="grid gap-3">
-                                <Label htmlFor="player-count" className="font-medium text-base flex items-center gap-2"><Users /> Players</Label>
-                                <Select value={String(numPlayers)} onValueChange={(val) => setNumPlayers(Number(val))}>
-                                    <SelectTrigger id="player-count" className="w-full">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {[1,2,3,4].map(n => <SelectItem key={n} value={String(n)}>{n} Player{n > 1 ? 's' : ''}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="grid gap-3">
-                                 <Label htmlFor="topic" className="font-medium text-base flex items-center gap-2"><BookCopy /> Topic</Label>
-                                 <Select value={selectedTopic || ''} onValueChange={setSelectedTopic}>
-                                    <SelectTrigger id="topic" className="w-full">
-                                        <SelectValue placeholder="Select a topic" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {TOPICS.map(topic => <SelectItem key={topic} value={topic}>{topic}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div className="grid gap-4 md:grid-cols-2">
-                            {players.map(player => (
-                                <PlayerSetupCard key={player.id} player={player} onPlayerChange={handlePlayerChange} skillLevels={SKILL_LEVELS} />
-                            ))}
-                        </div>
-                        <Button size="lg" className="w-full font-bold text-lg" onClick={handleStartGame} disabled={!isSetupValid}>
-                            Start Game <ArrowRight className="ml-2" />
-                        </Button>
+                    <div className="grid gap-3">
+                         <Label htmlFor="topic" className="font-medium text-lg flex items-center gap-2"><BookCopy className="text-primary"/> Challenge Topic</Label>
+                         <Select value={selectedTopic || ''} onValueChange={setSelectedTopic}>
+                            <SelectTrigger id="topic" className="w-full">
+                                <SelectValue placeholder="Select a topic" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {TOPICS.map(topic => <SelectItem key={topic} value={topic}>{topic}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
+                
+                <div className="mb-8">
+                    <h3 className="font-headline text-2xl mb-4">Player Configuration</h3>
+                    <div className="grid gap-6 md:grid-cols-2">
+                        {players.map(player => (
+                            <PlayerSetupCard key={player.id} player={player} onPlayerChange={handlePlayerChange} skillLevels={SKILL_LEVELS} />
+                        ))}
+                    </div>
+                </div>
+
+                <Button size="lg" className="w-full font-bold text-lg" onClick={handleStartGame} disabled={!isSetupValid}>
+                    Start Challenge <ArrowRight className="ml-2" />
+                </Button>
             </div>
         </div>
+    </div>
     );
   }
 
@@ -290,7 +292,7 @@ export default function ChallengePage() {
           className="h-24 w-24 text-primary animate-loader-shake"
           style={{filter: `drop-shadow(0 0 15px hsl(var(--primary)))`}} 
         />
-        <h1 className="text-2xl font-headline text-glow">Generating Challenges...</h1>
+        <h1 className="text-2xl font-headline">Generating Challenges...</h1>
         <p className="text-muted-foreground">The AI is crafting unique problems for your team.</p>
       </div>
     );
@@ -313,7 +315,7 @@ export default function ChallengePage() {
             <ChallengeHeader />
             <div className="container mx-auto max-w-5xl py-8 px-4 font-body flex flex-col items-center text-center flex-1">
                 <Trophy className="h-24 w-24 text-primary mb-4" style={{filter: `drop-shadow(0 0 15px hsl(var(--primary)))`}} />
-                <h1 className="text-4xl font-bold font-headline text-glow">Challenge Dashboard</h1>
+                <h1 className="text-4xl font-bold font-headline">Challenge Dashboard</h1>
                 <p className="text-muted-foreground mb-1">Topic: <span className="font-semibold text-primary">{selectedTopic}</span></p>
                 <p className="text-muted-foreground mb-8">View your assigned problems below.</p>
                 <div className="w-full grid md:grid-cols-2 gap-6">
@@ -380,7 +382,7 @@ export default function ChallengePage() {
                                 <div>
                                     <p className="font-semibold flex items-center gap-2">{p.name}</p>
                                     <p className="text-sm text-muted-foreground flex items-center gap-1">{SKILL_LEVELS[p.skillLevel].icon} {p.skillLevel}</p>
-                                </div>
+                                 </div>
                             </div>
                             <div className="text-right">
                                 {p.problem ? (
