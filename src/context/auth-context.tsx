@@ -10,6 +10,7 @@ export type UserProfile = {
     uid: string;
     email: string;
     username: string;
+    connections?: string[];
 };
 
 interface AuthContextType {

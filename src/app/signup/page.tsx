@@ -72,6 +72,7 @@ export default function SignUpPage() {
         uid: user.uid,
         username: values.username,
         email: values.email,
+        connections: [],
       });
       
       toast({ title: 'Account Created!', description: 'Welcome to Challenger.io!' });

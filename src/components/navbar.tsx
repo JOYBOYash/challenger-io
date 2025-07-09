@@ -31,7 +31,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 const NAV_ITEMS = [
   { href: '/challenge', label: 'Challenge' },
   { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Contact' },
+  { href: '/contact', label: 'Connect' },
 ];
 
 export function Navbar() {

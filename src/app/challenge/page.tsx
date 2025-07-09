@@ -10,14 +10,15 @@ import { Input } from '@/components/ui/input';
 import { LuckyWheel } from '@/components/lucky-wheel';
 import { ProblemDisplay } from '@/components/problem-display';
 import { Icons } from '@/components/icons';
-import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft, X, UserPlus } from 'lucide-react';
+import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft, X, UserPlus, Search } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import { curateProblems, type Problem } from '@/ai/flows/problem-curation';
 import { useAuth, type UserProfile } from '@/context/auth-context';
-import { findUserByUsername } from '@/app/actions/user';
+import { getConnectedUsers } from '@/app/actions/user';
 import Loading from '@/app/loading';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 
 const PLAYER_COLORS = ['#50C878', '#20B2AA', '#66CDAA', '#2E8B57'];
@@ -99,8 +100,8 @@ export default function ChallengePage() {
   const router = useRouter();
   const [gameState, setGameState] = useState<'setup' | 'generating' | 'playing' | 'finished'>('setup');
   const [players, setPlayers] = useState<Player[]>([]);
-  const [invitedPlayerUsername, setInvitedPlayerUsername] = useState('');
-  const [isAddingPlayer, setIsAddingPlayer] = useState(false);
+  const [connections, setConnections] = useState<UserProfile[]>([]);
+  const [isFetchingConnections, setIsFetchingConnections] = useState(true);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [questions, setQuestions] = useState<GameQuestion[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
@@ -123,6 +124,15 @@ export default function ChallengePage() {
         }]);
     }
   }, [user, loading, router, players.length]);
+  
+  useEffect(() => {
+    if (user) {
+        setIsFetchingConnections(true);
+        getConnectedUsers(user.uid)
+            .then(setConnections)
+            .finally(() => setIsFetchingConnections(false));
+    }
+  }, [user]);
 
   const unassignedQuestions = questions.filter(q => !players.some(p => p.problem?.id === q.id));
 
@@ -150,36 +160,23 @@ export default function ChallengePage() {
     setPlayers(players.map(p => p.profile.uid === playerId ? { ...p, skillLevel } : p));
   };
 
-  const handleAddPlayer = async () => {
+  const handleAddPlayer = (friend: UserProfile) => {
     if (players.length >= 4) {
         toast({ title: 'Maximum Players Reached', description: 'You can only have up to 4 players.', variant: 'destructive' });
         return;
     }
-    if (!invitedPlayerUsername) {
-        toast({ title: 'No Username Entered', description: 'Please enter a username to invite.', variant: 'destructive' });
-        return;
-    }
-    if (players.some(p => p.profile.username === invitedPlayerUsername)) {
+    if (players.some(p => p.profile.uid === friend.uid)) {
         toast({ title: 'Player Already Added', description: 'This user is already in the challenge.', variant: 'destructive' });
         return;
     }
 
-    setIsAddingPlayer(true);
-    const foundUser = await findUserByUsername(invitedPlayerUsername);
-    setIsAddingPlayer(false);
-
-    if (foundUser) {
-        const newPlayer: Player = {
-            profile: foundUser,
-            skillLevel: 'Rookie',
-            color: PLAYER_COLORS[players.length % PLAYER_COLORS.length],
-            problem: null
-        };
-        setPlayers([...players, newPlayer]);
-        setInvitedPlayerUsername('');
-    } else {
-        toast({ title: 'User Not Found', description: `No user with the username "${invitedPlayerUsername}" exists.`, variant: 'destructive' });
-    }
+    const newPlayer: Player = {
+        profile: friend,
+        skillLevel: 'Rookie',
+        color: PLAYER_COLORS[players.length % PLAYER_COLORS.length],
+        problem: null
+    };
+    setPlayers([...players, newPlayer]);
   };
 
   const handleRemovePlayer = (uid: string) => {
@@ -274,6 +271,7 @@ export default function ChallengePage() {
   const currentPlayer = players[currentPlayerIndex];
   const isSetupValid = selectedTopic !== null;
   const wheelSegments = unassignedQuestions.map(q => ({ id: q.id, label: String(q.displayNumber) }));
+  const availableFriends = connections.filter(friend => !players.some(p => p.profile.uid === friend.uid));
 
 
   if (gameState === 'setup') {
@@ -284,7 +282,7 @@ export default function ChallengePage() {
             <div className="text-center mb-12">
               <h1 className="text-4xl font-bold font-headline tracking-tighter sm:text-5xl">Challenge Setup</h1>
               <p className="mt-4 text-muted-foreground md:text-lg max-w-2xl mx-auto">
-                Configure your session. Invite other players, choose a topic, and set each player's skill level.
+                Configure your session. Invite your connections, choose a topic, and set each player's skill level.
               </p>
             </div>
 
@@ -306,14 +304,39 @@ export default function ChallengePage() {
                 <div className="mb-8">
                     <h3 className="font-headline text-2xl mb-4">Player Configuration</h3>
                     <div className="mb-6 p-4 border rounded-lg">
-                        <Label htmlFor="player-invite" className="font-medium text-lg flex items-center gap-2"><UserPlus className="text-primary"/> Invite Players</Label>
-                        <p className="text-muted-foreground text-sm mb-4">Add other registered users to the challenge by their username.</p>
-                        <div className="flex gap-2">
-                            <Input id="player-invite" placeholder="Enter username..." value={invitedPlayerUsername} onChange={e => setInvitedPlayerUsername(e.target.value)} disabled={isAddingPlayer || players.length >=4}/>
-                            <Button onClick={handleAddPlayer} disabled={isAddingPlayer || players.length >=4}>
-                                {isAddingPlayer ? 'Adding...' : 'Add Player'}
-                            </Button>
-                        </div>
+                        <Label htmlFor="player-invite" className="font-medium text-lg flex items-center gap-2"><UserPlus className="text-primary"/> Invite Connections</Label>
+                        <p className="text-muted-foreground text-sm mb-4">Add your connected friends to the challenge.</p>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="w-full justify-start"
+                                    disabled={players.length >= 4 || isFetchingConnections}
+                                >
+                                    {isFetchingConnections ? 'Loading connections...' : (availableFriends.length > 0 ? 'Select a friend to add' : 'No available friends')}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-1" align="start">
+                                <div className="flex flex-col gap-1">
+                                    {availableFriends.length > 0 ? (
+                                        availableFriends.map(friend => (
+                                            <Button
+                                                key={friend.uid}
+                                                variant="ghost"
+                                                className="w-full justify-start"
+                                                onClick={() => handleAddPlayer(friend)}
+                                            >
+                                                {friend.username}
+                                            </Button>
+                                        ))
+                                    ) : (
+                                        <p className="p-2 text-sm text-muted-foreground">
+                                          {isFetchingConnections ? 'Loading...' : 'No friends to invite. Go to the Connect page to add some!'}
+                                        </p>
+                                    )}
+                                </div>
+                            </PopoverContent>
+                        </Popover>
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
