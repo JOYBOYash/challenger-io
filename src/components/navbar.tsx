@@ -93,7 +93,7 @@ export function Navbar() {
                     <DropdownMenuTrigger asChild>
                        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                          <Avatar className="h-8 w-8">
-                            {/* <AvatarImage src="/avatars/01.png" alt={user.username} /> */}
+                            <AvatarImage src={user.photoURL} alt={user.username} />
                             <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
                          </Avatar>
                        </Button>
@@ -105,6 +105,13 @@ export function Navbar() {
                             <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                           </div>
                         </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                           <Link href="/profile">
+                            <UserIcon className="mr-2 h-4 w-4" />
+                            <span>Profile</span>
+                           </Link>
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={handleLogout}>
                             <LogOut className="mr-2 h-4 w-4" />
@@ -156,16 +163,9 @@ export function Navbar() {
 
                 <div className="mt-10 pt-6 border-t border-muted">
                   {user ? (
-                      <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                             <Avatar>
-                                <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
-                             </Avatar>
-                             <div>
-                                <p className="font-semibold">{user.username}</p>
-                             </div>
-                          </div>
-                          <Button variant="ghost" size="icon" onClick={handleLogout}><LogOut /></Button>
+                      <div className="flex flex-col space-y-4">
+                           <Link href="/profile" className="text-lg font-semibold uppercase tracking-wide pl-1 border-l-4 border-transparent hover:text-primary">Profile</Link>
+                           <Button variant="ghost" onClick={handleLogout} className="justify-start text-lg font-semibold uppercase tracking-wide pl-1">Log Out</Button>
                       </div>
                   ) : (
                     <div className="flex flex-col gap-4">

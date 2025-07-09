@@ -2,15 +2,21 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { initializeFirebase } from '@/lib/firebase';
 import Loading from '@/app/loading';
+import type { Problem } from '@/ai/flows/problem-curation';
 
 export type UserProfile = {
     uid: string;
     email: string;
     username: string;
     connections?: string[];
+    photoURL?: string;
+    bio?: string;
+    domain?: string;
+    skills?: string[];
+    savedChallenges?: Problem[];
 };
 
 interface AuthContextType {
@@ -39,29 +45,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return;
         }
 
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                setFirebaseUser(user);
+        const unsubscribeAuth = onAuthStateChanged(auth, (authUser) => {
+            if (authUser) {
+                setFirebaseUser(authUser);
                 if (db) {
-                    const docRef = doc(db, 'users', user.uid);
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        setUser(docSnap.data() as UserProfile);
-                    } else {
-                        // Handle case where user exists in Auth but not in Firestore
+                    const docRef = doc(db, 'users', authUser.uid);
+                    
+                    const unsubscribeFirestore = onSnapshot(docRef, (docSnap) => {
+                        if (docSnap.exists()) {
+                            setUser(docSnap.data() as UserProfile);
+                        } else {
+                            setUser(null);
+                        }
+                        setLoading(false);
+                    }, (err) => {
+                        console.error("Firestore snapshot error:", err);
                         setUser(null);
-                    }
+                        setLoading(false);
+                    });
+                    
+                    // This will be the cleanup function for the auth subscription.
+                    // When the user logs out, we need to detach the firestore listener.
+                    return () => unsubscribeFirestore();
                 } else {
-                    setUser(null);
+                     setUser(null);
+                     setLoading(false);
                 }
             } else {
                 setFirebaseUser(null);
                 setUser(null);
+                setLoading(false);
             }
-            setLoading(false);
         });
 
-        return () => unsubscribe();
+        // This is the cleanup function for the useEffect hook.
+        return () => unsubscribeAuth();
     }, []);
 
     const value = { user, firebaseUser, loading };

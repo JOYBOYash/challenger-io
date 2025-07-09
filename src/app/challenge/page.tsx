@@ -10,13 +10,13 @@ import { Input } from '@/components/ui/input';
 import { LuckyWheel } from '@/components/lucky-wheel';
 import { ProblemDisplay } from '@/components/problem-display';
 import { Icons } from '@/components/icons';
-import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft, X, UserPlus, Search } from 'lucide-react';
+import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft, X, UserPlus, Search, Bookmark } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import { curateProblems, type Problem } from '@/ai/flows/problem-curation';
 import { useAuth, type UserProfile } from '@/context/auth-context';
-import { getConnectedUsers } from '@/app/actions/user';
+import { getConnectedUsers, saveChallenge } from '@/app/actions/user';
 import Loading from '@/app/loading';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -264,6 +264,16 @@ export default function ChallengePage() {
     setViewedProblem(null);
   };
 
+  const handleSaveChallenge = async (problem: Problem) => {
+    if (!user) return;
+    const { success } = await saveChallenge(user.uid, problem);
+    if (success) {
+        toast({ title: "Challenge Saved!", description: "View it on your profile." });
+    } else {
+        toast({ title: "Error", description: "Could not save the challenge.", variant: "destructive" });
+    }
+  }
+
   if (loading || !user) {
     return <Loading />;
   }
@@ -412,6 +422,8 @@ export default function ChallengePage() {
             </div>
         )
     }
+    const savedChallengeTitles = user.savedChallenges?.map(c => c.problemTitle) || [];
+
     return (
         <div className="flex flex-col min-h-screen">
             <ChallengeHeader />
@@ -421,7 +433,9 @@ export default function ChallengePage() {
                 <p className="text-muted-foreground mb-1">Topic: <span className="font-semibold text-primary">{selectedTopic}</span></p>
                 <p className="text-muted-foreground mb-8">View your assigned problems below.</p>
                 <div className="w-full grid md:grid-cols-2 gap-6">
-                    {players.map(player => (
+                    {players.map(player => {
+                        const isSaved = player.problem ? savedChallengeTitles.includes(player.problem.problem.problemTitle) : false;
+                        return (
                         <div key={player.profile.uid} className="cyber-card text-left flex flex-col" style={{ borderLeftColor: player.color, borderLeftWidth: '4px' }}>
                              <div className="flex flex-col items-start gap-2 flex-1">
                                 <div className="w-full flex justify-between items-start">
@@ -444,14 +458,24 @@ export default function ChallengePage() {
                                             <p className="font-semibold text-primary">Challenge #{player.problem.displayNumber}: {player.problem.problem.problemTitle}</p>
                                             <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{player.problem.problem.problemDescription}</p>
                                         </div>
-                                        <Button className="w-full mt-4" onClick={() => setViewedProblem(player.problem)}>
-                                            View Challenge <ArrowRight />
-                                        </Button>
+                                        <div className="flex gap-2 w-full mt-4">
+                                            <Button className="w-full" onClick={() => setViewedProblem(player.problem)}>
+                                                View Challenge <ArrowRight />
+                                            </Button>
+                                            <Button 
+                                                size="icon" 
+                                                variant={isSaved ? "secondary" : "outline"}
+                                                onClick={() => !isSaved && handleSaveChallenge(player.problem!.problem)}
+                                                disabled={isSaved}
+                                            >
+                                                <Bookmark className={cn(isSaved && "fill-primary")} />
+                                            </Button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
                         </div>
-                    ))}
+                    )})}
                 </div>
                 <Button size="lg" className="mt-8 font-bold" onClick={handleResetGame}>
                     <RotateCw className="mr-2" /> Play Again

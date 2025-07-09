@@ -9,7 +9,7 @@ import { BookOpen, Lightbulb, ArrowLeft } from 'lucide-react';
 
 interface ProblemDisplayProps {
   problem: Problem;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export function ProblemDisplay({ problem, onBack }: ProblemDisplayProps) {
@@ -34,10 +34,12 @@ export function ProblemDisplay({ problem, onBack }: ProblemDisplayProps) {
                     <Badge variant={getBadgeVariant(problem.difficulty)}>{problem.difficulty}</Badge>
                 </div>
             </div>
-            <Button onClick={onBack}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
-            </Button>
+            {onBack && (
+                <Button onClick={onBack}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                </Button>
+            )}
         </div>
 
         <Card className="cyber-card">

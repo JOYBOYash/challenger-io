@@ -1,8 +1,59 @@
 'use server';
 
 import { initializeFirebase } from '@/lib/firebase';
-import { collection, query, where, getDocs, limit, getDoc, doc, updateDoc, arrayUnion, documentId, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, getDoc, doc, updateDoc, arrayUnion, documentId, orderBy, arrayRemove } from 'firebase/firestore';
 import type { UserProfile } from '@/context/auth-context';
+import type { Problem } from '@/ai/flows/problem-curation';
+
+
+export async function updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<{success: boolean}> {
+    const { db, error } = initializeFirebase();
+    if (error || !db) {
+        console.error("Firebase error in updateUserProfile:", error?.message);
+        return { success: false };
+    }
+    const userRef = doc(db, 'users', userId);
+    try {
+        await updateDoc(userRef, data);
+        return { success: true };
+    } catch (e) {
+        console.error("Error updating user profile:", e);
+        return { success: false };
+    }
+}
+
+export async function saveChallenge(userId: string, problem: Problem): Promise<{success: boolean}> {
+    const { db, error } = initializeFirebase();
+    if (error || !db) {
+        console.error("Firebase error in saveChallenge:", error?.message);
+        return { success: false };
+    }
+    const userRef = doc(db, 'users', userId);
+    try {
+        await updateDoc(userRef, { savedChallenges: arrayUnion(problem) });
+        return { success: true };
+    } catch (e) {
+        console.error("Error saving challenge:", e);
+        return { success: false };
+    }
+}
+
+export async function removeChallenge(userId: string, problem: Problem): Promise<{success: boolean}> {
+    const { db, error } = initializeFirebase();
+    if (error || !db) {
+        console.error("Firebase error in removeChallenge:", error?.message);
+        return { success: false };
+    }
+    const userRef = doc(db, 'users', userId);
+    try {
+        await updateDoc(userRef, { savedChallenges: arrayRemove(problem) });
+        return { success: true };
+    } catch (e) {
+        console.error("Error removing challenge:", e);
+        return { success: false };
+    }
+}
+
 
 export async function findUserByUsername(username: string): Promise<UserProfile | null> {
   const { db, error } = initializeFirebase();
