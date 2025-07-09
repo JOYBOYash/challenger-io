@@ -392,7 +392,7 @@ export default function ChallengePage() {
               onClick={handleSpinClick}
               disabled={isSpinning || !!lastSpunQuestion || isAutoAssigning}
             >
-              {isSpinning || isAutoAssigning ? <Icons.animatedLogo className="mr-2 h-6 w-6 animate-loader-shake" /> : <Zap className="mr-2 h-6 w-6" />}
+              {isSpinning || isAutoAssigning ? <AnimatedLogo className="mr-2 h-6 w-6 animate-loader-shake" /> : <Zap className="mr-2 h-6 w-6" />}
               {isAutoAssigning ? 'Assigning...' : (isSpinning ? 'Spinning...' : 'Spin for a Challenge')}
             </Button>
 
