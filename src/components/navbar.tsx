@@ -24,8 +24,8 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky md:px-12 px-4 top-0 z-50 w-full bg-gradient-to-r from-background/80 via-background/60 to-background/80 backdrop-blur-xl border-b border-primary/30 shadow-lg shadow-primary/10">
-      <div className="container flex h-16 items-center justify-between">
+    <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-background/80 backdrop-blur-sm">
+      <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-10">
           <Link href="/" className="flex items-center space-x-2 group">
             <Icons.logo className="h-8 w-8 text-primary transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
@@ -40,10 +40,10 @@ export function Navbar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'relative text-sm font-semibold uppercase tracking-wide transition-all duration-300 pb-1',
+                  'text-sm font-semibold uppercase tracking-wider transition-colors duration-300 pb-1',
                   pathname === item.href
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-muted-foreground hover:text-primary hover:border-b-2 hover:border-primary/60'
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-primary'
                 )}
               >
                 {item.label}

@@ -1,11 +1,10 @@
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { User } from 'lucide-react';
-import type { Player } from '@/app/page';
+import type { Player } from '@/app/challenge/page';
 
 type SkillLevel = 'Rookie' | 'Crusader' | 'Veteran';
 
@@ -25,8 +24,8 @@ export function PlayerSetupCard({ player, onPlayerChange, skillLevels }: PlayerS
   };
 
   return (
-    <Card className="w-full" style={{ borderLeft: `4px solid ${player.color}` }}>
-      <CardContent className="p-4 grid gap-4">
+    <div className="cyber-card w-full" style={{ borderLeft: `4px solid ${player.color}` }}>
+      <div className="grid gap-4">
         <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: player.color }}>
                 <User className="h-5 w-5 text-white" />
@@ -36,7 +35,7 @@ export function PlayerSetupCard({ player, onPlayerChange, skillLevels }: PlayerS
               value={player.name}
               onChange={handleNameChange}
               placeholder={`Player...`}
-              className="text-lg font-semibold border-0 shadow-none focus-visible:ring-0 pl-1"
+              className="text-lg font-semibold border-0 shadow-none focus-visible:ring-0 pl-1 bg-transparent"
             />
         </div>
         <div className="grid gap-2">
@@ -53,7 +52,7 @@ export function PlayerSetupCard({ player, onPlayerChange, skillLevels }: PlayerS
             ))}
           </RadioGroup>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

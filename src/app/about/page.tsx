@@ -18,14 +18,14 @@ export default function AboutPage() {
                     Our mission is to make skill development fun, engaging, and a little unpredictable. By leveraging generative AI, we provide a limitless supply of coding problems. The "Wheel of Fate" adds an element of surprise, ensuring you're always on your toes.
                 </p>
             </div>
-            <div>
+            <div className="cyber-card p-0 overflow-hidden">
                  <Image
                     src="https://placehold.co/600x400.png"
                     width={600}
                     height={400}
                     alt="Mission"
                     data-ai-hint="futuristic code"
-                    className="overflow-hidden rounded-xl object-cover border-2 border-primary/20 opacity-75"
+                    className="object-cover"
                 />
             </div>
         </div>
@@ -37,14 +37,14 @@ export default function AboutPage() {
                     Whether you're a rookie just starting out, a crusader honing your skills, or a veteran looking for a true test, our platform is built for you. We aim to be the ultimate training ground for coders of all levels.
                 </p>
             </div>
-            <div>
+            <div className="cyber-card p-0 overflow-hidden">
                  <Image
                     src="https://placehold.co/600x400.png"
                     width={600}
                     height={400}
                     alt="Built for you"
                     data-ai-hint="developer community"
-                    className="overflow-hidden rounded-xl object-cover border-2 border-primary/20 opacity-75"
+                    className="object-cover"
                 />
             </div>
         </div>

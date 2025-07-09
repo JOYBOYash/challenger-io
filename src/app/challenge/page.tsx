@@ -215,12 +215,12 @@ export default function ChallengePage() {
                 <Icons.logo className="h-8 w-8 text-primary" />
                 <span className="font-headline text-3xl font-bold">Challenger.io</span>
             </div>
-            <Card className="w-full cyber-card">
-                <CardHeader className="text-center">
-                    <CardTitle className="font-headline text-2xl">Game Setup</CardTitle>
-                    <CardDescription>Configure your challenge session.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-6">
+            <div className="w-full cyber-card">
+                <div className="text-center">
+                    <h2 className="font-headline text-2xl">Game Setup</h2>
+                    <p>Configure your challenge session.</p>
+                </div>
+                <div className="grid gap-6 mt-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="grid gap-3">
                             <Label htmlFor="player-count" className="font-medium text-base flex items-center gap-2"><Users /> Players</Label>
@@ -253,8 +253,8 @@ export default function ChallengePage() {
                     <Button size="lg" className="w-full font-bold text-lg" onClick={handleStartGame} disabled={!isSetupValid}>
                         Start Game <ArrowRight className="ml-2" />
                     </Button>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     );
   }
@@ -281,8 +281,8 @@ export default function ChallengePage() {
             <p className="text-muted-foreground mb-8">Here are the assigned challenges:</p>
             <div className="w-full space-y-4">
                 {players.map(player => (
-                    <Card key={player.id} className="cyber-card text-left border-l-4" style={{ borderLeftColor: player.color }}>
-                         <CardContent className="p-4 flex flex-col items-start gap-2">
+                    <div key={player.id} className="cyber-card text-left border-l-4" style={{ borderLeftColor: player.color }}>
+                         <div className="flex flex-col items-start gap-2">
                             <div className="w-full flex justify-between items-start">
                                 <div>
                                     <p className="font-bold text-lg flex items-center gap-2" style={{ color: player.color }}>
@@ -303,8 +303,8 @@ export default function ChallengePage() {
                                     <p className="text-sm text-muted-foreground line-clamp-2">{player.problem.problem.problemDescription}</p>
                                 </div>
                             )}
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
                 ))}
             </div>
             <Button size="lg" className="mt-8 font-bold" onClick={handleResetGame}>
@@ -319,42 +319,38 @@ export default function ChallengePage() {
       <div className="flex-1 overflow-auto p-4 md:p-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2">
           <div className="flex flex-col gap-8">
-            <Card className="cyber-card">
-                <CardHeader>
-                    <CardTitle className="font-headline text-2xl">Player {currentPlayerIndex + 1}'s Turn</CardTitle>
-                    {currentPlayer && (
-                        <CardDescription>
-                            Time for <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.name}</span> to spin for a challenge!
-                            <br/>
-                            Topic for this round is <span className="font-bold text-primary">{selectedTopic}</span>.
-                        </CardDescription>
-                    )}
-                </CardHeader>
-                <CardContent>
-                    <ul className="space-y-3">
-                        {players.map((p, index) => (
-                           <li key={p.id} className={cn("flex items-center justify-between p-3 rounded-lg transition-all", index === currentPlayerIndex ? 'bg-primary/10' : '')}>
-                                <div className="flex items-center gap-3">
-                                    <div className="font-bold text-lg" style={{ color: p.color }}>{index + 1}</div>
-                                    <div>
-                                        <p className="font-semibold flex items-center gap-2">{p.name}</p>
-                                        <p className="text-sm text-muted-foreground flex items-center gap-1">{SKILL_LEVELS[p.skillLevel].icon} {p.skillLevel}</p>
-                                    </div>
+            <div className="cyber-card">
+                <h2 className="font-headline text-2xl">Player {currentPlayerIndex + 1}'s Turn</h2>
+                {currentPlayer && (
+                    <p className="text-muted-foreground">
+                        Time for <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.name}</span> to spin for a challenge!
+                        <br/>
+                        Topic for this round is <span className="font-bold text-primary">{selectedTopic}</span>.
+                    </p>
+                )}
+                <ul className="space-y-3 mt-6">
+                    {players.map((p, index) => (
+                       <li key={p.id} className={cn("flex items-center justify-between p-3 rounded-lg transition-all", index === currentPlayerIndex ? 'bg-primary/10' : '')}>
+                            <div className="flex items-center gap-3">
+                                <div className="font-bold text-lg" style={{ color: p.color }}>{index + 1}</div>
+                                <div>
+                                    <p className="font-semibold flex items-center gap-2">{p.name}</p>
+                                    <p className="text-sm text-muted-foreground flex items-center gap-1">{SKILL_LEVELS[p.skillLevel].icon} {p.skillLevel}</p>
                                 </div>
-                                <div className="text-right">
-                                    {p.problem ? (
-                                        <span className="font-semibold text-primary flex items-center gap-2 justify-end">
-                                            #{p.problem.displayNumber} - {p.problem.problem.difficulty}
-                                        </span>
-                                    ) : (
-                                        <span className="text-sm text-muted-foreground">Waiting...</span>
-                                    )}
-                                </div>
-                           </li>
-                        ))}
-                    </ul>
-                </CardContent>
-            </Card>
+                            </div>
+                            <div className="text-right">
+                                {p.problem ? (
+                                    <span className="font-semibold text-primary flex items-center gap-2 justify-end">
+                                        #{p.problem.displayNumber} - {p.problem.problem.difficulty}
+                                    </span>
+                                ) : (
+                                    <span className="text-sm text-muted-foreground">Waiting...</span>
+                                )}
+                            </div>
+                       </li>
+                    ))}
+                </ul>
+            </div>
              <Button size="lg" className="w-full font-bold text-lg lg:hidden" onClick={handleResetGame}>
                 <RotateCw className="mr-2" /> Reset Game
             </Button>
@@ -362,21 +358,17 @@ export default function ChallengePage() {
           <div className="flex flex-col items-center justify-center gap-6 py-8 lg:py-0">
              <div className="min-h-24 flex items-center justify-center">
                 {lastSpunQuestion && (
-                    <Card className="cyber-card text-center animate-in fade-in zoom-in-95 w-full">
-                        <CardHeader>
-                            <CardDescription>
-                                {isAutoAssigning ? 'Last challenge automatically assigned to ' : `Challenge #${lastSpunQuestion.displayNumber} Assigned to `}
-                                <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.name}</span>!
-                            </CardDescription>
-                            <CardTitle className="font-headline text-primary">{lastSpunQuestion.problem.problemTitle}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                           <Button onClick={handleNextPlayer}>
-                                <span>{currentPlayerIndex === players.length - 1 ? 'Finish & View Results' : 'Next Player'}</span>
-                                <ArrowRight />
-                            </Button>
-                        </CardContent>
-                    </Card>
+                    <div className="cyber-card text-center animate-in fade-in zoom-in-95 w-full">
+                        <p className="text-muted-foreground">
+                            {isAutoAssigning ? 'Last challenge automatically assigned to ' : `Challenge #${lastSpunQuestion.displayNumber} Assigned to `}
+                            <span className="font-bold" style={{color: currentPlayer.color}}>{currentPlayer.name}</span>!
+                        </p>
+                        <h3 className="font-headline text-primary text-xl mt-1">{lastSpunQuestion.problem.problemTitle}</h3>
+                       <Button onClick={handleNextPlayer} className="mt-4">
+                            <span>{currentPlayerIndex === players.length - 1 ? 'Finish & View Results' : 'Next Player'}</span>
+                            <ArrowRight />
+                        </Button>
+                    </div>
                 )}
             </div>
             

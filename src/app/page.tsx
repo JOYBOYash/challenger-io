@@ -50,8 +50,8 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl items-center gap-8 py-12 lg:grid-cols-2 lg:gap-12">
-                <div className="flex flex-col justify-center space-y-8">
+            <div className="mx-auto grid max-w-5xl items-start gap-8 py-12 lg:grid-cols-3 lg:gap-12">
+                <div className="cyber-card flex flex-col justify-center space-y-4 h-full">
                     <div className="flex items-start gap-4">
                         <div className="bg-primary/10 p-3 rounded-full mt-1">
                             <Terminal className="h-6 w-6 text-primary" />
@@ -63,7 +63,9 @@ export default function HomePage() {
                             </p>
                         </div>
                     </div>
-                     <div className="flex items-start gap-4">
+                </div>
+                 <div className="cyber-card flex flex-col justify-center space-y-4 h-full">
+                    <div className="flex items-start gap-4">
                         <div className="bg-primary/10 p-3 rounded-full mt-1">
                             <Network className="h-6 w-6 text-primary" />
                         </div>
@@ -74,7 +76,9 @@ export default function HomePage() {
                             </p>
                         </div>
                     </div>
-                     <div className="flex items-start gap-4">
+                </div>
+                 <div className="cyber-card flex flex-col justify-center space-y-4 h-full">
+                    <div className="flex items-start gap-4">
                         <div className="bg-primary/10 p-3 rounded-full mt-1">
                             <Orbit className="h-6 w-6 text-primary" />
                         </div>
@@ -86,14 +90,6 @@ export default function HomePage() {
                         </div>
                     </div>
                 </div>
-                <Image
-                    src="https://placehold.co/800x600.png"
-                    data-ai-hint="abstract code"
-                    width={800}
-                    height={600}
-                    alt="Feature"
-                    className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full border-2 border-primary/20 opacity-75"
-                />
             </div>
           </div>
         </section>
