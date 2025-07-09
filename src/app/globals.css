@@ -62,7 +62,6 @@
 @layer utilities {
   .text-glow {
     @apply text-primary;
-    text-shadow: 0 0 10px hsl(var(--primary) / 0.8);
   }
 
   .cyber-grid {
@@ -75,5 +74,9 @@
   .cyber-card {
     @apply border border-primary/20 bg-card/80 backdrop-blur-sm p-6;
     clip-path: polygon(calc(100% - 1rem) 0, 100% 1rem, 100% 100%, 1rem 100%, 0 calc(100% - 1rem), 0 0);
+  }
+  
+  .cyber-button {
+    clip-path: polygon(0.75rem 0, 100% 0, 100% calc(100% - 0.75rem), calc(100% - 0.75rem) 100%, 0 100%, 0 0.75rem);
   }
 }
