@@ -169,7 +169,11 @@ export default function ProfilePage() {
                                         <CardDescription>{problem.topic} - <span className="font-medium text-primary">{problem.difficulty}</span></CardDescription>
                                     </CardHeader>
                                     <CardContent className="flex-grow">
-                                        <p className="text-muted-foreground line-clamp-3">{problem.problemDescription}</p>
+                                        {problem.problemDescription ? (
+                                            <p className="text-muted-foreground line-clamp-3">{problem.problemDescription}</p>
+                                        ) : (
+                                            <p className="text-muted-foreground text-sm">This is a platform challenge. Click View to see the original problem.</p>
+                                        )}
                                     </CardContent>
                                     <div className="p-4 pt-0 flex gap-2">
                                          <Dialog>
@@ -181,7 +185,7 @@ export default function ProfilePage() {
                                                     <DialogTitle>{problem.problemTitle}</DialogTitle>
                                                 </DialogHeader>
                                                 <div className="overflow-y-auto">
-                                                    <ProblemDisplay problem={problem} onBack={() => {}} />
+                                                    <ProblemDisplay problem={problem} />
                                                 </div>
                                             </DialogContent>
                                         </Dialog>

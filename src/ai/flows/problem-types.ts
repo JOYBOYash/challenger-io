@@ -15,7 +15,7 @@ export type CurateProblemsInput = z.infer<typeof CurateProblemsInputSchema>;
 
 export const ProblemSchema = z.object({
   problemTitle: z.string().describe('The title of the coding problem.'),
-  problemDescription: z.string().describe('The detailed description of the coding problem, including examples.'),
+  problemDescription: z.string().describe('The detailed description of the coding problem, including examples.').optional(),
   difficulty: z.string().describe('The difficulty level of the coding problem. This MUST match the requested skill level.'),
   topic: z.string().describe('The topic of the coding problem.'),
   solutions: z.object({
@@ -24,7 +24,8 @@ export const ProblemSchema = z.object({
     java: z.string().describe('The optimal solution to the coding problem in Java.'),
     csharp: z.string().describe('The optimal solution to the coding problem in C# (C-sharp).'),
     go: z.string().describe('The optimal solution to the coding problem in Go.'),
-  }).describe('An object containing the optimal solution in various programming languages.'),
+  }).describe('An object containing the optimal solution in various programming languages.').optional(),
+  url: z.string().url().describe("The URL to the original problem if sourced from a platform.").optional(),
 });
 export type Problem = z.infer<typeof ProblemSchema>;
 

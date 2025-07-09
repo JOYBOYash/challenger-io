@@ -16,7 +16,7 @@ import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import { curateProblems, type Problem } from '@/ai/flows/problem-curation';
-import { curatePlatformInspiredProblems } from '@/ai/flows/platformInspiredProblemCuration';
+import { fetchPlatformProblems } from '@/ai/flows/platformInspiredProblemCuration';
 import { useAuth, type UserProfile } from '@/context/auth-context';
 import { getConnectedUsers, saveChallenge } from '@/app/actions/user';
 import Loading from '@/app/loading';
@@ -198,7 +198,7 @@ export default function ChallengePage() {
         let problems: Problem[];
 
         if (problemSource === 'platform') {
-            const result = await curatePlatformInspiredProblems({
+            const result = await fetchPlatformProblems({
                 topic: selectedTopic,
                 players: playerInputs,
             });
@@ -213,7 +213,7 @@ export default function ChallengePage() {
 
 
         if (problems.length !== players.length) {
-            throw new Error("AI did not return the correct number of problems for all players.");
+            throw new Error("Did not return the correct number of problems for all players.");
         }
 
         const gameQuestions = problems.map((problem, index) => {
@@ -349,7 +349,7 @@ export default function ChallengePage() {
                                 className="flex flex-col items-center justify-center text-center rounded-md border-2 border-muted bg-card p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                             >
                                 <Database className="mb-3 h-6 w-6" />
-                                Platform Inspired
+                                Platform Direct
                             </Label>
                             </div>
                         </RadioGroup>
