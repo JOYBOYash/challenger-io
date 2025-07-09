@@ -4,10 +4,8 @@ import { type CurateProblemOutput } from '@/ai/flows/problem-curation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Code, BookOpen, Lightbulb, ArrowLeft } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BookOpen, Lightbulb, ArrowLeft } from 'lucide-react';
 
 interface ProblemDisplayProps {
   problem: CurateProblemOutput;
@@ -52,46 +50,46 @@ export function ProblemDisplay({ problem, onBack }: ProblemDisplayProps) {
         
         <Card className="cyber-card">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-headline"><Code className="text-primary" /> Your Code</CardTitle>
-                <CardDescription>Select a language and write your solution below.</CardDescription>
+                <CardTitle className="flex items-center gap-2 font-headline"><Lightbulb className="text-primary" /> Optimal Solutions</CardTitle>
+                <CardDescription>Here are the optimal solutions in various languages.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="mb-4">
-                     <Select defaultValue="javascript">
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Select language" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="javascript">JavaScript</SelectItem>
-                          <SelectItem value="python">Python</SelectItem>
-                          <SelectItem value="java">Java</SelectItem>
-                          <SelectItem value="csharp">C#</SelectItem>
-                          <SelectItem value="go">Go</SelectItem>
-                        </SelectContent>
-                      </Select>
-                </div>
-                <Textarea 
-                    placeholder="Write your code here..." 
-                    className="min-h-[300px] font-mono bg-muted/30 text-base"
-                />
+                 <Tabs defaultValue="javascript" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
+                        <TabsTrigger value="javascript">JavaScript</TabsTrigger>
+                        <TabsTrigger value="python">Python</TabsTrigger>
+                        <TabsTrigger value="java">Java</TabsTrigger>
+                        <TabsTrigger value="csharp">C#</TabsTrigger>
+                        <TabsTrigger value="go">Go</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="javascript">
+                        <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
+                        <code className="font-mono text-sm">{problem.solutions.javascript}</code>
+                        </pre>
+                    </TabsContent>
+                    <TabsContent value="python">
+                        <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
+                        <code className="font-mono text-sm">{problem.solutions.python}</code>
+                        </pre>
+                    </TabsContent>
+                    <TabsContent value="java">
+                        <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
+                        <code className="font-mono text-sm">{problem.solutions.java}</code>
+                        </pre>
+                    </TabsContent>
+                    <TabsContent value="csharp">
+                        <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
+                        <code className="font-mono text-sm">{problem.solutions.csharp}</code>
+                        </pre>
+                    </TabsContent>
+                    <TabsContent value="go">
+                        <pre className="bg-muted p-4 rounded-md overflow-x-auto mt-4">
+                        <code className="font-mono text-sm">{problem.solutions.go}</code>
+                        </pre>
+                    </TabsContent>
+                </Tabs>
             </CardContent>
         </Card>
-
-        {problem.solution && (
-            <Accordion type="single" collapsible className="w-full cyber-card p-0">
-                <AccordionItem value="item-1" className="border-b-0">
-                    <AccordionTrigger className="text-lg font-headline flex items-center gap-2 hover:no-underline px-6">
-                        <Lightbulb className="text-primary" />
-                        View Optimal Solution
-                    </AccordionTrigger>
-                    <AccordionContent className="px-6">
-                        <pre className="bg-muted p-4 rounded-md overflow-x-auto">
-                            <code className="font-mono text-sm">{problem.solution}</code>
-                        </pre>
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
-        )}
       </div>
     </main>
   );

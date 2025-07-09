@@ -22,7 +22,13 @@ const CurateProblemOutputSchema = z.object({
   problemDescription: z.string().describe('The detailed description of the coding problem, including examples.'),
   difficulty: z.string().describe('The difficulty level of the coding problem.'),
   topic: z.string().describe('The topic of the coding problem.'),
-  solution: z.string().optional().describe('The optimal solution to the coding problem in JavaScript.'),
+  solutions: z.object({
+      javascript: z.string().describe('The optimal solution to the coding problem in JavaScript.'),
+      python: z.string().describe('The optimal solution to the coding problem in Python.'),
+      java: z.string().describe('The optimal solution to the coding problem in Java.'),
+      csharp: z.string().describe('The optimal solution to the coding problem in C# (C-sharp).'),
+      go: z.string().describe('The optimal solution to the coding problem in Go.'),
+    }).describe('An object containing the optimal solution in various programming languages.'),
 });
 export type CurateProblemOutput = z.infer<typeof CurateProblemOutputSchema>;
 
@@ -47,7 +53,9 @@ const curateProblemPrompt = ai.definePrompt({
 Topic: {{{topic}}}
 Skill Level: {{{skillLevel}}}
 
-Generate a unique coding problem with a title, a detailed description including one or two examples, the difficulty, and an optimal solution in JavaScript. The difficulty field in the output **must** match the skill level provided. Be creative!`,
+Generate a unique coding problem with a title, a detailed description including one or two examples, and the difficulty. The difficulty field in the output **must** match the skill level provided.
+
+You must also provide optimal solutions for the problem in the following languages: JavaScript, Python, Java, C#, and Go. The output must include a 'solutions' object containing keys for 'javascript', 'python', 'java', 'csharp', and 'go', with the full code for each solution as the value. Be creative!`,
   config: {
     safetySettings: [
       {
