@@ -13,7 +13,7 @@ import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy
 import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
-import { curateProblem, type CurateProblemOutput } from '@/ai/flows/problem-curation';
+import { curateProblems, type Problem } from '@/ai/flows/problem-curation';
 
 const TOPICS = ['Data Structures', 'Algorithms', 'System Design', 'JavaScript', 'React', 'SQL'];
 const PLAYER_COLORS = ['#50C878', '#20B2AA', '#66CDAA', '#2E8B57'];
@@ -28,7 +28,7 @@ type SkillLevel = keyof typeof SKILL_LEVELS;
 
 export type GameQuestion = {
     id: string;
-    problem: CurateProblemOutput;
+    problem: Problem;
     forPlayerSkill: SkillLevel;
     icon: React.ReactNode;
     displayNumber: number;
@@ -155,19 +155,28 @@ export default function ChallengePage() {
     }
     setGameState('generating');
     try {
-        const promises = players.map((player, index) => curateProblem({
-            topic: selectedTopic,
-            skillLevel: player.skillLevel
-        }).then(problem => ({
-            id: nanoid(),
-            problem: problem,
-            forPlayerSkill: player.skillLevel,
-            icon: SKILL_LEVELS[player.skillLevel].wheelIcon,
-            displayNumber: index + 1,
-        })));
+        const playerInputs = players.map(player => ({ skillLevel: player.skillLevel }));
         
-        const gameQuestions = await Promise.all(promises);
+        const { problems } = await curateProblems({
+            topic: selectedTopic,
+            players: playerInputs,
+        });
 
+        if (problems.length !== players.length) {
+            throw new Error("AI did not return the correct number of problems for all players.");
+        }
+
+        const gameQuestions = problems.map((problem, index) => {
+            const player = players[index];
+            return {
+                id: nanoid(),
+                problem: problem,
+                forPlayerSkill: player.skillLevel,
+                icon: SKILL_LEVELS[player.skillLevel].wheelIcon,
+                displayNumber: index + 1,
+            };
+        });
+        
         setQuestions(gameQuestions);
         setCurrentPlayerIndex(0);
         setLastSpunQuestion(null);

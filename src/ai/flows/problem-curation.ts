@@ -1,61 +1,75 @@
 'use server';
 
 /**
- * @fileOverview Curates coding problems based on the topic and skill level selected by the user.
+ * @fileOverview Curates a batch of coding problems based on the topic and skill levels selected by the user.
  *
- * - curateProblem - A function that curates a coding problem based on user input.
- * - CurateProblemInput - The input type for the curateProblem function.
- * - CurateProblemOutput - The return type for the curateProblem function.
+ * - curateProblems - A function that curates coding problems for multiple players in a single call.
+ * - CurateProblemsInput - The input type for the curateProblems function.
+ * - CurateProblemsOutput - The return type for the curateProblems function.
+ * - Problem - The type for a single generated coding problem.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const CurateProblemInputSchema = z.object({
-  topic: z.string().describe('The topic of the coding problem.'),
-  skillLevel: z.string().describe('The skill level of the coding problem (Rookie, Crusader, Veteran).'),
+const PlayerInputSchema = z.object({
+  skillLevel: z.string().describe('The skill level for this player (Rookie, Crusader, Veteran).'),
 });
-export type CurateProblemInput = z.infer<typeof CurateProblemInputSchema>;
 
-const CurateProblemOutputSchema = z.object({
+const CurateProblemsInputSchema = z.object({
+  topic: z.string().describe('The topic for all coding problems.'),
+  players: z.array(PlayerInputSchema).describe('An array of players for whom to generate problems.'),
+});
+export type CurateProblemsInput = z.infer<typeof CurateProblemsInputSchema>;
+
+const ProblemSchema = z.object({
   problemTitle: z.string().describe('The title of the coding problem.'),
   problemDescription: z.string().describe('The detailed description of the coding problem, including examples.'),
-  difficulty: z.string().describe('The difficulty level of the coding problem.'),
+  difficulty: z.string().describe('The difficulty level of the coding problem. This MUST match the requested skill level.'),
   topic: z.string().describe('The topic of the coding problem.'),
   solutions: z.object({
-      javascript: z.string().describe('The optimal solution to the coding problem in JavaScript.'),
-      python: z.string().describe('The optimal solution to the coding problem in Python.'),
-      java: z.string().describe('The optimal solution to the coding problem in Java.'),
-      csharp: z.string().describe('The optimal solution to the coding problem in C# (C-sharp).'),
-      go: z.string().describe('The optimal solution to the coding problem in Go.'),
-    }).describe('An object containing the optimal solution in various programming languages.'),
+    javascript: z.string().describe('The optimal solution to the coding problem in JavaScript.'),
+    python: z.string().describe('The optimal solution to the coding problem in Python.'),
+    java: z.string().describe('The optimal solution to the coding problem in Java.'),
+    csharp: z.string().describe('The optimal solution to the coding problem in C# (C-sharp).'),
+    go: z.string().describe('The optimal solution to the coding problem in Go.'),
+  }).describe('An object containing the optimal solution in various programming languages.'),
 });
-export type CurateProblemOutput = z.infer<typeof CurateProblemOutputSchema>;
+export type Problem = z.infer<typeof ProblemSchema>;
 
-export async function curateProblem(input: CurateProblemInput): Promise<CurateProblemOutput> {
-  return curateProblemFlow(input);
+const CurateProblemsOutputSchema = z.object({
+    problems: z.array(ProblemSchema).describe('An array of generated coding problems, one for each player input.'),
+});
+export type CurateProblemsOutput = z.infer<typeof CurateProblemsOutputSchema>;
+
+export async function curateProblems(input: CurateProblemsInput): Promise<CurateProblemsOutput> {
+  return curateProblemsFlow(input);
 }
 
-const curateProblemPrompt = ai.definePrompt({
-  name: 'curateProblemPrompt',
-  input: {schema: CurateProblemInputSchema},
-  output: {schema: CurateProblemOutputSchema},
-  prompt: `You are an expert and highly creative LeetCode problem creator. Your task is to generate a UNIQUE and interesting coding problem based on a given topic and skill level.
+const curateProblemsPrompt = ai.definePrompt({
+  name: 'curateProblemsPrompt',
+  input: {schema: CurateProblemsInputSchema},
+  output: {schema: CurateProblemsOutputSchema},
+  prompt: `You are an expert and highly creative LeetCode problem creator. Your task is to generate a batch of UNIQUE and interesting coding problems based on a given topic and a list of player skill levels.
 
 **CRITICAL INSTRUCTIONS:**
-1.  **DO NOT** generate common, textbook problems. Avoid well-known challenges like "Two Sum", "Reverse a String", "FizzBuzz", or any of the first 20 most popular problems on LeetCode. Your goal is to create something fresh that a user likely hasn't seen before.
-2.  The problem must be similar in style and structure to a real LeetCode problem, with a clear description and at least one concrete example.
-3.  The problem's difficulty **MUST** strictly match the user's skill level:
-    *   'Rookie': Corresponds to LeetCode Easy. Should be solvable with basic data structures and algorithms.
-    *   'Crusader': Corresponds to LeetCode Medium. May require more complex logic or a combination of data structures.
-    *   'Veteran': Corresponds to LeetCode Hard. Should involve clever algorithms, complex data structures, or non-obvious insights.
+1.  **DO NOT** generate common, textbook problems. Avoid well-known challenges like "Two Sum", "Reverse a String", "FizzBuzz", etc. Your goal is to create something fresh that a user likely hasn't seen before.
+2.  You will be given an array of players, each with a specified skill level. You **MUST** generate one unique problem for each player in the input array.
+3.  The problem's difficulty **MUST** strictly match the requested skill level for each problem:
+    *   'Rookie': Corresponds to LeetCode Easy.
+    *   'Crusader': Corresponds to LeetCode Medium.
+    *   'Veteran': Corresponds to LeetCode Hard.
+4.  For each problem, provide a title, a detailed description with at least one example, the difficulty, and optimal solutions in JavaScript, Python, Java, C#, and Go.
+5.  The number of problems in your output array **MUST EXACTLY** match the number of players in the input array. The order of problems in the output array should correspond to the order of players in the input array.
 
-Topic: {{{topic}}}
-Skill Level: {{{skillLevel}}}
+Topic for all problems: {{{topic}}}
 
-Generate a unique coding problem with a title, a detailed description including one or two examples, and the difficulty. The difficulty field in the output **must** match the skill level provided.
+Generate a problem for each of the following players:
+{{#each players}}
+- Player with skill level: {{{this.skillLevel}}}
+{{/each}}
 
-You must also provide optimal solutions for the problem in the following languages: JavaScript, Python, Java, C#, and Go. The output must include a 'solutions' object containing keys for 'javascript', 'python', 'java', 'csharp', and 'go', with the full code for each solution as the value. Be creative!`,
+Your final output must be a JSON object with a single key "problems" which is an array of problem objects.`,
   config: {
     safetySettings: [
       {
@@ -70,14 +84,14 @@ You must also provide optimal solutions for the problem in the following languag
   },
 });
 
-const curateProblemFlow = ai.defineFlow(
+const curateProblemsFlow = ai.defineFlow(
   {
-    name: 'curateProblemFlow',
-    inputSchema: CurateProblemInputSchema,
-    outputSchema: CurateProblemOutputSchema,
+    name: 'curateProblemsFlow',
+    inputSchema: CurateProblemsInputSchema,
+    outputSchema: CurateProblemsOutputSchema,
   },
   async input => {
-    const {output} = await curateProblemPrompt(input);
+    const {output} = await curateProblemsPrompt(input);
     return output!;
   }
 );

@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { type CurateProblemOutput } from '@/ai/flows/problem-curation';
+import { type Problem } from '@/ai/flows/problem-curation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, Lightbulb, ArrowLeft } from 'lucide-react';
 
 interface ProblemDisplayProps {
-  problem: CurateProblemOutput;
+  problem: Problem;
   onBack: () => void;
 }
 
