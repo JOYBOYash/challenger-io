@@ -518,12 +518,12 @@ export default function ChallengePage() {
                                             {player.problem.problem.url ? (
                                                 <Button asChild className="w-full">
                                                     <a href={player.problem.problem.url} target="_blank" rel="noopener noreferrer">
-                                                        View on Platform <ExternalLink className="ml-2" />
+                                                        View on Platform <ExternalLink className="ml-2 h-4 w-4" />
                                                     </a>
                                                 </Button>
                                             ) : (
                                                 <Button className="w-full" onClick={() => setViewedProblem(player.problem)}>
-                                                    View Challenge <ArrowRight />
+                                                    View Challenge <ArrowRight className="h-4 w-4" />
                                                 </Button>
                                             )}
                                             <Button 
@@ -602,7 +602,7 @@ export default function ChallengePage() {
                         <h3 className="font-headline text-primary text-xl mt-1">{lastSpunQuestion.problem.problemTitle}</h3>
                        <Button onClick={handleNextPlayer} className="mt-4">
                             <span>{currentPlayerIndex === players.length - 1 ? 'Finish & View Results' : 'Next Player'}</span>
-                            <ArrowRight />
+                            <ArrowRight className="h-4 w-4" />
                         </Button>
                     </div>
                 )}

@@ -23,7 +23,7 @@ export function ProblemDisplay({ problem, onBack }: ProblemDisplayProps) {
     }
   }
 
-  const isPlatformProblem = problem.url && !problem.solutions;
+  const isPlatformProblem = !!problem.url && !problem.solutions;
     
   return (
     <main className="container mx-auto max-w-4xl py-8 px-4 font-body">
@@ -53,7 +53,7 @@ export function ProblemDisplay({ problem, onBack }: ProblemDisplayProps) {
             {isPlatformProblem && (
                  <Button asChild className="mt-4">
                     <a href={problem.url} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="mr-2"/> View Problem on Platform
+                        <ExternalLink className="mr-2 h-4 w-4"/> View Problem on Platform
                     </a>
                 </Button>
             )}

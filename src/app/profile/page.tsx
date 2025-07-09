@@ -175,13 +175,13 @@ export default function ProfilePage() {
                                          {problem.url ? (
                                             <Button asChild className="w-full">
                                                 <a href={problem.url} target="_blank" rel="noopener noreferrer">
-                                                    <ExternalLink className="mr-2"/> View on Platform
+                                                    <ExternalLink className="mr-2 h-4 w-4"/> View on Platform
                                                 </a>
                                             </Button>
                                          ) : (
                                              <Dialog>
                                                 <DialogTrigger asChild>
-                                                    <Button className="w-full"><Eye className="mr-2"/> View</Button>
+                                                    <Button className="w-full"><Eye className="mr-2 h-4 w-4"/> View</Button>
                                                 </DialogTrigger>
                                                 <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
                                                     <DialogHeader>
@@ -194,7 +194,7 @@ export default function ProfilePage() {
                                             </Dialog>
                                          )}
                                         <Button variant="destructive" size="icon" onClick={() => handleRemoveChallenge(problem)}>
-                                            <Trash2 />
+                                            <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 </Card>
