@@ -1,7 +1,7 @@
 'use server';
 
 import { initializeFirebase } from '@/lib/firebase';
-import { collection, query, where, getDocs, limit, getDoc, doc, updateDoc, arrayUnion, documentId, orderBy, arrayRemove } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, getDoc, doc, updateDoc, arrayUnion, documentId, orderBy, arrayRemove, writeBatch } from 'firebase/firestore';
 import type { UserProfile } from '@/context/auth-context';
 import type { Problem } from '@/ai/flows/problem-curation';
 
@@ -110,46 +110,82 @@ export async function searchUsers(currentUserId: string, searchTerm: string): Pr
   return users;
 }
 
-export async function addConnection(userId: string, friendId: string): Promise<{success: boolean}> {
+export async function sendConnectionRequest(requesterId: string, recipientId: string): Promise<{success: boolean}> {
   const { db, error } = initializeFirebase();
   if (error || !db) {
-    console.error("Firebase error in addConnection:", error?.message);
+    console.error("Firebase error in sendConnectionRequest:", error?.message);
     return { success: false };
   }
-  const userRef = doc(db, 'users', userId);
-  const friendRef = doc(db, 'users', friendId);
+  const requesterRef = doc(db, 'users', requesterId);
+  const recipientRef = doc(db, 'users', recipientId);
   try {
-    await updateDoc(userRef, { connections: arrayUnion(friendId) });
-    await updateDoc(friendRef, { connections: arrayUnion(userId) });
+    const batch = writeBatch(db);
+    batch.update(requesterRef, { sentRequests: arrayUnion(recipientId) });
+    batch.update(recipientRef, { pendingConnections: arrayUnion(requesterId) });
+    await batch.commit();
     return { success: true };
   } catch (e) {
-    console.error("Error adding connection:", e);
+    console.error("Error sending connection request:", e);
     return { success: false };
   }
 }
 
-export async function getConnectedUsers(userId: string): Promise<UserProfile[]> {
-    const { db, error } = initializeFirebase();
-    if (error || !db) {
-        console.error("Firebase error in getConnectedUsers:", error?.message);
-        return [];
-    }
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
-    if (!userSnap.exists()) {
-        return [];
-    }
-    const userData = userSnap.data() as UserProfile;
-    const connectionIds = userData.connections;
+export async function acceptConnectionRequest(userId: string, requesterId: string): Promise<{success: boolean}> {
+  const { db, error } = initializeFirebase();
+  if (error || !db) {
+    console.error("Firebase error in acceptConnectionRequest:", error?.message);
+    return { success: false };
+  }
+  const userRef = doc(db, 'users', userId);
+  const requesterRef = doc(db, 'users', requesterId);
+  try {
+    const batch = writeBatch(db);
+    // Add to connections for both
+    batch.update(userRef, { connections: arrayUnion(requesterId) });
+    batch.update(requesterRef, { connections: arrayUnion(userId) });
+    // Remove from pending/sent lists
+    batch.update(userRef, { pendingConnections: arrayRemove(requesterId) });
+    batch.update(requesterRef, { sentRequests: arrayRemove(userId) });
+    await batch.commit();
+    return { success: true };
+  } catch (e) {
+    console.error("Error accepting connection request:", e);
+    return { success: false };
+  }
+}
 
-    if (!connectionIds || connectionIds.length === 0) {
+export async function declineConnectionRequest(userId: string, requesterId: string): Promise<{success: boolean}> {
+  const { db, error } = initializeFirebase();
+  if (error || !db) {
+    console.error("Firebase error in declineConnectionRequest:", error?.message);
+    return { success: false };
+  }
+  const userRef = doc(db, 'users', userId);
+  const requesterRef = doc(db, 'users', requesterId);
+  try {
+    const batch = writeBatch(db);
+    batch.update(userRef, { pendingConnections: arrayRemove(requesterId) });
+    batch.update(requesterRef, { sentRequests: arrayRemove(userId) });
+    await batch.commit();
+    return { success: true };
+  } catch (e) {
+    console.error("Error declining connection request:", e);
+    return { success: false };
+  }
+}
+
+export async function getUsersByIds(uids: string[]): Promise<UserProfile[]> {
+    const { db, error } = initializeFirebase();
+    if (error || !db || uids.length === 0) {
         return [];
     }
     
-    const usersRef = collection(db, 'users');
     // Firestore 'in' query is limited to 30 elements. For a larger scale app, this would need pagination.
-    const q = query(usersRef, where(documentId(), 'in', connectionIds.slice(0, 30)));
-
+    const uidsToQuery = uids.slice(0, 30);
+    
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where(documentId(), 'in', uidsToQuery));
+    
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => doc.data() as UserProfile);
 }

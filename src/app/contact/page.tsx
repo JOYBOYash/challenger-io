@@ -6,9 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { UserPlus, Search, Check } from 'lucide-react';
+import { UserPlus, Search, Check, Hourglass } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { searchUsers, addConnection } from '@/app/actions/user';
+import { searchUsers, sendConnectionRequest } from '@/app/actions/user';
 
 // Debounce hook to prevent excessive API calls
 function useDebounce<T>(value: T, delay: number): T {
@@ -32,16 +32,9 @@ export default function ConnectPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [results, setResults] = useState<UserProfile[]>([]);
     const [isSearching, setIsSearching] = useState(false);
-    const [connections, setConnections] = useState<string[]>(user?.connections || []);
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const { toast } = useToast();
 
-    useEffect(() => {
-        if (user?.connections) {
-            setConnections(user.connections);
-        }
-    }, [user?.connections]);
-    
     useEffect(() => {
         const handleSearch = async () => {
             if (debouncedSearchTerm.trim().length > 1 && user) {
@@ -56,28 +49,28 @@ export default function ConnectPage() {
         handleSearch();
     }, [debouncedSearchTerm, user]);
 
-    const handleAddConnection = async (targetUserId: string) => {
+    const handleSendRequest = async (targetUserId: string) => {
         if (!user) return;
         
-        const { success } = await addConnection(user.uid, targetUserId);
+        const { success } = await sendConnectionRequest(user.uid, targetUserId);
 
         if (success) {
             toast({
-                title: "Connection Added!",
-                description: "You are now connected with this user.",
+                title: "Request Sent!",
+                description: "Your connection request has been sent.",
             });
-            // Optimistically update the UI
-            setConnections(prev => [...prev, targetUserId]);
+            // The user object from useAuth is reactive, so UI will update automatically.
         } else {
             toast({
                 title: "Error",
-                description: "Could not add connection. Please try again.",
+                description: "Could not send request. Please try again.",
                 variant: 'destructive',
             });
         }
     }
 
     if (loading) return null;
+    if (!user) return <p className="text-center mt-10">Please log in to find challengers.</p>;
 
     return (
         <div className="cyber-grid flex-1">
@@ -106,7 +99,15 @@ export default function ConnectPage() {
                             <p className="text-center text-muted-foreground">No users found.</p>
                         )}
                         {results.map((foundUser) => {
-                            const isConnected = connections.includes(foundUser.uid);
+                            const isConnected = user.connections?.includes(foundUser.uid);
+                            const requestSent = user.sentRequests?.includes(foundUser.uid);
+                            const requestReceived = user.pendingConnections?.includes(foundUser.uid);
+
+                            let buttonState: 'connect' | 'connected' | 'request_sent' | 'request_received' = 'connect';
+                            if (isConnected) buttonState = 'connected';
+                            else if (requestSent) buttonState = 'request_sent';
+                            else if (requestReceived) buttonState = 'request_received';
+                            
                             return (
                                 <Card key={foundUser.uid}>
                                     <CardContent className="p-4 flex items-center justify-between">
@@ -120,11 +121,19 @@ export default function ConnectPage() {
                                             </div>
                                         </div>
                                         <Button
-                                            onClick={() => handleAddConnection(foundUser.uid)}
-                                            disabled={isConnected}
+                                            onClick={() => buttonState === 'connect' && handleSendRequest(foundUser.uid)}
+                                            disabled={buttonState !== 'connect'}
+                                            variant={buttonState === 'connect' ? 'default' : 'secondary'}
                                         >
-                                            {isConnected ? <Check className="mr-2" /> : <UserPlus className="mr-2" />}
-                                            {isConnected ? 'Connected' : 'Connect'}
+                                            {buttonState === 'connected' && <Check className="mr-2" />}
+                                            {buttonState === 'request_sent' && <Hourglass className="mr-2" />}
+                                            {buttonState === 'request_received' && <UserPlus className="mr-2" />}
+                                            {buttonState === 'connect' && <UserPlus className="mr-2" />}
+
+                                            {buttonState === 'connected' ? 'Connected' :
+                                             buttonState === 'request_sent' ? 'Request Sent' :
+                                             buttonState === 'request_received' ? 'Respond on Profile' :
+                                             'Connect'}
                                         </Button>
                                     </CardContent>
                                 </Card>

@@ -12,6 +12,8 @@ export type UserProfile = {
     email: string;
     username: string;
     connections?: string[];
+    pendingConnections?: string[];
+    sentRequests?: string[];
     photoURL?: string;
     bio?: string;
     domain?: string;

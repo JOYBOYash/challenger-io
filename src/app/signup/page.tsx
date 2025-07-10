@@ -83,6 +83,8 @@ export default function SignUpPage() {
         username: values.username,
         email: values.email,
         connections: [],
+        pendingConnections: [],
+        sentRequests: [],
         photoURL: photoURL,
         bio: '',
         domain: '',
