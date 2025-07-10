@@ -11,6 +11,7 @@ import {z} from 'genkit';
 import {
   CurateProblemsInputSchema,
   CurateProblemsOutputSchema,
+  ProblemSchema,
   type CurateProblemsInput,
   type CurateProblemsOutput,
 } from './problem-types';
@@ -42,23 +43,17 @@ const TOPIC_TAG_MAP: Record<string, string[]> = {
     'number theory',
     'two pointers',
   ],
+  'System Design': [],
+  JavaScript: [],
+  React: [],
+  SQL: ['sql'],
 };
 
-const PlatformInspiredProblemMetadataSchema = z.object({
-  problemTitle: z.string(),
-  difficulty: z.string(),
-  topic: z.string(),
-  url: z.string(),
-});
-
-const PlatformInspiredInputSchema = z.object({
-  problemsMetadata: z.array(PlatformInspiredProblemMetadataSchema),
-});
-
-
-async function fetchProblemMetadata(
+// This function now only fetches metadata and does NOT use AI.
+// It's intended to be used directly by the frontend for "Classic Mode".
+export async function fetchPlatformProblems(
   input: CurateProblemsInput
-): Promise<z.infer<typeof PlatformInspiredInputSchema>> {
+): Promise<CurateProblemsOutput> {
   const {topic, players} = input;
 
   // 1. Fetch all problems from Codeforces
@@ -74,7 +69,7 @@ async function fetchProblemMetadata(
   }
   let allProblems: CodeforcesProblem[] = data.result.problems;
 
-  const problemsMetadata: z.infer<typeof PlatformInspiredProblemMetadataSchema>[] = [];
+  const problems: z.infer<typeof ProblemSchema>[] = [];
   const usedProblemNames: Set<string> = new Set();
   const relevantTags = TOPIC_TAG_MAP[topic] || [];
 
@@ -109,84 +104,23 @@ async function fetchProblemMetadata(
         p => p.rating >= ratingRange.min && p.rating <= ratingRange.max
       );
       if (suitableProblems.length === 0) {
-        throw new Error(
-          `Could not find any problems for player with skill: ${player.skillLevel}`
-        );
+        // Fallback to any problem if no suitable ones are found
+        suitableProblems = allProblems;
       }
     }
-
+    
     const randomProblem =
       suitableProblems[Math.floor(Math.random() * suitableProblems.length)];
     usedProblemNames.add(randomProblem.name);
 
-    problemsMetadata.push({
+    problems.push({
       problemTitle: randomProblem.name,
       difficulty: player.skillLevel,
       topic: topic,
       url: `https://codeforces.com/problemset/problem/${randomProblem.contestId}/${randomProblem.index}`,
+      // No description or solutions are fetched/generated.
     });
   }
 
-  return {problemsMetadata};
+  return {problems};
 }
-
-
-export async function curatePlatformInspiredProblems(input: CurateProblemsInput): Promise<CurateProblemsOutput> {
-  // Step 1: Fetch metadata from Codeforces
-  const problemsMetadata = await fetchProblemMetadata(input);
-
-  // Step 2: Use AI to flesh out the problems
-  const fleshedOutProblems = await fleshOutProblemsFlow(problemsMetadata);
-
-  return fleshedOutProblems;
-}
-
-const fleshOutProblemsPrompt = ai.definePrompt({
-    name: 'fleshOutProblemsPrompt',
-    input: {schema: PlatformInspiredInputSchema},
-    output: {schema: CurateProblemsOutputSchema},
-    prompt: `You are an expert and highly creative LeetCode problem creator. Your task is to take a batch of problem titles and metadata and generate full, detailed coding problems based on them.
-
-**CRITICAL INSTRUCTIONS:**
-1. You will be given an array of problem metadata objects.
-2. For each object, you MUST generate a complete coding problem including:
-    - A detailed **problemDescription** with at least one clear example. The description should be inspired by the provided 'problemTitle' but be creative and elaborate on it.
-    - **solutions**: An object containing optimal solutions in JavaScript, Python, Java, C#, and Go.
-3. The problem's **difficulty** and **topic** MUST EXACTLY match what is provided in the metadata.
-4. The **problemTitle** in your output MUST EXACTLY match the title from the input metadata.
-5. The number of problems in your output array MUST EXACTLY match the number of metadata objects in the input array.
-
-Here is the metadata for the problems to generate:
-{{#each problemsMetadata}}
-- Title: {{{this.problemTitle}}}
-  - Difficulty: {{{this.difficulty}}}
-  - Topic: {{{this.topic}}}
-  - Original URL (for context): {{{this.url}}}
-{{/each}}
-
-Your final output must be a JSON object with a single key "problems" which is an array of problem objects, fully fleshed out as per the instructions.`,
-    config: {
-        safetySettings: [
-        {
-            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-            threshold: 'BLOCK_ONLY_HIGH',
-        },
-        {
-            category: 'HARM_CATEGORY_HATE_SPEECH',
-            threshold: 'BLOCK_ONLY_HIGH',
-        },
-        ],
-    },
-});
-
-const fleshOutProblemsFlow = ai.defineFlow({
-    name: 'fleshOutProblemsFlow',
-    inputSchema: PlatformInspiredInputSchema,
-    outputSchema: CurateProblemsOutputSchema,
-}, async (input) => {
-    const { output } = await fleshOutProblemsPrompt(input);
-    if (!output) {
-        throw new Error("AI failed to generate problems from metadata.");
-    }
-    return output;
-});

@@ -16,7 +16,7 @@ import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import { curateProblems, type Problem } from '@/ai/flows/problem-curation';
-import { curatePlatformInspiredProblems } from '@/ai/flows/platformInspiredProblemCuration';
+import { fetchPlatformProblems } from '@/ai/flows/platformInspiredProblemCuration';
 import { useAuth, type UserProfile } from '@/context/auth-context';
 import { getConnectedUsers, saveChallenge, updateUserProfile } from '@/app/actions/user';
 import Loading from '@/app/loading';
@@ -98,7 +98,7 @@ const ChallengeHeader = () => (
 );
 
 export default function ChallengePage() {
-  const { user, loading } = useAuth();
+  const { user, loading, firebaseUser } = useAuth();
   const router = useRouter();
   const [gameState, setGameState] = useState<'setup' | 'generating' | 'playing' | 'finished'>('setup');
   const [players, setPlayers] = useState<Player[]>([]);
@@ -194,25 +194,36 @@ export default function ChallengePage() {
      if (!user) return;
 
     setGameState('generating');
+
     try {
         const playerInputs = players.map(player => ({ skillLevel: player.skillLevel }));
-        
         let problems: Problem[];
 
         if (problemSource === 'ai') {
+            const twentyFourHours = 24 * 60 * 60 * 1000;
+            const now = new Date().getTime();
+            const lastGenTime = user.lastAiChallengeTimestamp || 0;
+            if (now - lastGenTime < twentyFourHours) {
+                toast({ title: 'Daily Limit Reached', description: 'You can generate one AI challenge round per day.', variant: 'destructive' });
+                setGameState('setup');
+                return;
+            }
+            
             const result = await curateProblems({
                 topic: selectedTopic,
                 players: playerInputs,
             });
             problems = result.problems;
-        } else {
-            const result = await curatePlatformInspiredProblems({
+            // Update timestamp after successful generation
+            await updateUserProfile(user.uid, { lastAiChallengeTimestamp: now });
+
+        } else { // 'classic' mode
+            const result = await fetchPlatformProblems({
                 topic: selectedTopic,
                 players: playerInputs,
             });
             problems = result.problems;
         }
-
 
         if (problems.length !== players.length) {
             throw new Error("Did not return the correct number of problems for all players.");
@@ -482,6 +493,7 @@ export default function ChallengePage() {
                 <div className="w-full grid md:grid-cols-2 gap-6">
                     {players.map(player => {
                         const isSaved = player.problem ? savedChallengeTitles.includes(player.problem.problem.problemTitle) : false;
+                        const problem = player.problem?.problem;
                         return (
                         <div key={player.profile.uid} className="cyber-card text-left flex flex-col" style={{ borderLeftColor: player.color, borderLeftWidth: '4px' }}>
                              <div className="flex flex-col items-start gap-2 flex-1">
@@ -499,21 +511,29 @@ export default function ChallengePage() {
                                         </p>
                                     </div>
                                 </div>
-                                {player.problem && (
+                                {problem && (
                                     <div className="w-full pt-3 mt-3 border-t flex-1 flex flex-col justify-between">
                                         <div>
-                                            <p className="font-semibold text-primary">Challenge #{player.problem.displayNumber}: {player.problem.problem.problemTitle}</p>
-                                            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{player.problem.problem.problemDescription}</p>
+                                            <p className="font-semibold text-primary">Challenge #{player.problem.displayNumber}: {problem.problemTitle}</p>
+                                            {problem.problemDescription && <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{problem.problemDescription}</p>}
                                         </div>
                                         <div className="flex gap-2 w-full mt-4">
-                                            <Button className="w-full" onClick={() => setViewedProblem(player.problem)}>
-                                                View Challenge <ArrowRight className="h-4 w-4 ml-2" />
-                                            </Button>
+                                            {problem.url ? (
+                                                <Button asChild className="w-full">
+                                                    <a href={problem.url} target="_blank" rel="noopener noreferrer">
+                                                        <ExternalLink className="mr-2 h-4 w-4"/> View on Platform
+                                                    </a>
+                                                </Button>
+                                            ) : (
+                                                <Button className="w-full" onClick={() => setViewedProblem(player.problem)}>
+                                                    View Challenge <ArrowRight className="h-4 w-4 ml-2" />
+                                                </Button>
+                                            )}
                                             <Button 
                                                 size="icon" 
                                                 variant={isSaved ? "secondary" : "outline"}
-                                                onClick={() => !isSaved && handleSaveChallenge(player.problem!.problem)}
-                                                disabled={isSaved || !player.problem?.problem.solutions}
+                                                onClick={() => !isSaved && handleSaveChallenge(problem)}
+                                                disabled={isSaved}
                                             >
                                                 <Bookmark className={cn(isSaved && "fill-primary")} />
                                             </Button>
