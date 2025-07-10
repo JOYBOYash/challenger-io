@@ -13,6 +13,7 @@ import { UserPlus, Check, Hourglass, UserX, Users } from 'lucide-react';
 import { notFound, useRouter } from 'next/navigation';
 
 export default function PublicProfilePage({ params }: { params: { username: string } }) {
+    const { username } = params;
     const { user: currentUser, loading: authLoading } = useAuth();
     const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
@@ -21,9 +22,9 @@ export default function PublicProfilePage({ params }: { params: { username: stri
 
     useEffect(() => {
         const fetchUser = async () => {
-            if (!params.username) return;
+            if (!username) return;
             setLoading(true);
-            const foundUser = await findUserByUsername(params.username);
+            const foundUser = await findUserByUsername(username);
             if (!foundUser) {
                 notFound();
                 return;
@@ -32,11 +33,11 @@ export default function PublicProfilePage({ params }: { params: { username: stri
             setLoading(false);
         };
         fetchUser();
-    }, [params.username]);
+    }, [username]);
 
     if (authLoading || loading) return <Loading />;
     if (!profileUser) return notFound();
-    if (currentUser?.username === params.username) {
+    if (currentUser?.username === username) {
         router.push('/profile');
         return <Loading/>;
     }
