@@ -212,3 +212,49 @@ export async function getConnectedUsers(userId: string): Promise<UserProfile[]> 
     
     return getUsersByIds(connectionIds);
 }
+
+// Non-AI based user suggestion based on shared skills.
+export async function getSuggestedUsers(currentUser: UserProfile): Promise<UserProfile[]> {
+    const { db, error } = initializeFirebase();
+    if (error || !db) {
+        return [];
+    }
+
+    const currentUserSkills = new Set(currentUser.skills || []);
+    const excludedIds = new Set([
+        currentUser.uid,
+        ...(currentUser.connections || []),
+        ...(currentUser.sentRequests || []),
+        ...(currentUser.pendingConnections || [])
+    ]);
+
+    // Fetch a batch of users to compare against.
+    // In a real large-scale app, this would need a more sophisticated discovery mechanism.
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, limit(50));
+    const querySnapshot = await getDocs(q);
+
+    const scoredUsers: { user: UserProfile; score: number }[] = [];
+
+    querySnapshot.forEach(doc => {
+        const potentialMatch = doc.data() as UserProfile;
+        
+        if (excludedIds.has(potentialMatch.uid)) {
+            return; // Skip if user is self, already connected, or has a pending request.
+        }
+
+        const matchSkills = new Set(potentialMatch.skills || []);
+        const commonSkillsCount = [...currentUserSkills].filter(skill => matchSkills.has(skill)).length;
+        
+        // We only want to suggest users with at least one shared skill.
+        if (commonSkillsCount > 0) {
+            scoredUsers.push({ user: potentialMatch, score: commonSkillsCount });
+        }
+    });
+
+    // Sort by score (descending) and return the top 10.
+    return scoredUsers
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10)
+        .map(item => item.user);
+}
