@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth, type UserProfile } from '@/context/auth-context';
 import Loading from '@/app/loading';
+import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -48,16 +49,18 @@ const ConnectionsList = ({ uids }: { uids: string[] }) => {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {users.map(user => (
-                <Card key={user.uid} className="p-4 flex items-center gap-4">
-                    <Avatar>
-                        <AvatarImage src={user.photoURL} alt={user.username} />
-                        <AvatarFallback>{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                        <p className="font-semibold">{user.username}</p>
-                        <p className="text-sm text-muted-foreground">{user.domain}</p>
-                    </div>
-                </Card>
+                <Link href={`/profile/${user.username}`} key={user.uid} className="block">
+                    <Card className="p-4 flex items-center gap-4 hover:bg-accent transition-colors">
+                        <Avatar>
+                            <AvatarImage src={user.photoURL} alt={user.username} />
+                            <AvatarFallback>{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <p className="font-semibold">{user.username}</p>
+                            <p className="text-sm text-muted-foreground">{user.domain}</p>
+                        </div>
+                    </Card>
+                </Link>
             ))}
         </div>
     );

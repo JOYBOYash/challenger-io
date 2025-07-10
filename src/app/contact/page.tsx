@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useAuth, type UserProfile } from '@/context/auth-context';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { UserPlus, Search, Check, Hourglass } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserPlus, Search, Check, Hourglass, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { searchUsers, sendConnectionRequest } from '@/app/actions/user';
 
@@ -49,25 +50,6 @@ export default function ConnectPage() {
         handleSearch();
     }, [debouncedSearchTerm, user]);
 
-    const handleSendRequest = async (targetUserId: string) => {
-        if (!user) return;
-        
-        const { success } = await sendConnectionRequest(user.uid, targetUserId);
-
-        if (success) {
-            toast({
-                title: "Request Sent!",
-                description: "Your connection request has been sent.",
-            });
-            // The user object from useAuth is reactive, so UI will update automatically.
-        } else {
-            toast({
-                title: "Error",
-                description: "Could not send request. Please try again.",
-                variant: 'destructive',
-            });
-        }
-    }
 
     if (loading) return null;
     if (!user) return <p className="text-center mt-10">Please log in to find challengers.</p>;
@@ -98,47 +80,27 @@ export default function ConnectPage() {
                         {!isSearching && results.length === 0 && searchTerm && (
                             <p className="text-center text-muted-foreground">No users found.</p>
                         )}
-                        {results.map((foundUser) => {
-                            const isConnected = user.connections?.includes(foundUser.uid);
-                            const requestSent = user.sentRequests?.includes(foundUser.uid);
-                            const requestReceived = user.pendingConnections?.includes(foundUser.uid);
-
-                            let buttonState: 'connect' | 'connected' | 'request_sent' | 'request_received' = 'connect';
-                            if (isConnected) buttonState = 'connected';
-                            else if (requestSent) buttonState = 'request_sent';
-                            else if (requestReceived) buttonState = 'request_received';
-                            
-                            return (
-                                <Card key={foundUser.uid}>
-                                    <CardContent className="p-4 flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <Avatar>
-                                                <AvatarFallback>{foundUser.username.charAt(0).toUpperCase()}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="font-semibold text-lg">{foundUser.username}</p>
-                                                <p className="text-sm text-muted-foreground">{foundUser.email}</p>
-                                            </div>
+                        {results.map((foundUser) => (
+                             <Card key={foundUser.uid}>
+                                <CardContent className="p-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <Avatar>
+                                            <AvatarImage src={foundUser.photoURL} alt={foundUser.username} />
+                                            <AvatarFallback>{foundUser.username.charAt(0).toUpperCase()}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="font-semibold text-lg">{foundUser.username}</p>
+                                            <p className="text-sm text-muted-foreground">{foundUser.domain || 'Developer'}</p>
                                         </div>
-                                        <Button
-                                            onClick={() => buttonState === 'connect' && handleSendRequest(foundUser.uid)}
-                                            disabled={buttonState !== 'connect'}
-                                            variant={buttonState === 'connect' ? 'default' : 'secondary'}
-                                        >
-                                            {buttonState === 'connected' && <Check className="mr-2" />}
-                                            {buttonState === 'request_sent' && <Hourglass className="mr-2" />}
-                                            {buttonState === 'request_received' && <UserPlus className="mr-2" />}
-                                            {buttonState === 'connect' && <UserPlus className="mr-2" />}
-
-                                            {buttonState === 'connected' ? 'Connected' :
-                                             buttonState === 'request_sent' ? 'Request Sent' :
-                                             buttonState === 'request_received' ? 'Respond on Profile' :
-                                             'Connect'}
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            )
-                        })}
+                                    </div>
+                                    <Button asChild>
+                                        <Link href={`/profile/${foundUser.username}`}>
+                                            <Eye className="mr-2 h-4 w-4" /> View Profile
+                                        </Link>
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        ))}
                     </div>
                 </div>
             </div>
