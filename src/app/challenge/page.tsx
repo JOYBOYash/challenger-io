@@ -16,7 +16,7 @@ import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import { curateProblems, type Problem } from '@/ai/flows/problem-curation';
-import { fetchPlatformProblems } from '@/ai/flows/platformInspiredProblemCuration';
+import { curatePlatformInspiredProblems } from '@/ai/flows/platformInspiredProblemCuration';
 import { useAuth, type UserProfile } from '@/context/auth-context';
 import { getConnectedUsers, saveChallenge, updateUserProfile } from '@/app/actions/user';
 import Loading from '@/app/loading';
@@ -105,7 +105,7 @@ export default function ChallengePage() {
   const [connections, setConnections] = useState<UserProfile[]>([]);
   const [isFetchingConnections, setIsFetchingConnections] = useState(true);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-  const [problemSource, setProblemSource] = useState<'gauntlet' | 'classics'>('gauntlet');
+  const [problemSource, setProblemSource] = useState<'ai' | 'classic'>('ai');
   const [questions, setQuestions] = useState<GameQuestion[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -199,23 +199,14 @@ export default function ChallengePage() {
         
         let problems: Problem[];
 
-        if (problemSource === 'gauntlet') {
-             const now = new Date();
-             const lastDate = user.lastAiChallengeTimestamp ? new Date(user.lastAiChallengeTimestamp) : new Date(0);
-
-             if (now.toDateString() === lastDate.toDateString()) {
-                 toast({ title: "AI Limit Reached", description: "You can generate one AI challenge per day. Try the Classic Mode or come back tomorrow!", variant: "destructive" });
-                 setGameState('setup');
-                 return;
-             }
+        if (problemSource === 'ai') {
             const result = await curateProblems({
                 topic: selectedTopic,
                 players: playerInputs,
             });
-            await updateUserProfile(user.uid, { lastAiChallengeTimestamp: Date.now() });
             problems = result.problems;
         } else {
-            const result = await fetchPlatformProblems({
+            const result = await curatePlatformInspiredProblems({
                 topic: selectedTopic,
                 players: playerInputs,
             });
@@ -338,15 +329,15 @@ export default function ChallengePage() {
                      <div className="grid gap-3">
                         <Label className="font-medium text-lg flex items-center gap-2"><Trophy className="text-primary"/> Challenge Mode</Label>
                         <RadioGroup
-                            defaultValue="gauntlet"
+                            defaultValue="ai"
                             value={problemSource}
-                            onValueChange={(value: 'gauntlet' | 'classics') => setProblemSource(value)}
+                            onValueChange={(value: 'ai' | 'classic') => setProblemSource(value)}
                             className="grid grid-cols-2 gap-4"
                         >
                             <div>
-                            <RadioGroupItem value="gauntlet" id="gauntlet" className="peer sr-only" />
+                            <RadioGroupItem value="ai" id="ai" className="peer sr-only" />
                             <Label
-                                htmlFor="gauntlet"
+                                htmlFor="ai"
                                 className="flex flex-col items-center justify-center text-center rounded-md border-2 border-muted bg-card p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                             >
                                 <Zap className="mb-3 h-6 w-6" />
@@ -354,9 +345,9 @@ export default function ChallengePage() {
                             </Label>
                             </div>
                             <div>
-                            <RadioGroupItem value="classics" id="classics" className="peer sr-only" />
+                            <RadioGroupItem value="classic" id="classic" className="peer sr-only" />
                             <Label
-                                htmlFor="classics"
+                                htmlFor="classic"
                                 className="flex flex-col items-center justify-center text-center rounded-md border-2 border-muted bg-card p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                             >
                                 <Trophy className="mb-3 h-6 w-6" />
@@ -515,22 +506,14 @@ export default function ChallengePage() {
                                             <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{player.problem.problem.problemDescription}</p>
                                         </div>
                                         <div className="flex gap-2 w-full mt-4">
-                                            {player.problem.problem.url ? (
-                                                <Button asChild className="w-full">
-                                                    <a href={player.problem.problem.url} target="_blank" rel="noopener noreferrer">
-                                                        View on Platform <ExternalLink className="ml-2 h-4 w-4" />
-                                                    </a>
-                                                </Button>
-                                            ) : (
-                                                <Button className="w-full" onClick={() => setViewedProblem(player.problem)}>
-                                                    View Challenge <ArrowRight className="h-4 w-4" />
-                                                </Button>
-                                            )}
+                                            <Button className="w-full" onClick={() => setViewedProblem(player.problem)}>
+                                                View Challenge <ArrowRight className="h-4 w-4 ml-2" />
+                                            </Button>
                                             <Button 
                                                 size="icon" 
                                                 variant={isSaved ? "secondary" : "outline"}
                                                 onClick={() => !isSaved && handleSaveChallenge(player.problem!.problem)}
-                                                disabled={isSaved}
+                                                disabled={isSaved || !player.problem?.problem.solutions}
                                             >
                                                 <Bookmark className={cn(isSaved && "fill-primary")} />
                                             </Button>
