@@ -270,7 +270,7 @@ export default function ProfilePage() {
                 </Card>
 
                 <Tabs defaultValue="challenges" className="mt-12">
-                    <TabsList className="grid w-full grid-cols-4">
+                    <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto md:h-10">
                         <TabsTrigger value="challenges">Saved Challenges ({user.savedChallenges?.length || 0})</TabsTrigger>
                         <TabsTrigger value="connections">Connections ({user.connections?.length || 0})</TabsTrigger>
                         <TabsTrigger value="pending">Pending ({user.pendingConnections?.length || 0})</TabsTrigger>
