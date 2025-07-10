@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { Users, Zap, Trophy } from 'lucide-react';
 
 export default function AboutPage() {
   return (
@@ -15,7 +16,7 @@ export default function AboutPage() {
             <div className="space-y-4">
                 <h2 className="text-3xl font-headline font-bold text-glow">Our Mission</h2>
                 <p className="text-muted-foreground text-lg">
-                    Our mission is to make skill development fun, engaging, and a little unpredictable. By leveraging generative AI, we provide a limitless supply of coding problems. The "Wheel of Fate" adds an element of surprise, ensuring you're always on your toes.
+                    Our mission is to make skill development fun, engaging, and a little unpredictable. By leveraging generative AI and classic competitive problems, we provide a limitless supply of coding challenges. The "Wheel of Fate" adds an element of surprise, ensuring you're always on your toes.
                 </p>
             </div>
             <div className="cyber-card p-0 overflow-hidden">
@@ -29,12 +30,12 @@ export default function AboutPage() {
                 />
             </div>
         </div>
-
+        
          <div className="grid md:grid-cols-2 items-center gap-12 mt-16">
             <div className="md:order-last space-y-4">
-                <h2 className="text-3xl font-headline font-bold text-glow">Built For You</h2>
-                <p className="text-muted-foreground text-lg">
-                    Whether you're a rookie just starting out, a crusader honing your skills, or a veteran looking for a true test, our platform is built for you. We aim to be the ultimate training ground for coders of all levels.
+                <h2 className="text-3xl font-headline font-bold text-glow">Two Arenas, One Goal</h2>
+                 <p className="text-muted-foreground text-lg">
+                    We offer two distinct modes to sharpen your skills. The <strong className="text-primary/90">AI Gauntlet</strong> (<Zap className="inline h-5 w-5"/>) throws novel, creative problems at you, while the <strong className="text-primary/90">Arena Classics</strong> (<Trophy className="inline h-5 w-5"/>) test your fundamentals with problems inspired by legendary competitive platforms.
                 </p>
             </div>
             <div className="cyber-card p-0 overflow-hidden">
@@ -44,6 +45,25 @@ export default function AboutPage() {
                     height={400}
                     alt="Built for you"
                     data-ai-hint="developer community"
+                    className="object-cover"
+                />
+            </div>
+        </div>
+
+         <div className="grid md:grid-cols-2 items-center gap-12 mt-16">
+            <div className="space-y-4">
+                <h2 className="text-3xl font-headline font-bold text-glow">Connect & Compete</h2>
+                <p className="text-muted-foreground text-lg">
+                    Challenger.io is more than just a training ground; it's a community. Find and connect with other developers, invite them to friendly competitions, and grow your skills together.
+                </p>
+            </div>
+            <div className="cyber-card p-0 overflow-hidden">
+                 <Image
+                    src="https://placehold.co/600x400.png"
+                    width={600}
+                    height={400}
+                    alt="Mission"
+                    data-ai-hint="social connection"
                     className="object-cover"
                 />
             </div>

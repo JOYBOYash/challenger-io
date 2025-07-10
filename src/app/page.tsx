@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Orbit, Network, Terminal } from 'lucide-react';
+import { ArrowRight, Zap, Trophy, Users } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -26,7 +26,7 @@ export default function HomePage() {
                 Enter the Coding Arena
               </h1>
               <p className="max-w-[700px] text-muted-foreground md:text-xl">
-                Face off against AI-generated challenges. Spin the wheel of fate, test your skills, and dominate the leaderboard. Your evolution starts now.
+                Face unique AI-generated problems or timeless classics from the competitive scene. Connect with developers, challenge your friends, and dominate the leaderboard.
               </p>
               <div className="flex flex-col gap-2 min-[400px]:flex-row pt-4">
                 <Button asChild size="lg" className="font-bold group">
@@ -44,9 +44,9 @@ export default function HomePage() {
           <div className="container mx-auto px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-5xl text-glow">Why Challenger.io?</h2>
+                <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-5xl text-glow">An Arena Built For Growth</h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Engineered for unpredictability. Designed for growth.
+                  Engineered for unpredictability. Designed for community.
                 </p>
               </div>
             </div>
@@ -54,12 +54,12 @@ export default function HomePage() {
                 <div className="cyber-card flex flex-col justify-center space-y-4 h-full">
                     <div className="flex items-start gap-4">
                         <div className="bg-primary/10 p-3 rounded-full mt-1">
-                            <Terminal className="h-6 w-6 text-primary" />
+                            <Zap className="h-6 w-6 text-primary" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold font-headline">Infinite Problems</h3>
+                            <h3 className="text-xl font-bold font-headline">AI Gauntlet</h3>
                             <p className="text-muted-foreground">
-                              Our AI engine generates a limitless stream of unique coding challenges. Never face the same problem twice.
+                              Test your creativity against a limitless stream of unique, AI-generated coding challenges. A true test of adaptability.
                             </p>
                         </div>
                     </div>
@@ -67,12 +67,12 @@ export default function HomePage() {
                  <div className="cyber-card flex flex-col justify-center space-y-4 h-full">
                     <div className="flex items-start gap-4">
                         <div className="bg-primary/10 p-3 rounded-full mt-1">
-                            <Network className="h-6 w-6 text-primary" />
+                            <Trophy className="h-6 w-6 text-primary" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold font-headline">Dynamic Difficulty</h3>
+                            <h3 className="text-xl font-bold font-headline">Arena Classics</h3>
                             <p className="text-muted-foreground">
-                              From Rookie to Veteran, problems are tailored to each player's skill level, ensuring a meaningful challenge every time.
+                              Prove your mastery by solving problems inspired by legendary competitive programming platforms.
                             </p>
                         </div>
                     </div>
@@ -80,12 +80,12 @@ export default function HomePage() {
                  <div className="cyber-card flex flex-col justify-center space-y-4 h-full">
                     <div className="flex items-start gap-4">
                         <div className="bg-primary/10 p-3 rounded-full mt-1">
-                            <Orbit className="h-6 w-6 text-primary" />
+                            <Users className="h-6 w-6 text-primary" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold font-headline">Wheel of Fate</h3>
+                            <h3 className="text-xl font-bold font-headline">Connect & Compete</h3>
                             <p className="text-muted-foreground">
-                              Embrace the chaos. Spin the wheel to receive your randomly assigned challenge. A true test of adaptability.
+                              Find and connect with other developers. Invite your friends to a challenge and see who comes out on top.
                             </p>
                         </div>
                     </div>
