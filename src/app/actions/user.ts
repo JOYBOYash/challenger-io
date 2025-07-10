@@ -189,3 +189,26 @@ export async function getUsersByIds(uids: string[]): Promise<UserProfile[]> {
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => doc.data() as UserProfile);
 }
+
+export async function getConnectedUsers(userId: string): Promise<UserProfile[]> {
+    const { db, error } = initializeFirebase();
+    if (error || !db) {
+        return [];
+    }
+    
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+        return [];
+    }
+    
+    const userData = userSnap.data() as UserProfile;
+    const connectionIds = userData.connections || [];
+    
+    if (connectionIds.length === 0) {
+        return [];
+    }
+    
+    return getUsersByIds(connectionIds);
+}
