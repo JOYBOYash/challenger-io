@@ -57,7 +57,7 @@ export default function HomePage() {
                             <Zap className="h-6 w-6 text-primary" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold font-headline">AI Gauntlet</h3>
+                            <h3 className="text-xl font-bold font-headline">AI Mode</h3>
                             <p className="text-muted-foreground">
                               Test your creativity against a limitless stream of unique, AI-generated coding challenges. A true test of adaptability.
                             </p>
@@ -70,7 +70,7 @@ export default function HomePage() {
                             <Trophy className="h-6 w-6 text-primary" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold font-headline">Arena Classics</h3>
+                            <h3 className="text-xl font-bold font-headline">Classic Mode</h3>
                             <p className="text-muted-foreground">
                               Prove your mastery by solving problems inspired by legendary competitive programming platforms.
                             </p>

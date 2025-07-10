@@ -204,7 +204,7 @@ export default function ChallengePage() {
              const lastDate = user.lastAiChallengeTimestamp ? new Date(user.lastAiChallengeTimestamp) : new Date(0);
 
              if (now.toDateString() === lastDate.toDateString()) {
-                 toast({ title: "AI Limit Reached", description: "You can generate one AI challenge per day. Try the Arena Classics or come back tomorrow!", variant: "destructive" });
+                 toast({ title: "AI Limit Reached", description: "You can generate one AI challenge per day. Try the Classic Mode or come back tomorrow!", variant: "destructive" });
                  setGameState('setup');
                  return;
              }
@@ -350,7 +350,7 @@ export default function ChallengePage() {
                                 className="flex flex-col items-center justify-center text-center rounded-md border-2 border-muted bg-card p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                             >
                                 <Zap className="mb-3 h-6 w-6" />
-                                AI Gauntlet
+                                AI Mode
                             </Label>
                             </div>
                             <div>
@@ -360,7 +360,7 @@ export default function ChallengePage() {
                                 className="flex flex-col items-center justify-center text-center rounded-md border-2 border-muted bg-card p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                             >
                                 <Trophy className="mb-3 h-6 w-6" />
-                                Arena Classics
+                                Classic Mode
                             </Label>
                             </div>
                         </RadioGroup>

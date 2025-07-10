@@ -35,7 +35,7 @@ export default function AboutPage() {
             <div className="md:order-last space-y-4">
                 <h2 className="text-3xl font-headline font-bold text-glow">Two Arenas, One Goal</h2>
                  <p className="text-muted-foreground text-lg">
-                    We offer two distinct modes to sharpen your skills. The <strong className="text-primary/90">AI Gauntlet</strong> (<Zap className="inline h-5 w-5"/>) throws novel, creative problems at you, while the <strong className="text-primary/90">Arena Classics</strong> (<Trophy className="inline h-5 w-5"/>) test your fundamentals with problems inspired by legendary competitive platforms.
+                    We offer two distinct modes to sharpen your skills. The <strong className="text-primary/90">AI Mode</strong> (<Zap className="inline h-5 w-5"/>) throws novel, creative problems at you, while the <strong className="text-primary/90">Classic Mode</strong> (<Trophy className="inline h-5 w-5"/>) test your fundamentals with problems inspired by legendary competitive platforms.
                 </p>
             </div>
             <div className="cyber-card p-0 overflow-hidden">
