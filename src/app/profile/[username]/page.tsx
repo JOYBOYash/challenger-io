@@ -10,10 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { findUserByUsername, sendConnectionRequest, acceptConnectionRequest, declineConnectionRequest } from '@/app/actions/user';
 import { UserPlus, Check, Hourglass, UserX, Users } from 'lucide-react';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 
-export default function PublicProfilePage({ params }: { params: { username: string } }) {
-    const { username } = params;
+export default function PublicProfilePage() {
+    const params = useParams();
+    const username = Array.isArray(params.username) ? params.username[0] : params.username;
     const { user: currentUser, loading: authLoading } = useAuth();
     const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
@@ -33,14 +34,21 @@ export default function PublicProfilePage({ params }: { params: { username: stri
             setLoading(false);
         };
         fetchUser();
-    }, [username]);
+    }, [username, notFound]);
+
+    useEffect(() => {
+        if (!authLoading && currentUser?.username === username) {
+            router.push('/profile');
+        }
+    }, [authLoading, currentUser, username, router]);
+
 
     if (authLoading || loading) return <Loading />;
     if (!profileUser) return notFound();
-    if (currentUser?.username === username) {
-        router.push('/profile');
+     if (currentUser?.username === username) {
         return <Loading/>;
     }
+
 
     const isConnected = currentUser?.connections?.includes(profileUser.uid);
     const requestSent = currentUser?.sentRequests?.includes(profileUser.uid);
