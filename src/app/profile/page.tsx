@@ -1,6 +1,5 @@
 
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -310,41 +309,43 @@ export default function ProfilePage() {
                         </div>
                         <div className="w-full">
                             <form onSubmit={form.handleSubmit(onSubmit)}>
-                                <div className="flex justify-between items-center mb-4">
-                                    <h1 className="text-3xl font-bold font-headline flex items-center gap-2">
-                                        {user.username}
-                                        {user.plan === 'pro' && !isEditing && <Gem className="h-6 w-6 text-amber-500" />}
-                                        {!isEditing && user.medallions?.map(mId => {
-                                            const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
-                                            return m ? (
-                                                <Tooltip key={m.id}>
-                                                    <TooltipTrigger>
-                                                        <Image src={`https://placehold.co/32x32.png`} width={32} height={32} alt={m.name} data-ai-hint={`${m.id} icon`} />
-                                                    </TooltipTrigger>
-                                                    <TooltipContent><p>{m.name}</p></TooltipContent>
-                                                </Tooltip>
-                                            ) : null;
-                                        })}
-                                    </h1>
-                                    <div className="flex items-center gap-2">
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-4">
+                                    <div className="flex-1">
+                                        <h1 className="text-3xl font-bold font-headline flex items-center gap-2 flex-wrap">
+                                            <span className="break-all">{user.username}</span>
+                                            {user.plan === 'pro' && !isEditing && <Gem className="h-6 w-6 text-amber-500" />}
+                                            {!isEditing && user.medallions?.map(mId => {
+                                                const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
+                                                return m ? (
+                                                    <Tooltip key={m.id}>
+                                                        <TooltipTrigger>
+                                                            <Image src={`https://placehold.co/32x32.png`} width={32} height={32} alt={m.name} data-ai-hint={`${m.id} icon`} />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent><p>{m.name}</p></TooltipContent>
+                                                    </Tooltip>
+                                                ) : null;
+                                            })}
+                                        </h1>
+                                        <p className="text-muted-foreground break-all">{user.email}</p>
+                                    </div>
+                                    <div className="flex sm:flex-col md:flex-row items-center gap-2 w-full sm:w-auto shrink-0">
                                         {isEditing ? (
                                             <>
-                                                <Button type="button" variant="ghost" onClick={handleCancelEdit}>
+                                                <Button type="button" variant="ghost" onClick={handleCancelEdit} className="w-full">
                                                     <X className="mr-2 h-4 w-4" /> Cancel
                                                 </Button>
-                                                <Button type="submit">
+                                                <Button type="submit" className="w-full">
                                                     <Save className="mr-2 h-4 w-4" /> Save
                                                 </Button>
                                             </>
                                         ) : (
-                                            <Button type="button" onClick={() => setIsEditing(true)}>
+                                            <Button type="button" onClick={() => setIsEditing(true)} className="w-full">
                                                 <Edit className="mr-2 h-4 w-4" /> Edit Profile
                                             </Button>
                                         )}
                                     </div>
                                 </div>
-                                <p className="text-muted-foreground mb-6">{user.email}</p>
-
+                                
                                 <div className="space-y-6">
                                     {isEditing && (
                                         <div>
