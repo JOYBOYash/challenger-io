@@ -131,7 +131,12 @@ export default function PublicProfilePage() {
                         <div className="w-full">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <h1 className="text-3xl font-bold font-headline">{profileUser.username}</h1>
+                                    <div className="flex items-center gap-3">
+                                        <h1 className="text-3xl font-bold font-headline">{profileUser.username}</h1>
+                                        {profileUser.plan === 'pro' && (
+                                            <Badge variant="default" className="bg-purple-600 text-base"><Gem className="mr-2 h-4 w-4"/> PRO</Badge>
+                                        )}
+                                    </div>
                                     <p className="text-muted-foreground mb-6">{profileUser.email}</p>
                                 </div>
                                 <div className="flex items-center gap-2">

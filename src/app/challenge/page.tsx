@@ -467,7 +467,12 @@ export default function ChallengePage() {
                                      <User className="h-5 w-5 text-white" />
                                  </div>
                                  <div>
-                                    <p className="text-lg font-semibold">{player.profile.username}</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-lg font-semibold">{player.profile.username}</p>
+                                        {player.profile.plan === 'pro' && (
+                                            <Badge variant="default" className="bg-purple-600"><Gem className="h-3 w-3 mr-1"/> PRO</Badge>
+                                        )}
+                                    </div>
                                     <p className="text-sm text-muted-foreground">{player.profile.uid === user.uid ? '(You)' : ''}</p>
                                  </div>
                              </div>

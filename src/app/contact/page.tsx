@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { searchUsers, getSuggestedUsers, sendConnectionRequest } from '@/app/actions/user';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 
 
 // Debounce hook to prevent excessive API calls
@@ -75,7 +76,12 @@ const UserCard = ({ userProfile, onLimitReached }: { userProfile: UserProfile, o
                         <AvatarFallback>{userProfile.username.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
-                        <p className="font-semibold text-lg group-hover:text-primary">{userProfile.username}</p>
+                        <div className="flex items-center gap-2">
+                           <p className="font-semibold text-lg group-hover:text-primary">{userProfile.username}</p>
+                           {userProfile.plan === 'pro' && (
+                             <Badge variant="default" className="bg-purple-600"><Gem className="h-3 w-3 mr-1"/> PRO</Badge>
+                           )}
+                        </div>
                         <p className="text-sm text-muted-foreground">{userProfile.domain || 'Developer'}</p>
                     </div>
                 </Link>

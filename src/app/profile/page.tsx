@@ -17,7 +17,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { updateUserProfile, removeChallenge, getUsersByIds, acceptConnectionRequest, declineConnectionRequest } from '@/app/actions/user';
-import { Edit, Save, Trash2, X, Eye, ExternalLink, User, Users, UserPlus, Check, UserX } from 'lucide-react';
+import { Edit, Save, Trash2, X, Eye, ExternalLink, User, Users, UserPlus, Check, UserX, Gem } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ProblemDisplay } from '@/components/problem-display';
 import type { Problem } from '@/ai/flows/problem-curation';
@@ -203,6 +203,11 @@ export default function ProfilePage() {
                                 <AvatarImage src={user.photoURL} alt={user.username} />
                                 <AvatarFallback className="text-4xl">{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
                            </Avatar>
+                           {user.plan === 'pro' ? (
+                                <Badge className="mt-4 text-base bg-purple-600" variant="default"><Gem className="mr-2 h-4 w-4"/> Pro Member</Badge>
+                           ) : (
+                               <Button asChild className="mt-4"><Link href="/pricing">Upgrade to Pro</Link></Button>
+                           )}
                         </div>
                         <div className="w-full">
                             <form onSubmit={form.handleSubmit(onSubmit)}>
