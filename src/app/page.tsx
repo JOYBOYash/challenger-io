@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { UserPlus, Search, Check, Hourglass, Eye, Users, Gem, Star, Zap, Trophy, ArrowRight, Lock } from 'lucide-react';
+import { UserPlus, Search, Check, Hourglass, Eye, Users, Gem, Star, Zap, Trophy, ArrowRight, Lock, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { searchUsers, getSuggestedUsers, sendConnectionRequest } from '@/app/actions/user';
+import { createCheckoutSession, createCustomerPortalSession } from '@/app/actions/stripe';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -149,7 +150,7 @@ const TIERS_DATA = [
       { text: 'Unlimited Classic Mode Challenges', icon: <Trophy className="h-5 w-5 text-amber-500" /> },
       { text: 'Up to 50 Connections', icon: <Users className="h-5 w-5 text-amber-500" /> },
     ],
-    buttonText: 'Current Plan',
+    buttonText: 'Manage Subscription',
     upgradeButtonText: 'Upgrade to Pro',
     isPopular: true,
     tag: 'Unlock All Features',
@@ -172,6 +173,10 @@ export default function HomePage() {
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [showLimitDialog, setShowLimitDialog] = useState(false);
   const [limitDialogMessage, setLimitDialogMessage] = useState('');
+  
+  // State for pricing/payment
+  const [isBillingLoading, setIsBillingLoading] = useState(false);
+  const { toast } = useToast();
 
   // Effects from contact/page.tsx
   useEffect(() => {
@@ -209,6 +214,36 @@ export default function HomePage() {
 
   // Logic from pricing/page.tsx
   const currentPlanId = user?.plan || 'free';
+  
+  const handleBillingAction = async (planId: string) => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    setIsBillingLoading(true);
+
+    try {
+      if (planId === 'pro' && currentPlanId !== 'pro') {
+        // Upgrade to Pro
+        const { url, error } = await createCheckoutSession(user.uid, user.email);
+        if (error || !url) throw new Error(error || "Could not create checkout session.");
+        router.push(url);
+      } else if (planId === 'pro' && currentPlanId === 'pro') {
+        // Manage subscription
+        const { url, error } = await createCustomerPortalSession(user.uid);
+        if (error || !url) throw new Error(error || "Could not create customer portal session.");
+        router.push(url);
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Billing Error',
+        description: err.message || 'An unexpected error occurred.',
+        variant: 'destructive'
+      });
+      setIsBillingLoading(false);
+    }
+    // Loading state will persist until page redirects.
+  };
 
   return (
     <TooltipProvider>
@@ -422,14 +457,21 @@ export default function HomePage() {
                                         isCurrent ? (
                                             <Button
                                                 className="w-full text-lg font-bold"
-                                                variant="secondary"
-                                                disabled
+                                                variant={tier.id === 'pro' ? 'default' : 'secondary'}
+                                                disabled={isBillingLoading}
+                                                onClick={() => handleBillingAction(tier.id)}
                                             >
-                                            {tier.buttonText}
+                                                {isBillingLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                {tier.buttonText}
                                             </Button>
                                         ) : (
                                             tier.upgradeButtonText && (
-                                                <Button className="w-full text-lg font-bold" disabled>
+                                                <Button 
+                                                    className="w-full text-lg font-bold" 
+                                                    disabled={isBillingLoading}
+                                                    onClick={() => handleBillingAction(tier.id)}
+                                                >
+                                                    {isBillingLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                                     {tier.upgradeButtonText}
                                                 </Button>
                                             )

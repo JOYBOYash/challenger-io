@@ -76,6 +76,21 @@ export async function findUserByUsername(username: string): Promise<UserProfile 
   return userDoc.data() as UserProfile;
 }
 
+export async function findUserById(uid: string): Promise<UserProfile | null> {
+    const { db, error } = initializeFirebase();
+    if (error || !db) {
+        console.error("Firebase error in findUserById:", error?.message);
+        return null;
+    }
+    if (!uid) return null;
+    const userRef = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) {
+        return null;
+    }
+    return userSnap.data() as UserProfile;
+}
+
 export async function isUsernameTaken(username: string): Promise<boolean> {
   const { db, error } = initializeFirebase();
   if (error || !db) {
