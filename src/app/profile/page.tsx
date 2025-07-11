@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -212,24 +213,23 @@ export default function ProfilePage() {
         setSelectedMedallions(current => {
             const isSelected = current.includes(medallion);
             if (isSelected) {
+                // Always allow deselecting
                 return current.filter(m => m !== medallion);
             } else {
+                // Only allow selecting if under the limit
                 if (current.length < maxMedallions) {
                     return [...current, medallion];
-                } else {
-                    toast({
-                        title: "Medallion Limit Reached",
-                        description: `You can only select up to ${maxMedallions} medallions. ${user.plan === 'free' ? 'Upgrade to Pro to select more!' : ''}`,
-                        variant: 'destructive',
-                    });
-                    return current;
                 }
+                return current; // Do nothing if limit is reached
             }
         });
     };
 
     if (loading) return <Loading />;
     if (!user) return <p className="text-center mt-10">Please log in to view your profile.</p>;
+    
+    const maxMedallions = user.plan === 'pro' ? 3 : 1;
+    const limitReached = selectedMedallions.length >= maxMedallions;
 
     return (
         <div className="cyber-grid flex-1">
@@ -283,16 +283,27 @@ export default function ProfilePage() {
                                                 {user.plan === 'pro' ? 'As a Pro member, you can select up to 3 medallions.' : 'Select 1 medallion to display. Upgrade to Pro to select more!'}
                                             </p>
                                             <div className="flex flex-wrap gap-2 p-2 rounded-md border bg-background/50">
-                                                {AVAILABLE_MEDALLIONS.map(m => (
-                                                    <button
-                                                        type="button"
-                                                        key={m}
-                                                        onClick={() => handleMedallionToggle(m)}
-                                                        className={cn("p-1 rounded-md transition-all", selectedMedallions.includes(m) ? 'bg-primary/20 ring-2 ring-primary' : 'hover:bg-accent')}
-                                                    >
-                                                        <Image src={`https://placehold.co/48x48.png`} width={48} height={48} alt={m} data-ai-hint={`${m} icon`} />
-                                                    </button>
-                                                ))}
+                                                {AVAILABLE_MEDALLIONS.map(m => {
+                                                    const isSelected = selectedMedallions.includes(m);
+                                                    const isDisabled = !isSelected && limitReached;
+
+                                                    return (
+                                                        <button
+                                                            type="button"
+                                                            key={m}
+                                                            onClick={() => handleMedallionToggle(m)}
+                                                            disabled={isDisabled}
+                                                            className={cn(
+                                                                "p-1 rounded-md transition-all",
+                                                                isSelected && 'bg-primary/20 ring-2 ring-primary',
+                                                                !isDisabled && 'hover:bg-accent',
+                                                                isDisabled && 'opacity-50 cursor-not-allowed grayscale'
+                                                            )}
+                                                        >
+                                                            <Image src={`https://placehold.co/48x48.png`} width={48} height={48} alt={m} data-ai-hint={`${m} icon`} />
+                                                        </button>
+                                                    )
+                                                })}
                                             </div>
                                         </div>
                                     )}
