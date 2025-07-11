@@ -19,11 +19,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { updateUserProfile, removeChallenge, getUsersByIds, acceptConnectionRequest, declineConnectionRequest } from '@/app/actions/user';
-import { Edit, Save, Trash2, X, Eye, ExternalLink, User, Users, UserPlus, Check, UserX, Gem, Sparkles } from 'lucide-react';
+import { Edit, Save, Trash2, X, Eye, ExternalLink, User, Users, UserPlus, Check, UserX, Gem, Sparkles, Lock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ProblemDisplay } from '@/components/problem-display';
 import type { Problem } from '@/ai/flows/problem-curation';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useRouter } from 'next/navigation';
+
 
 const profileSchema = z.object({
     bio: z.string().max(250, "Bio can't be more than 250 characters.").optional(),
@@ -33,7 +37,18 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
-const AVAILABLE_MEDALLIONS = ['skull', 'crown', 'bolt', 'star', 'rocket', 'diamond'];
+const AVAILABLE_MEDALLIONS = [
+    { id: 'bolt', name: 'High Voltage', tier: 'free' },
+    { id: 'star', name: 'Star Player', tier: 'free' },
+    { id: 'rocket', name: 'Skyrocketer', tier: 'free' },
+    { id: 'skull', name: 'Bone Collector', tier: 'free' },
+    { id: 'crown', name: 'Arena King', tier: 'free' },
+    { id: 'diamond', name: 'Diamond Hands', tier: 'pro' },
+    { id: 'fire', name: 'On Fire', tier: 'pro' },
+    { id: 'shield', name: 'The Defender', tier: 'pro' },
+    { id: 'swords', name: 'Duelist', tier: 'pro' },
+    { id: 'toxic', name: 'Biohazard', tier: 'pro' },
+];
 
 
 const ConnectionsList = ({ uids }: { uids: string[] }) => {
@@ -140,6 +155,9 @@ export default function ProfilePage() {
     const [isEditing, setIsEditing] = useState(false);
     const { toast } = useToast();
     const [selectedMedallions, setSelectedMedallions] = useState<string[]>([]);
+    const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+    const router = useRouter();
+
 
     useEffect(() => {
         if (user?.medallions) {
@@ -165,15 +183,9 @@ export default function ProfilePage() {
             });
             setSelectedMedallions(user.medallions || []);
         }
-    }, [user, form]);
+    }, [user, form, isEditing]);
 
     const handleCancelEdit = () => {
-        form.reset({
-            bio: user?.bio || '',
-            domain: user?.domain || '',
-            skills: user?.skills?.join(', ') || '',
-        });
-        setSelectedMedallions(user?.medallions || []);
         setIsEditing(false);
     };
 
@@ -206,19 +218,26 @@ export default function ProfilePage() {
         }
     }
     
-    const handleMedallionToggle = (medallion: string) => {
+    const handleMedallionToggle = (medallion: {id: string, tier: string}) => {
         if (!user) return;
+        
+        // Check if medallion is locked
+        if (medallion.tier === 'pro' && user.plan !== 'pro') {
+            setShowUpgradeDialog(true);
+            return;
+        }
+
         const maxMedallions = user.plan === 'pro' ? 3 : 1;
         
         setSelectedMedallions(current => {
-            const isSelected = current.includes(medallion);
+            const isSelected = current.includes(medallion.id);
             if (isSelected) {
                 // Always allow deselecting
-                return current.filter(m => m !== medallion);
+                return current.filter(m => m !== medallion.id);
             } else {
                 // Only allow selecting if under the limit
                 if (current.length < maxMedallions) {
-                    return [...current, medallion];
+                    return [...current, medallion.id];
                 }
                 return current; // Do nothing if limit is reached
             }
@@ -232,6 +251,7 @@ export default function ProfilePage() {
     const limitReached = selectedMedallions.length >= maxMedallions;
 
     return (
+        <TooltipProvider>
         <div className="cyber-grid flex-1">
             <div className="container mx-auto max-w-6xl px-4 md:px-6 py-12 md:py-20">
                 <Card className="p-6 md:p-8">
@@ -252,9 +272,10 @@ export default function ProfilePage() {
                                 <div className="flex justify-between items-center mb-4">
                                     <h1 className="text-3xl font-bold font-headline flex items-center gap-2">
                                         {user.username}
-                                        {user.medallions && user.medallions.map(m => (
-                                            <Image key={m} src={`https://placehold.co/32x32.png`} width={32} height={32} alt={m} data-ai-hint="emblem badge" />
-                                        ))}
+                                        {!isEditing && user.medallions && user.medallions.map(mId => {
+                                            const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
+                                            return m ? <Image key={m.id} src={`https://placehold.co/32x32.png`} width={32} height={32} alt={m.name} data-ai-hint={`${m.id} icon`} /> : null
+                                        })}
                                     </h1>
                                     <div className="flex items-center gap-2">
                                         {isEditing ? (
@@ -283,25 +304,39 @@ export default function ProfilePage() {
                                                 {user.plan === 'pro' ? 'As a Pro member, you can select up to 3 medallions.' : 'Select 1 medallion to display. Upgrade to Pro to select more!'}
                                             </p>
                                             <div className="flex flex-wrap gap-2 p-2 rounded-md border bg-background/50">
-                                                {AVAILABLE_MEDALLIONS.map(m => {
-                                                    const isSelected = selectedMedallions.includes(m);
-                                                    const isDisabled = !isSelected && limitReached;
+                                                {AVAILABLE_MEDALLIONS.map(medallion => {
+                                                    const isSelected = selectedMedallions.includes(medallion.id);
+                                                    const isLockedForFreeUser = medallion.tier === 'pro' && user.plan !== 'pro';
+                                                    const isSelectionLimitReached = !isSelected && limitReached;
+                                                    const isDisabled = isSelectionLimitReached && !isLockedForFreeUser;
 
                                                     return (
-                                                        <button
-                                                            type="button"
-                                                            key={m}
-                                                            onClick={() => handleMedallionToggle(m)}
-                                                            disabled={isDisabled}
-                                                            className={cn(
-                                                                "p-1 rounded-md transition-all",
-                                                                isSelected && 'bg-primary/20 ring-2 ring-primary',
-                                                                !isDisabled && 'hover:bg-accent',
-                                                                isDisabled && 'opacity-50 cursor-not-allowed grayscale'
-                                                            )}
-                                                        >
-                                                            <Image src={`https://placehold.co/48x48.png`} width={48} height={48} alt={m} data-ai-hint={`${m} icon`} />
-                                                        </button>
+                                                        <Tooltip key={medallion.id}>
+                                                            <TooltipTrigger asChild>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleMedallionToggle(medallion)}
+                                                                    disabled={isDisabled}
+                                                                    className={cn(
+                                                                        "p-1 rounded-md transition-all relative",
+                                                                        isSelected && 'bg-primary/20 ring-2 ring-primary',
+                                                                        !isDisabled && !isLockedForFreeUser && 'hover:bg-accent',
+                                                                        (isDisabled || isLockedForFreeUser) && 'opacity-50 cursor-not-allowed grayscale'
+                                                                    )}
+                                                                >
+                                                                    <Image src={`https://placehold.co/48x48.png`} width={48} height={48} alt={medallion.name} data-ai-hint={`${medallion.id} icon`} />
+                                                                    {isLockedForFreeUser && (
+                                                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-md">
+                                                                            <Lock className="h-6 w-6 text-white" />
+                                                                        </div>
+                                                                    )}
+                                                                </button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                <p className="font-semibold">{medallion.name}</p>
+                                                                {isLockedForFreeUser && <p className="text-xs text-amber-500">Pro Exclusive</p>}
+                                                            </TooltipContent>
+                                                        </Tooltip>
                                                     )
                                                 })}
                                             </div>
@@ -414,6 +449,25 @@ export default function ProfilePage() {
                     </TabsContent>
                 </Tabs>
             </div>
+             <AlertDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2"><Gem className="text-amber-500" /> Unlock Pro Medallion</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This medallion is only available to Pro members. Upgrade your plan to unlock this and many other benefits!
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Maybe Later</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => router.push('/pricing')}>
+                        View Plans
+                    </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
+        </TooltipProvider>
     );
 }
+
+    
