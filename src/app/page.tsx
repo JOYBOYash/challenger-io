@@ -495,7 +495,7 @@ export default function HomePage() {
                      <div className="mt-8 h-12 bg-muted rounded w-full"></div>
                    </div>
                 ) : (
-                    products.filter(p => p.name.toLowerCase() === 'pro').map(product => {
+                    products && products.filter(p => p.name.toLowerCase() === 'pro').map(product => {
                         const monthlyPrice = product.prices.find(p => p.billing_cycle?.interval === 'month');
                         if (!monthlyPrice) return null;
 
