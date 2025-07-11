@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserPlus, Search, Check, Hourglass, Eye, Users, Gem, Star, Zap, Trophy, ArrowRight, Lock, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { searchUsers, getSuggestedUsers, sendConnectionRequest } from '@/app/actions/user';
-import { createCheckoutLink } from '@/app/actions/paddle';
+import { getProducts, createCheckoutLink, type PaddleProduct } from '@/app/actions/paddle';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -126,39 +126,19 @@ const UserCard = ({ userProfile, onLimitReached }: { userProfile: UserProfile, o
     );
 };
 
-// Pricing Tiers from pricing/page.tsx
-const TIERS_DATA = [
-  {
-    name: 'Free',
-    id: 'free',
-    price: '₹0',
-    priceSuffix: '/ month',
-    description: 'For individuals starting their journey in the coding arena.',
-    features: [
-      { text: '1 AI Mode Challenge per day', icon: <Zap className="h-5 w-5 text-primary" /> },
-      { text: 'Unlimited Classic Mode Challenges', icon: <Trophy className="h-5 w-5 text-primary" /> },
-      { text: 'Up to 10 Connections', icon: <Users className="h-5 w-5 text-primary" /> },
-    ],
-    buttonText: 'Current Plan',
-  },
-  {
-    name: 'Pro',
-    id: 'pro',
-    price: '₹499',
-    priceSuffix: '/ month',
-    description: 'For dedicated developers who want to push their limits.',
-    features: [
-      { text: 'Unlimited AI Mode Challenges', icon: <Zap className="h-5 w-5 text-amber-500" /> },
-      { text: 'Unlimited Classic Mode Challenges', icon: <Trophy className="h-5 w-5 text-amber-500" /> },
-      { text: 'Up to 50 Connections', icon: <Users className="h-5 w-5 text-amber-500" /> },
-    ],
-    buttonText: 'Manage Subscription',
-    upgradeButtonText: 'Upgrade to Pro',
-    isPopular: true,
-    tag: 'Unlock All Features',
-    tagIcon: <Lock className="h-4 w-4" />,
-  },
+
+const freeTierFeatures = [
+    { text: '1 AI Mode Challenge per day', icon: <Zap className="h-5 w-5 text-primary" /> },
+    { text: 'Unlimited Classic Mode Challenges', icon: <Trophy className="h-5 w-5 text-primary" /> },
+    { text: 'Up to 10 Connections', icon: <Users className="h-5 w-5 text-primary" /> },
 ];
+
+const proTierFeatures = [
+    { text: 'Unlimited AI Mode Challenges', icon: <Zap className="h-5 w-5 text-amber-500" /> },
+    { text: 'Unlimited Classic Mode Challenges', icon: <Trophy className="h-5 w-5 text-amber-500" /> },
+    { text: 'Up to 50 Connections', icon: <Users className="h-5 w-5 text-amber-500" /> },
+];
+
 
 // --- Main Homepage Component ---
 
@@ -177,13 +157,16 @@ export default function HomePage() {
   
   const [isBillingLoading, setIsBillingLoading] = useState(false);
   const [paddleInstance, setPaddleInstance] = useState<Paddle | undefined>();
+  const [products, setProducts] = useState<PaddleProduct[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+
   const { toast } = useToast();
 
   useEffect(() => {
     if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN) {
         import('@paddle/paddle-js').then(({ initializePaddle }) => {
             initializePaddle({
-                environment: 'sandbox', // Use 'production' for live
+                environment: 'sandbox',
                 token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
             }).then((paddle) => {
                 if (paddle) {
@@ -193,6 +176,21 @@ export default function HomePage() {
         });
     }
   }, []);
+  
+  useEffect(() => {
+    async function fetchProducts() {
+        setIsLoadingProducts(true);
+        const { products, error } = await getProducts();
+        if (error) {
+            toast({ title: 'Error', description: 'Could not load pricing plans.', variant: 'destructive' });
+        } else if (products) {
+            setProducts(products);
+        }
+        setIsLoadingProducts(false);
+    }
+    fetchProducts();
+  }, [toast]);
+
 
   useEffect(() => {
     const handleSearch = async () => {
@@ -229,26 +227,25 @@ export default function HomePage() {
 
   const currentPlanId = user?.plan || 'free';
   
-  const handleBillingAction = async (planId: string) => {
+  const handleBillingAction = async (priceId: string) => {
     if (!user) {
       router.push('/login');
       return;
     }
     setIsBillingLoading(true);
 
-    if (planId === 'pro' && currentPlanId !== 'pro') {
+    if (user.plan !== 'pro') {
       try {
-        const { checkoutURL, error } = await createCheckoutLink(user.uid);
+        const { checkoutURL, error } = await createCheckoutLink(user.uid, priceId);
         if (error || !checkoutURL) {
           throw new Error(error || 'Could not create checkout session.');
         }
-        // Redirect to Paddle's checkout
         window.location.href = checkoutURL;
       } catch (err: any) {
         toast({ title: 'Billing Error', description: err.message, variant: 'destructive' });
         setIsBillingLoading(false);
       }
-    } else if (planId === 'pro' && currentPlanId === 'pro') {
+    } else { // User is already pro
       if (paddleInstance && user.paddleSubscriptionId) {
             paddleInstance.Checkout.open({
                 settings: {
@@ -258,7 +255,6 @@ export default function HomePage() {
                 items: [
                     {
                         subscriptionId: user.paddleSubscriptionId,
-                        // priceId: 'YOUR_PRO_PRICE_ID' // You might need this depending on what changes are allowed
                     }
                 ]
             });
@@ -266,8 +262,6 @@ export default function HomePage() {
             toast({ title: 'Subscription Management', description: 'Could not open management portal.' });
         }
       setIsBillingLoading(false);
-    } else {
-        setIsBillingLoading(false);
     }
   };
 
@@ -437,83 +431,136 @@ export default function HomePage() {
 
           {/* --- Pricing Section (from pricing/page.tsx) --- */}
           <section id="pricing" className="w-full py-12 md:py-24 lg:py-32">
-              <div className="container mx-auto max-w-5xl px-4 md:px-6">
-                <div className="text-center">
-                  <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-5xl text-glow">Choose Your Arena</h2>
-                  <p className="mt-4 text-muted-foreground md:text-lg max-w-2xl mx-auto">
-                    Select the plan that best fits your training regimen. Upgrade anytime to unlock your full potential.
-                  </p>
+            <div className="container mx-auto max-w-5xl px-4 md:px-6">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-5xl text-glow">Choose Your Arena</h2>
+                <p className="mt-4 text-muted-foreground md:text-lg max-w-2xl mx-auto">
+                  Select the plan that best fits your training regimen. Upgrade anytime to unlock your full potential.
+                </p>
+              </div>
+
+              <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+                {/* Free Tier */}
+                <div className="relative">
+                  <div className="cyber-card p-8 flex flex-col h-full border-primary/20">
+                    <div className="flex-1 flex flex-col">
+                      <h3 className="text-2xl font-bold font-headline text-primary">Free</h3>
+                      <p className="mt-4 text-muted-foreground">For individuals starting their journey in the coding arena.</p>
+                      <div className="mt-6">
+                        <span className="text-5xl font-bold">₹0</span>
+                        <span className="text-lg text-muted-foreground">/ month</span>
+                      </div>
+                      <ul className="mt-8 space-y-4 flex-1">
+                        {freeTierFeatures.map((feature) => (
+                          <li key={feature.text} className="flex items-start gap-3">
+                            <div className="shrink-0 mt-1">{feature.icon}</div>
+                            <span>{feature.text}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="mt-8">
+                      {user && currentPlanId === 'free' && (
+                        <Button className="w-full text-lg font-bold" variant="secondary" disabled>
+                          Current Plan
+                        </Button>
+                      )}
+                      {!user && (
+                         <Button asChild className="w-full text-lg font-bold">
+                            <Link href="/signup">Sign Up to Start</Link>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-                  {TIERS_DATA.map((tier) => {
-                    const isCurrent = tier.id === currentPlanId;
-                    return (
-                        <div key={tier.name} className="relative">
-                            {tier.isPopular && (
-                                <div className="absolute top-0 -translate-y-1/2 w-full flex justify-center z-10">
+                {/* Pro Tier (Dynamic) */}
+                {isLoadingProducts ? (
+                   <div className="cyber-card p-8 flex flex-col h-full border-primary shadow-2xl shadow-primary/10 relative">
+                     <div className="absolute top-0 -translate-y-1/2 w-full flex justify-center z-10">
+                        <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-2">
+                            <Lock className="h-4 w-4" /> Unlock All Features
+                        </div>
+                    </div>
+                    <div className="flex-1 flex flex-col animate-pulse">
+                        <div className="h-8 bg-muted rounded w-1/4"></div>
+                        <div className="h-6 bg-muted rounded w-3/4 mt-4"></div>
+                        <div className="h-12 bg-muted rounded w-1/2 mt-6"></div>
+                        <div className="space-y-4 mt-8 flex-1">
+                            <div className="h-6 bg-muted rounded w-full"></div>
+                            <div className="h-6 bg-muted rounded w-full"></div>
+                            <div className="h-6 bg-muted rounded w-full"></div>
+                        </div>
+                    </div>
+                     <div className="mt-8 h-12 bg-muted rounded w-full"></div>
+                   </div>
+                ) : (
+                    products.filter(p => p.name.toLowerCase() === 'pro').map(product => {
+                        const monthlyPrice = product.prices.find(p => p.billing_cycle?.interval === 'month');
+                        if (!monthlyPrice) return null;
+
+                        const isCurrent = currentPlanId === 'pro';
+
+                        return (
+                            <div key={product.id} className="relative">
+                                 <div className="absolute top-0 -translate-y-1/2 w-full flex justify-center z-10">
                                     <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-2">
-                                        {tier.tagIcon} {tier.tag}
+                                        <Lock className="h-4 w-4" /> Unlock All Features
                                     </div>
                                 </div>
-                            )}
-                            <div
-                                className={cn(
-                                    'cyber-card p-8 flex flex-col h-full',
-                                    tier.isPopular ? 'border-primary shadow-2xl shadow-primary/10' : 'border-primary/20'
-                                )}
-                            >
-                                <div className="flex-1 flex flex-col">
-                                    <h3 className="text-2xl font-bold font-headline text-primary">{tier.name}</h3>
-                                    <p className="mt-4 text-muted-foreground">{tier.description}</p>
-                                    <div className="mt-6">
-                                    <span className="text-5xl font-bold">{tier.price}</span>
-                                    <span className="text-lg text-muted-foreground">{tier.priceSuffix}</span>
+                                <div className="cyber-card p-8 flex flex-col h-full border-primary shadow-2xl shadow-primary/10">
+                                    <div className="flex-1 flex flex-col">
+                                        <h3 className="text-2xl font-bold font-headline text-primary">{product.name}</h3>
+                                        <p className="mt-4 text-muted-foreground">{product.description}</p>
+                                        <div className="mt-6">
+                                            <span className="text-5xl font-bold">
+                                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: monthlyPrice.unit_price.currency_code }).format(parseInt(monthlyPrice.unit_price.amount) / 100)}
+                                            </span>
+                                            <span className="text-lg text-muted-foreground">/ month</span>
+                                        </div>
+                                        <ul className="mt-8 space-y-4 flex-1">
+                                            {proTierFeatures.map((feature) => (
+                                                <li key={feature.text} className="flex items-start gap-3">
+                                                <div className="shrink-0 mt-1">{feature.icon}</div>
+                                                <span>{feature.text}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
-                                    <ul className="mt-8 space-y-4 flex-1">
-                                    {tier.features.map((feature) => (
-                                        <li key={feature.text} className="flex items-start gap-3">
-                                        <div className="shrink-0 mt-1">{feature.icon}</div>
-                                        <span>{feature.text}</span>
-                                        </li>
-                                    ))}
-                                    </ul>
-                                </div>
-                                <div className="mt-8">
-                                    {user ? (
-                                        isCurrent ? (
-                                            <Button
-                                                className="w-full text-lg font-bold"
-                                                variant={tier.id === 'pro' ? 'default' : 'secondary'}
-                                                disabled={isBillingLoading || !paddleInstance}
-                                                onClick={() => handleBillingAction(tier.id)}
-                                            >
-                                                {isBillingLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                                {tier.buttonText}
-                                            </Button>
-                                        ) : (
-                                            tier.upgradeButtonText && (
+                                    <div className="mt-8">
+                                        {user ? (
+                                            isCurrent ? (
+                                                <Button
+                                                    className="w-full text-lg font-bold"
+                                                    disabled={isBillingLoading || !paddleInstance}
+                                                    onClick={() => handleBillingAction(monthlyPrice.id)}
+                                                >
+                                                    {isBillingLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                    Manage Subscription
+                                                </Button>
+                                            ) : (
                                                 <Button 
                                                     className="w-full text-lg font-bold" 
                                                     disabled={isBillingLoading || !paddleInstance}
-                                                    onClick={() => handleBillingAction(tier.id)}
+                                                    onClick={() => handleBillingAction(monthlyPrice.id)}
                                                 >
                                                     {isBillingLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                                    {tier.upgradeButtonText}
+                                                    Upgrade to Pro
                                                 </Button>
                                             )
-                                        )
-                                    ) : (
-                                        <Button asChild className="w-full text-lg font-bold">
-                                            <Link href="/signup">Sign Up to Start</Link>
-                                        </Button>
-                                    )}
+                                        ) : (
+                                            <Button asChild className="w-full text-lg font-bold">
+                                                <Link href="/signup">Sign Up to Start</Link>
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                  )})}
-                </div>
+                        )
+                    })
+                )}
               </div>
+            </div>
           </section>
 
           {/* --- Connect Section (from contact/page.tsx) --- */}

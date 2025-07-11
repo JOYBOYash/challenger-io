@@ -2,10 +2,63 @@
 
 import 'dotenv/config';
 import { findUserById } from './user';
+import type { UserProfile } from '@/context/auth-context';
 
-const PADDLE_API_URL = 'https://sandbox-api.paddle.com'; // Use 'https://api.paddle.com' for production
+const PADDLE_API_URL = 'https://sandbox-api.paddle.com';
 
-export async function createCheckoutLink(userId: string): Promise<{ checkoutURL?: string; error?: string }> {
+export interface PaddleProduct {
+    id: string;
+    name: string;
+    description: string;
+    prices: PaddlePrice[];
+}
+
+export interface PaddlePrice {
+    id: string;
+    description: string;
+    billing_cycle: {
+        interval: 'month' | 'year';
+    } | null;
+    unit_price: {
+        amount: string;
+        currency_code: string;
+    };
+}
+
+
+export async function getProducts(): Promise<{ products?: PaddleProduct[]; error?: string }> {
+    const apiKey = process.env.PADDLE_API_KEY;
+    if (!apiKey) {
+      return { error: 'Paddle API Key is not configured.' };
+    }
+
+    try {
+        const response = await fetch(`${PADDLE_API_URL}/products?include=prices`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+            },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error('Paddle API Error:', data);
+            const errorMessage = data?.error?.detail || 'Failed to fetch Paddle products.';
+            throw new Error(errorMessage);
+        }
+
+        return { products: data.data };
+
+    } catch (error: any) {
+        console.error('Error fetching Paddle products:', error);
+        return { error: error.message || 'An unexpected error occurred.' };
+    }
+}
+
+
+export async function createCheckoutLink(userId: string, priceId: string): Promise<{ checkoutURL?: string; error?: string }> {
   try {
     if (!userId) {
       throw new Error('User not authenticated.');
@@ -14,11 +67,6 @@ export async function createCheckoutLink(userId: string): Promise<{ checkoutURL?
 
     if (!user) {
       throw new Error('User not found.');
-    }
-
-    const priceId = process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID;
-    if (!priceId) {
-      throw new Error('Paddle Pro Price ID is not configured.');
     }
     
     const apiKey = process.env.PADDLE_API_KEY;
@@ -40,7 +88,6 @@ export async function createCheckoutLink(userId: string): Promise<{ checkoutURL?
             custom_data: {
                 firebase_uid: userId,
             },
-            // This URL is required by Paddle's API
             'checkout': {
                 'settings': {
                     'success_url': `${process.env.NEXT_PUBLIC_APP_URL}/profile?paddle_success=true`
