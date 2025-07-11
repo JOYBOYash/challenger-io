@@ -7,6 +7,9 @@ import { initializeFirebase } from '@/lib/firebase';
 import Loading from '@/app/loading';
 import type { Problem } from '@/ai/flows/problem-curation';
 
+// Add the email(s) of any user you want to have automatic Pro access here.
+const PRO_USER_EMAILS = ['your-email@example.com'];
+
 export type UserProfile = {
     uid: string;
     email: string;
@@ -57,7 +60,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     
                     const unsubscribeFirestore = onSnapshot(docRef, (docSnap) => {
                         if (docSnap.exists()) {
-                            setUser(docSnap.data() as UserProfile);
+                            const userData = docSnap.data() as UserProfile;
+                            
+                            // Override plan to 'pro' if user's email is in the special list
+                            if (authUser.email && PRO_USER_EMAILS.includes(authUser.email)) {
+                                userData.plan = 'pro';
+                            }
+                            
+                            setUser(userData);
                         } else {
                             setUser(null);
                         }
