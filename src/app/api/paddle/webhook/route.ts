@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Paddle } from '@paddle/paddle-js/dist/node.mjs';
+import { Paddle } from '@paddle/paddle-js/node';
 import { updateUserProfile } from '@/app/actions/user';
 import 'dotenv/config';
 
+// The webhook signature verifier uses the Node SDK, which is a separate small utility
+// We keep this specific import for its intended purpose.
 const paddle = new Paddle({
   apiKey: process.env.PADDLE_API_KEY!,
   environment: 'sandbox', // Use 'production' for live
 });
+
 
 export async function POST(req: NextRequest) {
   const signature = req.headers.get('paddle-signature')!;
@@ -32,8 +35,7 @@ export async function POST(req: NextRequest) {
       case 'transaction.completed':
          const status = event.data.status;
          // Check if this transaction is for a subscription product
-         const isSubscription = event.data.items.some(item => item.product?.custom_data?.is_subscription === 'true');
-         if (status === 'completed' && isSubscription) {
+         if (status === 'completed' && event.data.billing_details) {
            await updateUserProfile(firebaseUID, {
              plan: 'pro',
              paddleCustomerId: event.data.customer_id,
