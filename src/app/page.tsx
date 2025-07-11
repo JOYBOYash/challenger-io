@@ -1,23 +1,21 @@
 import { Button } from '@/components/ui/button'; 
 import { ArrowRight, Zap, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen cyber-grid">
       <main className="flex-1">
         <section className="relative w-full h-[80vh] flex items-center justify-center text-center overflow-hidden">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 object-cover w-full h-full opacity-20"
-            src="/nums.mp4"
-            data-ai-hint="digital matrix"
-          >
-            Your browser does not support the video tag.
-          </video>
+          <Image
+            src="/hero3.png"
+            alt="Futuristic coding interface background"
+            layout="fill"
+            objectFit="cover"
+            className="absolute inset-0 w-full h-full opacity-20"
+            priority
+          />
 
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent"></div>
