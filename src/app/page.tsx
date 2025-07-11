@@ -1,22 +1,29 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'; 
 import { ArrowRight, Zap, Trophy, Users } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
-import hero from '../public/hero3.png'
+// import herovideo from "@/public/grids.mp4"
+
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen cyber-grid">
       <main className="flex-1">
         <section className="relative w-full h-[80vh] flex items-center justify-center text-center overflow-hidden">
-          <Image
-            src={hero}
-            alt="Hero Background"
-            data-ai-hint="cyberpunk code city"
-            fill
-            sizes="100vw"
-            className="absolute inset-0 z-0 object-cover opacity-20"
-          />
+          {/* 🔁 Replaced Image with Video */}
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 z-0 object-cover w-full h-full opacity-20"
+          >
+            <source src="../public/nums.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+
+          {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10"></div>
+
+          {/* Main Hero Content */}
           <div className="container relative z-20 px-4 md:px-6">
             <div className="flex flex-col items-center space-y-4">
               <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm text-primary font-medium">
@@ -39,6 +46,8 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* Feature section remains unchanged */}
 
         <section id="features" className="w-full py-12 md:py-24 lg:py-32">
           <div className="container mx-auto px-4 md:px-6">
