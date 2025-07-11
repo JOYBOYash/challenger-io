@@ -33,9 +33,9 @@ import { Badge } from '@/components/ui/badge';
 
 const NAV_ITEMS = [
   { href: '/challenge', label: 'Challenge' },
-  { href: '/pricing', label: 'Pricing' },
-  { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Connect' },
+  { href: '/#pricing', label: 'Pricing' },
+  { href: '/#about', label: 'About' },
+  { href: '/#connect', label: 'Connect' },
 ];
 
 export function Navbar() {
