@@ -1,4 +1,5 @@
 import type {NextConfig} from 'next';
+import path from 'path';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -29,6 +30,15 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       }
     ],
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.resolve.alias['@paddle/paddle-js/node'] = path.resolve(
+        process.cwd(),
+        'node_modules/@paddle/paddle-js/dist/node.mjs'
+      );
+    }
+    return config;
   },
 };
 
