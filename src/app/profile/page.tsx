@@ -78,7 +78,10 @@ const ConnectionsList = ({ uids }: { uids: string[] }) => {
                             <AvatarFallback>{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <p className="font-semibold">{user.username}</p>
+                            <p className="font-semibold flex items-center gap-1">
+                                {user.username}
+                                {user.plan === 'pro' && <Gem className="h-4 w-4 text-amber-500" />}
+                            </p>
                             <p className="text-sm text-muted-foreground">{user.domain}</p>
                         </div>
                     </Card>
@@ -136,7 +139,10 @@ const PendingRequestsList = ({ uids }: { uids: string[] }) => {
                             <AvatarFallback>{requester.username?.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <p className="font-semibold">{requester.username}</p>
+                             <p className="font-semibold flex items-center gap-1">
+                                {requester.username}
+                                {requester.plan === 'pro' && <Gem className="h-4 w-4 text-amber-500" />}
+                            </p>
                             <p className="text-sm text-muted-foreground">{requester.domain}</p>
                         </div>
                     </div>
