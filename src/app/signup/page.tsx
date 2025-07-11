@@ -49,7 +49,7 @@ export default function SignUpPage() {
     }
   }, [searchParams, toast]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>>) => {
     setIsLoading(true);
 
     const { auth, db, error } = initializeFirebase();
@@ -96,7 +96,7 @@ export default function SignUpPage() {
       });
       
       toast({ title: 'Account Created!', description: 'Welcome to Challenger.io!' });
-      router.push('/challenge');
+      router.push('/profile');
     } catch (error: any) {
       toast({
         title: 'Sign Up Failed',

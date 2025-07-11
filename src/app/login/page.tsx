@@ -47,7 +47,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
       toast({ title: 'Login Successful', description: "Welcome back!" });
-      router.push('/challenge');
+      router.push('/profile');
     } catch (error: any) {
       if (error.code === 'auth/invalid-credential') {
         router.push('/signup?from=login-fail');
