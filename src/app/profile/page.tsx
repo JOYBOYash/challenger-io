@@ -452,9 +452,9 @@ export default function ProfilePage() {
                                         <CardContent className="flex-grow">
                                             <p className="text-muted-foreground line-clamp-3">{problem.problemDescription}</p>
                                         </CardContent>
-                                        <div className="flex flex-col sm:flex-row gap-2 p-4 pt-0">
+                                        <div className="flex gap-2 p-4 pt-0">
                                             {problem.url ? (
-                                                <Button asChild className="w-full">
+                                                <Button asChild className="flex-grow">
                                                     <a href={problem.url} target="_blank" rel="noopener noreferrer">
                                                         <ExternalLink className="mr-2 h-4 w-4"/> View on Platform
                                                     </a>
@@ -462,7 +462,7 @@ export default function ProfilePage() {
                                             ) : (
                                                 <Dialog>
                                                     <DialogTrigger asChild>
-                                                        <Button className="w-full"><Eye className="mr-2 h-4 w-4"/> View</Button>
+                                                        <Button className="flex-grow"><Eye className="mr-2 h-4 w-4"/> View</Button>
                                                     </DialogTrigger>
                                                     <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
                                                         <DialogHeader>
@@ -474,7 +474,7 @@ export default function ProfilePage() {
                                                     </DialogContent>
                                                 </Dialog>
                                             )}
-                                            <Button variant="destructive" size="icon" onClick={() => handleRemoveChallenge(problem)} className="w-full sm:w-auto">
+                                            <Button variant="destructive" size="icon" className="shrink-0" onClick={() => handleRemoveChallenge(problem)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
