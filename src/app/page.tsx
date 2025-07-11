@@ -1,27 +1,25 @@
 import { Button } from '@/components/ui/button'; 
 import { ArrowRight, Zap, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
-// import herovideo from "@/public/grids.mp4"
 
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen cyber-grid">
       <main className="flex-1">
         <section className="relative w-full h-[80vh] flex items-center justify-center text-center overflow-hidden">
-          {/* 🔁 Replaced Image with Video */}
           <video
             autoPlay
             muted
             loop
             playsInline
-            className="absolute inset-0 z-0 object-cover w-full h-full opacity-20"
+            className="absolute inset-0 object-cover w-full h-full opacity-20"
           >
             <source src="/nums.mp4" type="video/mp4" data-ai-hint="digital matrix" />
             Your browser does not support the video tag.
           </video>
 
           {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent"></div>
 
           {/* Main Hero Content */}
           <div className="container relative z-20 px-4 md:px-6">
