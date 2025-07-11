@@ -29,7 +29,7 @@ export default function AboutPage() {
                     height={400}
                     alt="Mission"
                     data-ai-hint="futuristic code"
-                    className="object-cover "
+                    className="object-cover hue-rotate-[55deg]"
                 />
             </div>
         </div>
@@ -48,7 +48,7 @@ export default function AboutPage() {
                     height={400}
                     alt="Built for you"
                     data-ai-hint="developer community"
-                    className="object-cover"
+                    className="object-cover hue-rotate-[55deg]"
                 />
             </div>
         </div>
@@ -67,7 +67,7 @@ export default function AboutPage() {
                     height={400}
                     alt="Mission"
                     data-ai-hint="social connection"
-                    className="object-cover"
+                    className="object-cover hue-rotate-[55deg]"
                 />
             </div>
         </div>

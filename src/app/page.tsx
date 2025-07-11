@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Zap, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import hero from '@/public/hero3.png'
 
 export default function HomePage() {
   return (
@@ -9,7 +10,7 @@ export default function HomePage() {
       <main className="flex-1">
         <section className="relative w-full h-[80vh] flex items-center justify-center text-center overflow-hidden">
           <Image
-            src="/hero3.png"
+            src={hero}
             alt="Futuristic coding interface background"
             layout="fill"
             objectFit="cover"
