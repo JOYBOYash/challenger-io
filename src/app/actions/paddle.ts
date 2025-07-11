@@ -2,7 +2,6 @@
 
 import 'dotenv/config';
 import { findUserById } from './user';
-import type { UserProfile } from '@/context/auth-context';
 
 const PADDLE_API_URL = 'https://sandbox-api.paddle.com';
 

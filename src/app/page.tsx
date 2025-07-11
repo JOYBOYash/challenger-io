@@ -162,18 +162,23 @@ export default function HomePage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN) {
-        import('@paddle/paddle-js').then(({ initializePaddle }) => {
-            initializePaddle({
+        import('@paddle/paddle-js').then(({ initializePaddle, Paddle }) => {
+             initializePaddle({
                 environment: 'sandbox',
                 token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
-            }).then((paddle) => {
+                eventCallback: function (data) {
+                    if (data.name === 'checkout.completed') {
+                        router.push('/profile?paddle_success=true');
+                    }
+                }
+             }).then((paddle) => {
                 if (paddle) {
                     setPaddleInstance(paddle);
                 }
             });
         });
     }
-  }, []);
+  }, [router]);
   
   useEffect(() => {
     async function fetchProducts() {
@@ -241,9 +246,9 @@ export default function HomePage() {
         paddleInstance?.Checkout.open({
           transactionId: checkoutURL.split('/').pop()!
         });
-        setIsBillingLoading(false);
       } catch (err: any) {
         toast({ title: 'Billing Error', description: err.message, variant: 'destructive' });
+      } finally {
         setIsBillingLoading(false);
       }
     } else { // User is already pro

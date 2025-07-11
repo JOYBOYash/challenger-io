@@ -1,14 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Paddle } from '@paddle/paddle-js/node';
+import crypto from 'crypto';
 import { updateUserProfile } from '@/app/actions/user';
 import 'dotenv/config';
 
-// The webhook signature verifier uses the Node SDK, which is a separate small utility
-// We keep this specific import for its intended purpose.
-const paddle = new Paddle({
-  apiKey: process.env.PADDLE_API_KEY!,
-  environment: 'sandbox', // Use 'production' for live
-});
+
+// Helper function to verify the Paddle signature
+function isValidSignature(
+    webhookSignature: string,
+    webhookSecret: string,
+    rawBody: string
+): boolean {
+    if (!webhookSignature) {
+        return false;
+    }
+
+    const [timestampPart, signaturePart] = webhookSignature.split(';');
+    const timestamp = timestampPart?.split('=')[1];
+    const signature = signaturePart?.split('=')[1];
+
+    if (!timestamp || !signature) {
+        return false;
+    }
+    
+    const signedPayload = `${timestamp}:${rawBody}`;
+    const expectedSignature = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(signedPayload)
+        .digest('hex');
+
+    return signature === expectedSignature;
+}
 
 
 export async function POST(req: NextRequest) {
@@ -16,13 +37,14 @@ export async function POST(req: NextRequest) {
   const rawBody = await req.text();
   const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET!;
 
+  if (!isValidSignature(signature, webhookSecret, rawBody)) {
+    return new NextResponse('Invalid signature.', { status: 400 });
+  }
+
   try {
-    const event = paddle.webhooks.unmarshal(rawBody, webhookSecret, signature);
-    if (!event) {
-        return new NextResponse('Invalid signature.', { status: 400 });
-    }
+    const event = JSON.parse(rawBody);
     
-    console.log(`✅ Paddle Webhook Received: ${event.eventType}`);
+    console.log(`✅ Paddle Webhook Received: ${event.event_type}`);
 
     const firebaseUID = event.data.custom_data?.firebase_uid;
     
@@ -31,7 +53,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true, message: "No UID found." });
     }
 
-    switch (event.eventType) {
+    switch (event.event_type) {
       case 'transaction.completed':
          const status = event.data.status;
          // Check if this transaction is for a subscription product
@@ -61,11 +83,11 @@ export async function POST(req: NextRequest) {
           plan: 'free',
           paddleSubscriptionId: ''
         });
-        console.log(`Reverted user ${firebaseUID} to Free plan due to status: ${event.eventType}.`);
+        console.log(`Reverted user ${firebaseUID} to Free plan due to status: ${event.event_type}.`);
         break;
       
       default:
-        console.log(`Unhandled Paddle event type: ${event.eventType}`);
+        console.log(`Unhandled Paddle event type: ${event.event_type}`);
     }
 
     return NextResponse.json({ received: true });
