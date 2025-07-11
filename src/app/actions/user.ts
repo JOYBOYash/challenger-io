@@ -110,24 +110,24 @@ export async function searchUsers(currentUserId: string, searchTerm: string): Pr
   return users;
 }
 
-export async function sendConnectionRequest(requesterId: string, recipientId: string): Promise<{success: boolean, message?: string}> {
+export async function sendConnectionRequest(requesterId: string, recipientId: string): Promise<{success: boolean; message?: string; reason?: 'limit_reached' | 'already_connected' | 'unknown'}> {
   const { db, error } = initializeFirebase();
   if (error || !db) {
     console.error("Firebase error in sendConnectionRequest:", error?.message);
-    return { success: false, message: 'Database error.' };
+    return { success: false, message: 'Database error.', reason: 'unknown' };
   }
   const requesterRef = doc(db, 'users', requesterId);
   const recipientRef = doc(db, 'users', recipientId);
   try {
     const requesterSnap = await getDoc(requesterRef);
     if (!requesterSnap.exists()) {
-        return { success: false, message: 'Requester does not exist.' };
+        return { success: false, message: 'Requester does not exist.', reason: 'unknown' };
     }
     const requesterData = requesterSnap.data() as UserProfile;
     
     const limit = requesterData.plan === 'pro' ? 50 : 10;
     if ((requesterData.connections?.length || 0) >= limit) {
-        return { success: false, message: 'You have reached your connection limit.' };
+        return { success: false, message: `You have reached your connection limit of ${limit}. Upgrade to Pro for more connections.`, reason: 'limit_reached' };
     }
 
     const batch = writeBatch(db);
@@ -137,7 +137,7 @@ export async function sendConnectionRequest(requesterId: string, recipientId: st
     return { success: true };
   } catch (e) {
     console.error("Error sending connection request:", e);
-    return { success: false, message: 'An unexpected error occurred.' };
+    return { success: false, message: 'An unexpected error occurred.', reason: 'unknown' };
   }
 }
 

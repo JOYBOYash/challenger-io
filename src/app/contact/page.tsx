@@ -7,10 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { UserPlus, Search, Check, Hourglass, Eye, Users } from 'lucide-react';
+import { UserPlus, Search, Check, Hourglass, Eye, Users, Gem } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { searchUsers, getSuggestedUsers, sendConnectionRequest } from '@/app/actions/user';
 import { useRouter } from 'next/navigation';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
 
 // Debounce hook to prevent excessive API calls
 function useDebounce<T>(value: T, delay: number): T {
@@ -29,7 +31,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-const UserCard = ({ userProfile }: { userProfile: UserProfile }) => {
+const UserCard = ({ userProfile, onLimitReached }: { userProfile: UserProfile, onLimitReached: (message: string) => void }) => {
     const { user: currentUser } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
@@ -41,9 +43,11 @@ const UserCard = ({ userProfile }: { userProfile: UserProfile }) => {
     const requestReceived = currentUser.pendingConnections?.includes(userProfile.uid);
 
     const handleConnectClick = async () => {
-        const { success, message } = await sendConnectionRequest(currentUser.uid, userProfile.uid);
+        const { success, message, reason } = await sendConnectionRequest(currentUser.uid, userProfile.uid);
         if (success) {
             toast({ title: 'Request Sent!' });
+        } else if (reason === 'limit_reached') {
+            onLimitReached(message || 'Connection limit reached.');
         } else {
             toast({ title: 'Error', description: message || 'Could not send request.', variant: 'destructive' });
         }
@@ -91,12 +95,15 @@ const UserCard = ({ userProfile }: { userProfile: UserProfile }) => {
 
 export default function ConnectPage() {
     const { user, loading } = useAuth();
+    const router = useRouter();
     const [searchTerm, setSearchTerm] = useState('');
     const [results, setResults] = useState<UserProfile[]>([]);
     const [suggestions, setSuggestions] = useState<UserProfile[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
+    const [showLimitDialog, setShowLimitDialog] = useState(false);
+    const [limitDialogMessage, setLimitDialogMessage] = useState('');
 
     useEffect(() => {
         const handleSearch = async () => {
@@ -123,6 +130,11 @@ export default function ConnectPage() {
         };
         fetchSuggestions();
     }, [user]);
+    
+    const handleLimitReached = (message: string) => {
+        setLimitDialogMessage(message);
+        setShowLimitDialog(true);
+    }
 
 
     if (loading) return null;
@@ -152,7 +164,7 @@ export default function ConnectPage() {
                     <div className="mt-8 space-y-4">
                         {isSearching && <p className="text-center text-muted-foreground">Searching...</p>}
                         {!isSearching && results.length > 0 && (
-                            results.map((foundUser) => <UserCard key={foundUser.uid} userProfile={foundUser} />)
+                            results.map((foundUser) => <UserCard key={foundUser.uid} userProfile={foundUser} onLimitReached={handleLimitReached} />)
                         )}
                         {!isSearching && results.length === 0 && searchTerm && (
                             <p className="text-center text-muted-foreground">No users found.</p>
@@ -173,13 +185,29 @@ export default function ConnectPage() {
                                     </p>
                                 )}
                                 {suggestions.map((suggestedUser) => (
-                                    <UserCard key={suggestedUser.uid} userProfile={suggestedUser} />
+                                    <UserCard key={suggestedUser.uid} userProfile={suggestedUser} onLimitReached={handleLimitReached} />
                                 ))}
                             </div>
                         </div>
                     )}
                 </div>
             </div>
+             <AlertDialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2"><Gem className="text-purple-500" /> Upgrade to Pro</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        {limitDialogMessage}
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Maybe Later</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => router.push('/pricing')}>
+                        View Plans
+                    </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

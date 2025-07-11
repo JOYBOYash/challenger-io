@@ -9,8 +9,10 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { findUserByUsername, sendConnectionRequest, acceptConnectionRequest, declineConnectionRequest } from '@/app/actions/user';
-import { UserPlus, Check, Hourglass, UserX, Users } from 'lucide-react';
+import { UserPlus, Check, Hourglass, UserX, Users, Gem } from 'lucide-react';
 import { notFound, useRouter, useParams } from 'next/navigation';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
 
 export default function PublicProfilePage() {
     const params = useParams();
@@ -18,6 +20,8 @@ export default function PublicProfilePage() {
     const { user: currentUser, loading: authLoading } = useAuth();
     const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const [showLimitDialog, setShowLimitDialog] = useState(false);
+    const [limitDialogMessage, setLimitDialogMessage] = useState('');
     const { toast } = useToast();
     const router = useRouter();
 
@@ -61,9 +65,12 @@ export default function PublicProfilePage() {
     
     const handleSendRequest = async () => {
         if (!currentUser) return;
-        const { success, message } = await sendConnectionRequest(currentUser.uid, profileUser.uid);
+        const { success, message, reason } = await sendConnectionRequest(currentUser.uid, profileUser.uid);
         if (success) {
             toast({ title: "Request Sent!" });
+        } else if (reason === 'limit_reached') {
+            setLimitDialogMessage(message || 'You have reached your connection limit.');
+            setShowLimitDialog(true);
         } else {
             toast({ title: "Error", description: message, variant: 'destructive' });
         }
@@ -156,6 +163,22 @@ export default function PublicProfilePage() {
                     </div>
                 </Card>
             </div>
+             <AlertDialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2"><Gem className="text-purple-500" /> Upgrade to Pro</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        {limitDialogMessage}
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Maybe Later</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => router.push('/pricing')}>
+                        View Plans
+                    </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
