@@ -16,7 +16,7 @@ export default function HomePage() {
             playsInline
             className="absolute inset-0 z-0 object-cover w-full h-full opacity-20"
           >
-            <source src="../public/nums.mp4" type="video/mp4" />
+            <source src="/nums.mp4" type="video/mp4" data-ai-hint="digital matrix" />
             Your browser does not support the video tag.
           </video>
 
