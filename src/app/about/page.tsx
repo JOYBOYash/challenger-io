@@ -1,5 +1,8 @@
 import Image from 'next/image';
 import { Users, Zap, Trophy } from 'lucide-react';
+import mission from "@/public/rocket2.png";
+import arena from "@/public/2vs.png";
+import connect from "@/public/3shake.png";
 
 export default function AboutPage() {
   return (
@@ -19,14 +22,14 @@ export default function AboutPage() {
                     Our mission is to make skill development fun, engaging, and a little unpredictable. By leveraging generative AI and classic competitive problems, we provide a limitless supply of coding challenges. The "Wheel of Fate" adds an element of surprise, ensuring you're always on your toes.
                 </p>
             </div>
-            <div className="cyber-card p-0 overflow-hidden">
+            <div className="cyber-card  p-0 overflow-hidden">
                  <Image
-                    src="https://placehold.co/600x400.png"
+                    src={mission}
                     width={600}
                     height={400}
                     alt="Mission"
                     data-ai-hint="futuristic code"
-                    className="object-cover"
+                    className="object-cover "
                 />
             </div>
         </div>
@@ -40,7 +43,7 @@ export default function AboutPage() {
             </div>
             <div className="cyber-card p-0 overflow-hidden">
                  <Image
-                    src="https://placehold.co/600x400.png"
+                    src={arena}
                     width={600}
                     height={400}
                     alt="Built for you"
@@ -59,7 +62,7 @@ export default function AboutPage() {
             </div>
             <div className="cyber-card p-0 overflow-hidden">
                  <Image
-                    src="https://placehold.co/600x400.png"
+                    src={connect}
                     width={600}
                     height={400}
                     alt="Mission"

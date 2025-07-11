@@ -2,14 +2,14 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Zap, Trophy, Users } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-
+import hero from '../public/hero3.png'
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen cyber-grid">
       <main className="flex-1">
         <section className="relative w-full h-[80vh] flex items-center justify-center text-center overflow-hidden">
           <Image
-            src="https://placehold.co/1920x1080.png"
+            src={hero}
             alt="Hero Background"
             data-ai-hint="cyberpunk code city"
             fill
