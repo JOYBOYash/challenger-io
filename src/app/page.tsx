@@ -13,8 +13,9 @@ export default function HomePage() {
             loop
             playsInline
             className="absolute inset-0 object-cover w-full h-full opacity-20"
+            src="/nums.mp4"
+            data-ai-hint="digital matrix"
           >
-            <source src="/nums.mp4" type="video/mp4" data-ai-hint="digital matrix" />
             Your browser does not support the video tag.
           </video>
 
@@ -22,7 +23,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent"></div>
 
           {/* Main Hero Content */}
-          <div className="container px-4 md:px-6">
+          <div className="relative z-10 container px-4 md:px-6">
             <div className="flex flex-col items-center space-y-4">
               <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm text-primary font-medium">
                 From Rookie to Veteran
