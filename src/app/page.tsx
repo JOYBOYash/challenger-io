@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Script from 'next/script';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth, type UserProfile } from '@/context/auth-context';
@@ -12,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserPlus, Search, Check, Hourglass, Eye, Users, Gem, Star, Zap, Trophy, ArrowRight, Lock, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { searchUsers, getSuggestedUsers, sendConnectionRequest } from '@/app/actions/user';
-import { createCheckoutSession, createCustomerPortalSession } from '@/app/actions/stripe';
+import { createSubscription, verifyPayment } from '@/app/actions/razorpay';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -129,7 +130,7 @@ const TIERS_DATA = [
   {
     name: 'Free',
     id: 'free',
-    price: '$0',
+    price: '₹0',
     priceSuffix: '/ month',
     description: 'For individuals starting their journey in the coding arena.',
     features: [
@@ -142,7 +143,7 @@ const TIERS_DATA = [
   {
     name: 'Pro',
     id: 'pro',
-    price: '$9.99',
+    price: '₹499',
     priceSuffix: '/ month',
     description: 'For dedicated developers who want to push their limits.',
     features: [
@@ -164,7 +165,6 @@ export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   
-  // State from contact/page.tsx
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<UserProfile[]>([]);
   const [suggestions, setSuggestions] = useState<UserProfile[]>([]);
@@ -174,11 +174,9 @@ export default function HomePage() {
   const [showLimitDialog, setShowLimitDialog] = useState(false);
   const [limitDialogMessage, setLimitDialogMessage] = useState('');
   
-  // State for pricing/payment
   const [isBillingLoading, setIsBillingLoading] = useState(false);
   const { toast } = useToast();
 
-  // Effects from contact/page.tsx
   useEffect(() => {
     const handleSearch = async () => {
         if (debouncedSearchTerm.trim().length > 1 && user) {
@@ -212,7 +210,6 @@ export default function HomePage() {
       setShowLimitDialog(true);
   }
 
-  // Logic from pricing/page.tsx
   const currentPlanId = user?.plan || 'free';
   
   const handleBillingAction = async (planId: string) => {
@@ -222,31 +219,75 @@ export default function HomePage() {
     }
     setIsBillingLoading(true);
 
-    try {
-      if (planId === 'pro' && currentPlanId !== 'pro') {
-        // Upgrade to Pro
-        const { url, error } = await createCheckoutSession(user.uid, user.email);
-        if (error || !url) throw new Error(error || "Could not create checkout session.");
-        router.push(url);
-      } else if (planId === 'pro' && currentPlanId === 'pro') {
-        // Manage subscription
-        const { url, error } = await createCustomerPortalSession(user.uid);
-        if (error || !url) throw new Error(error || "Could not create customer portal session.");
-        router.push(url);
+    if (planId === 'pro' && currentPlanId !== 'pro') {
+      try {
+        const subData = await createSubscription();
+        if (!subData || subData.error) {
+          throw new Error(subData?.error || 'Could not create subscription.');
+        }
+
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+          subscription_id: subData.subscriptionId,
+          name: 'Challenger.io Pro',
+          description: 'Monthly Pro Subscription',
+          image: '/logo.svg', // You might need to create this logo file
+          handler: async function (response: any) {
+            const verificationResult = await verifyPayment({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_subscription_id: response.razorpay_subscription_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verificationResult.success) {
+              toast({ title: 'Payment Successful', description: 'Welcome to Pro!' });
+              router.push('/profile'); // or refresh to show new status
+            } else {
+              toast({ title: 'Payment Failed', description: 'Your payment could not be verified.', variant: 'destructive' });
+            }
+            setIsBillingLoading(false);
+          },
+          prefill: {
+            name: user.username,
+            email: user.email,
+          },
+          theme: {
+            color: '#10b981' // primary color
+          }
+        };
+        // @ts-ignore
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+
+        rzp.on('payment.failed', function (response: any) {
+            toast({
+                title: 'Payment Failed',
+                description: response.error.description,
+                variant: 'destructive',
+            });
+            setIsBillingLoading(false);
+        });
+
+      } catch (err: any) {
+        toast({ title: 'Billing Error', description: err.message, variant: 'destructive' });
+        setIsBillingLoading(false);
       }
-    } catch (err: any) {
-      toast({
-        title: 'Billing Error',
-        description: err.message || 'An unexpected error occurred.',
-        variant: 'destructive'
-      });
+    } else if (planId === 'pro' && currentPlanId === 'pro') {
+      // Logic to manage subscription - typically redirect to a customer portal
+      toast({ title: 'Subscription Management', description: 'Redirecting to manage your subscription.' });
+      // You'd typically redirect to a portal URL provided by Razorpay or your own management page
+      // For now, let's just log it.
+      console.log('Manage subscription clicked');
       setIsBillingLoading(false);
+    } else {
+        setIsBillingLoading(false);
     }
-    // Loading state will persist until page redirects.
   };
+
 
   return (
     <TooltipProvider>
+      <Script id="razorpay-checkout-js" src="https://checkout.razorpay.com/v1/checkout.js" />
       <div className="flex flex-col min-h-screen cyber-grid">
         <main className="flex-1">
           {/* --- Hero Section --- */}

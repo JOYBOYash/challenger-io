@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { PRO_USER_EMAILS } from '@/context/auth-context';
 
 const formSchema = z.object({
   username: z.string().min(3, { message: 'Username must be at least 3 characters.' }).max(20, { message: 'Username must be less than 20 characters.' })
@@ -77,12 +78,14 @@ export default function SignUpPage() {
           photoURL,
       });
 
+      const isPro = PRO_USER_EMAILS.includes(values.email);
+
       // Create the user document in Firestore
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         username: values.username,
         email: values.email,
-        plan: 'free', // Set default plan
+        plan: isPro ? 'pro' : 'free',
         connections: [],
         pendingConnections: [],
         sentRequests: [],

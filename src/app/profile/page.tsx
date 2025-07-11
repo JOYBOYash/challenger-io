@@ -305,7 +305,7 @@ export default function ProfilePage() {
                            {user.plan === 'pro' ? (
                                 <Badge className="mt-4 text-base bg-amber-500 text-amber-950" variant="default"><Gem className="mr-2 h-4 w-4"/> Pro Member</Badge>
                            ) : (
-                               <Button asChild className="mt-4"><Link href="/pricing">Upgrade to Pro</Link></Button>
+                               <Button asChild className="mt-4"><Link href="/#pricing">Upgrade to Pro</Link></Button>
                            )}
                         </div>
                         <div className="w-full">
@@ -508,7 +508,7 @@ export default function ProfilePage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                     <AlertDialogCancel>Maybe Later</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => router.push('/pricing')}>
+                    <AlertDialogAction onClick={() => router.push('/#pricing')}>
                         View Plans
                     </AlertDialogAction>
                     </AlertDialogFooter>
