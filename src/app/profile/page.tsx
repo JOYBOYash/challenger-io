@@ -221,7 +221,6 @@ export default function ProfilePage() {
     const handleMedallionToggle = (medallion: {id: string, tier: string}) => {
         if (!user) return;
         
-        // Check if medallion is locked
         if (medallion.tier === 'pro' && user.plan !== 'pro') {
             setShowUpgradeDialog(true);
             return;
@@ -232,14 +231,12 @@ export default function ProfilePage() {
         setSelectedMedallions(current => {
             const isSelected = current.includes(medallion.id);
             if (isSelected) {
-                // Always allow deselecting
                 return current.filter(m => m !== medallion.id);
             } else {
-                // Only allow selecting if under the limit
                 if (current.length < maxMedallions) {
                     return [...current, medallion.id];
                 }
-                return current; // Do nothing if limit is reached
+                return current;
             }
         });
     };
@@ -301,7 +298,7 @@ export default function ProfilePage() {
                                         <div>
                                             <Label className="text-lg font-semibold flex items-center gap-2"><Sparkles className="text-amber-500" /> Medallions</Label>
                                             <p className="text-xs text-muted-foreground mb-2">
-                                                {user.plan === 'pro' ? 'As a Pro member, you can select up to 3 medallions.' : 'Select 1 medallion to display. Upgrade to Pro to select more!'}
+                                                {user.plan === 'pro' ? `Select up to ${maxMedallions} medallions to display on your profile.` : `Select 1 medallion. Upgrade to Pro to select up to 3!`}
                                             </p>
                                             <div className="flex flex-wrap gap-2 p-2 rounded-md border bg-background/50">
                                                 {AVAILABLE_MEDALLIONS.map(medallion => {
@@ -469,5 +466,3 @@ export default function ProfilePage() {
         </TooltipProvider>
     );
 }
-
-    
