@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -50,7 +51,7 @@ export default function SignUpPage() {
     }
   }, [searchParams, toast]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
 
     const { auth, db, error } = initializeFirebase();
@@ -101,11 +102,19 @@ export default function SignUpPage() {
       toast({ title: 'Account Created!', description: 'Welcome to Challenger.io!' });
       router.push('/profile');
     } catch (error: any) {
-      toast({
-        title: 'Sign Up Failed',
-        description: error.message || 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
+      if (error.code === 'auth/email-already-in-use') {
+         toast({
+          title: 'Sign Up Failed',
+          description: 'This email is already in use. Please log in instead.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Sign Up Failed',
+          description: error.message || 'An unexpected error occurred.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
