@@ -20,7 +20,6 @@ const TIERS_DATA = [
       { text: 'Up to 10 Connections', icon: <Users className="h-5 w-5 text-primary" /> },
     ],
     buttonText: 'Current Plan',
-    upgradeButtonText: 'Upgrade to Pro',
   },
   {
     name: 'Pro',
@@ -33,7 +32,7 @@ const TIERS_DATA = [
       { text: 'Unlimited Classic Mode Challenges', icon: <Trophy className="h-5 w-5 text-purple-500" /> },
       { text: 'Up to 50 Connections', icon: <Users className="h-5 w-5 text-purple-500" /> },
     ],
-    buttonText: 'You are on this plan',
+    buttonText: 'Current Plan',
     upgradeButtonText: 'Upgrade to Pro',
     isPopular: true,
   },
@@ -95,18 +94,24 @@ export default function PricingPage() {
                     </ul>
                 </div>
                 <div className="mt-8">
-                    <Button
-                    className="w-full text-lg font-bold"
-                    variant={isCurrent ? 'secondary' : 'default'}
-                    disabled={isCurrent}
-                    asChild={!isCurrent}
-                    >
                     {isCurrent ? (
-                        <span>{tier.buttonText}</span>
+                         <Button
+                            className="w-full text-lg font-bold"
+                            variant="secondary"
+                            disabled
+                        >
+                           {tier.buttonText}
+                        </Button>
                     ) : (
-                        <Link href="/">{tier.upgradeButtonText}</Link>
+                        tier.upgradeButtonText && (
+                            <Button
+                                className="w-full text-lg font-bold"
+                                asChild
+                            >
+                               <Link href="/">{tier.upgradeButtonText}</Link>
+                            </Button>
+                        )
                     )}
-                    </Button>
                 </div>
                 </div>
           )})}
