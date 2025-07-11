@@ -1,6 +1,6 @@
-import {genkit, configureGenkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
-import {groq} from 'genkitx-groq';
+import { configureGenkit, genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { groq } from 'genkitx-groq';
 
 // Default AI for Free tier
 export const ai = genkit({
@@ -8,7 +8,7 @@ export const ai = genkit({
   model: 'googleai/gemini-1.5-flash-latest',
 });
 
-// Separate AI configuration for Pro tier using Groq
+// Pro tier using Groq
 export const proAi = genkit({
   plugins: [
     groq({
