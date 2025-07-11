@@ -79,7 +79,7 @@ const UserCard = ({ userProfile, onLimitReached }: { userProfile: UserProfile, o
                         <div className="flex items-center gap-2">
                            <p className="font-semibold text-lg group-hover:text-primary">{userProfile.username}</p>
                            {userProfile.plan === 'pro' && (
-                             <Badge variant="default" className="bg-purple-600"><Gem className="h-3 w-3 mr-1"/> PRO</Badge>
+                             <Badge variant="default" className="bg-amber-500 text-amber-950"><Gem className="h-3 w-3 mr-1"/> PRO</Badge>
                            )}
                         </div>
                         <p className="text-sm text-muted-foreground">{userProfile.domain || 'Developer'}</p>
@@ -201,7 +201,7 @@ export default function ConnectPage() {
              <AlertDialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                    <AlertDialogTitle className="flex items-center gap-2"><Gem className="text-purple-500" /> Upgrade to Pro</AlertDialogTitle>
+                    <AlertDialogTitle className="flex items-center gap-2"><Gem className="text-amber-500" /> Upgrade to Pro</AlertDialogTitle>
                     <AlertDialogDescription>
                         {limitDialogMessage}
                     </AlertDialogDescription>

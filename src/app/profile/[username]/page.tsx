@@ -134,7 +134,7 @@ export default function PublicProfilePage() {
                                     <div className="flex items-center gap-3">
                                         <h1 className="text-3xl font-bold font-headline">{profileUser.username}</h1>
                                         {profileUser.plan === 'pro' && (
-                                            <Badge variant="default" className="bg-purple-600 text-base"><Gem className="mr-2 h-4 w-4"/> PRO</Badge>
+                                            <Badge variant="default" className="bg-amber-500 text-amber-950 text-base"><Gem className="mr-2 h-4 w-4"/> PRO</Badge>
                                         )}
                                     </div>
                                     <p className="text-muted-foreground mb-6">{profileUser.email}</p>
@@ -171,7 +171,7 @@ export default function PublicProfilePage() {
              <AlertDialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                    <AlertDialogTitle className="flex items-center gap-2"><Gem className="text-purple-500" /> Upgrade to Pro</AlertDialogTitle>
+                    <AlertDialogTitle className="flex items-center gap-2"><Gem className="text-amber-500" /> Upgrade to Pro</AlertDialogTitle>
                     <AlertDialogDescription>
                         {limitDialogMessage}
                     </AlertDialogDescription>

@@ -204,7 +204,7 @@ export default function ProfilePage() {
                                 <AvatarFallback className="text-4xl">{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
                            </Avatar>
                            {user.plan === 'pro' ? (
-                                <Badge className="mt-4 text-base bg-purple-600" variant="default"><Gem className="mr-2 h-4 w-4"/> Pro Member</Badge>
+                                <Badge className="mt-4 text-base bg-amber-500 text-amber-950" variant="default"><Gem className="mr-2 h-4 w-4"/> Pro Member</Badge>
                            ) : (
                                <Button asChild className="mt-4"><Link href="/pricing">Upgrade to Pro</Link></Button>
                            )}

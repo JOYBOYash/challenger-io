@@ -399,7 +399,7 @@ export default function ChallengePage() {
                                 )}
                             >
                                 {aiCredits === Infinity ? (
-                                    <Badge variant="default" className="absolute -top-2 -right-2 bg-purple-600"><Gem className="h-3 w-3 mr-1"/> Unlimited</Badge>
+                                    <Badge variant="default" className="absolute -top-2 -right-2 bg-amber-500 text-amber-950"><Gem className="h-3 w-3 mr-1"/> Unlimited</Badge>
                                 ) : (
                                     <Badge variant={aiCredits > 0 ? "default" : "destructive"} className="absolute -top-2 -right-2">{aiCredits} Credit{aiCredits !== 1 && 's'}</Badge>
                                 )}
@@ -470,7 +470,7 @@ export default function ChallengePage() {
                                     <div className="flex items-center gap-2">
                                         <p className="text-lg font-semibold">{player.profile.username}</p>
                                         {player.profile.plan === 'pro' && (
-                                            <Badge variant="default" className="bg-purple-600"><Gem className="h-3 w-3 mr-1"/> PRO</Badge>
+                                            <Badge variant="default" className="bg-amber-500 text-amber-950"><Gem className="h-3 w-3 mr-1"/> PRO</Badge>
                                         )}
                                     </div>
                                     <p className="text-sm text-muted-foreground">{player.profile.uid === user.uid ? '(You)' : ''}</p>

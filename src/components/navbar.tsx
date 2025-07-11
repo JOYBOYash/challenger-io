@@ -106,7 +106,7 @@ export function Navbar() {
                             <div className="flex items-center justify-between">
                                 <p className="text-sm font-medium leading-none">{user.username}</p>
                                 {user.plan === 'pro' ? (
-                                    <Badge variant="default" className="ml-2 bg-purple-600"><Gem className="mr-1 h-3 w-3" /> PRO</Badge>
+                                    <Badge variant="default" className="ml-2 bg-amber-500 text-amber-950"><Gem className="mr-1 h-3 w-3" /> PRO</Badge>
                                 ) : (
                                     <Badge variant="secondary" className="ml-2">Free</Badge>
                                 )}

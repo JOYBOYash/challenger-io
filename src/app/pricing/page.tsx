@@ -28,9 +28,9 @@ const TIERS_DATA = [
     priceSuffix: '/ month',
     description: 'For dedicated developers who want to push their limits.',
     features: [
-      { text: 'Unlimited AI Mode Challenges', icon: <Zap className="h-5 w-5 text-purple-500" /> },
-      { text: 'Unlimited Classic Mode Challenges', icon: <Trophy className="h-5 w-5 text-purple-500" /> },
-      { text: 'Up to 50 Connections', icon: <Users className="h-5 w-5 text-purple-500" /> },
+      { text: 'Unlimited AI Mode Challenges', icon: <Zap className="h-5 w-5 text-amber-500" /> },
+      { text: 'Unlimited Classic Mode Challenges', icon: <Trophy className="h-5 w-5 text-amber-500" /> },
+      { text: 'Up to 50 Connections', icon: <Users className="h-5 w-5 text-amber-500" /> },
     ],
     buttonText: 'Current Plan',
     upgradeButtonText: 'Upgrade to Pro',
