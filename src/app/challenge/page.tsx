@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { LuckyWheel } from '@/components/lucky-wheel';
 import { ProblemDisplay } from '@/components/problem-display';
 import { Icons } from '@/components/icons';
-import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft, X, UserPlus, Search, Bookmark, ExternalLink, Timer } from 'lucide-react';
+import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft, X, UserPlus, Search, Bookmark, ExternalLink, Timer, Gem } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +21,7 @@ import { useAuth, type UserProfile } from '@/context/auth-context';
 import { getConnectedUsers, saveChallenge, updateUserProfile } from '@/app/actions/user';
 import Loading from '@/app/loading';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
 
 
 const PLAYER_COLORS = ['#50C878', '#20B2AA', '#66CDAA', '#2E8B57'];
@@ -162,6 +163,8 @@ export default function ChallengePage() {
   }, [gameState, questions, players, lastSpunQuestion, currentPlayerIndex, isSpinning, unassignedQuestions]);
 
     const isAiDisabled = user?.plan === 'free' && user.lastAiChallengeTimestamp && (new Date().getTime() - user.lastAiChallengeTimestamp) < (24 * 60 * 60 * 1000);
+    const aiCredits = user?.plan === 'pro' ? Infinity : (isAiDisabled ? 0 : 1);
+
 
     useEffect(() => {
         if (isAiDisabled && user?.lastAiChallengeTimestamp) {
@@ -391,10 +394,15 @@ export default function ChallengePage() {
                             <Label
                                 htmlFor="ai"
                                 className={cn(
-                                    "flex flex-col items-center justify-center text-center rounded-md border-2 border-muted bg-card p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary",
+                                    "flex flex-col items-center justify-center text-center rounded-md border-2 border-muted bg-card p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary relative",
                                     isAiDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
                                 )}
                             >
+                                {aiCredits === Infinity ? (
+                                    <Badge variant="default" className="absolute -top-2 -right-2 bg-purple-600"><Gem className="h-3 w-3 mr-1"/> Unlimited</Badge>
+                                ) : (
+                                    <Badge variant={aiCredits > 0 ? "default" : "destructive"} className="absolute -top-2 -right-2">{aiCredits} Credit{aiCredits !== 1 && 's'}</Badge>
+                                )}
                                 <Zap className="mb-3 h-6 w-6" />
                                 AI Mode
                             </Label>
