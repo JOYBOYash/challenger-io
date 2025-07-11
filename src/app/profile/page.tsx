@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -269,6 +270,7 @@ export default function ProfilePage() {
                                 <div className="flex justify-between items-center mb-4">
                                     <h1 className="text-3xl font-bold font-headline flex items-center gap-2">
                                         {user.username}
+                                        {user.plan === 'pro' && !isEditing && <Gem className="h-6 w-6 text-amber-500" />}
                                         {!isEditing && user.medallions && user.medallions.map(mId => {
                                             const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
                                             return m ? <Image key={m.id} src={`https://placehold.co/32x32.png`} width={32} height={32} alt={m.name} data-ai-hint={`${m.id} icon`} /> : null

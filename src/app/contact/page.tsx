@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -79,10 +80,10 @@ const UserCard = ({ userProfile, onLimitReached }: { userProfile: UserProfile, o
                     <div>
                         <div className="flex items-center gap-2">
                            <p className="font-semibold text-lg group-hover:text-primary">{userProfile.username}</p>
-                           {userProfile.medallions && userProfile.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
                            {userProfile.plan === 'pro' && (
-                             <Badge variant="default" className="bg-amber-500 text-amber-950"><Gem className="h-3 w-3 mr-1"/> PRO</Badge>
+                             <Gem className="h-4 w-4 text-amber-500" />
                            )}
+                           {userProfile.medallions && userProfile.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
                         </div>
                         <p className="text-sm text-muted-foreground">{userProfile.domain || 'Developer'}</p>
                     </div>

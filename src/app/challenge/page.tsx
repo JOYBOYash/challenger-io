@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect, type SVGProps } from 'react';
 import { useRouter } from 'next/navigation';
@@ -469,10 +470,10 @@ export default function ChallengePage() {
                                  <div>
                                     <div className="flex items-center gap-2">
                                         <p className="text-lg font-semibold">{player.profile.username}</p>
-                                        {player.profile.medallions && player.profile.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
                                         {player.profile.plan === 'pro' && (
-                                            <Badge variant="default" className="bg-amber-500 text-amber-950"><Gem className="h-3 w-3 mr-1"/> PRO</Badge>
+                                            <Gem className="h-4 w-4 text-amber-500" />
                                         )}
+                                        {player.profile.medallions && player.profile.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
                                     </div>
                                     <p className="text-sm text-muted-foreground">{player.profile.uid === user.uid ? '(You)' : ''}</p>
                                  </div>
@@ -559,6 +560,9 @@ export default function ChallengePage() {
                                     <div>
                                         <p className="font-bold text-lg flex items-center gap-2" style={{ color: player.color }}>
                                             {SKILL_LEVELS[player.skillLevel].icon} {player.profile.username}
+                                            {player.profile.plan === 'pro' && (
+                                                <Gem className="h-4 w-4 text-amber-500" />
+                                            )}
                                             {player.profile.medallions && player.profile.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
                                         </p>
                                         <p className="text-muted-foreground">Base Skill: {player.skillLevel}</p>
@@ -632,7 +636,11 @@ export default function ChallengePage() {
                             <div className="flex items-center gap-3">
                                 <div className="font-bold text-lg" style={{ color: p.color }}>{index + 1}</div>
                                 <div>
-                                    <p className="font-semibold flex items-center gap-2">{p.profile.username} {p.profile.medallions && p.profile.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}</p>
+                                    <p className="font-semibold flex items-center gap-2">
+                                        {p.profile.username} 
+                                        {p.profile.plan === 'pro' && <Gem className="h-4 w-4 text-amber-500" />}
+                                        {p.profile.medallions && p.profile.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
+                                    </p>
                                     <p className="text-sm text-muted-foreground flex items-center gap-1">{SKILL_LEVELS[p.skillLevel].icon} {p.skillLevel}</p>
                                  </div>
                             </div>
