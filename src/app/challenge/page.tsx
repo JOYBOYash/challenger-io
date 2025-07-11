@@ -466,14 +466,14 @@ export default function ChallengePage() {
 
                     <div className="grid gap-4 md:grid-cols-2">
                         {players.map(player => (
-                           <div key={player.profile.uid} className="cyber-card p-4 w-full flex items-center justify-between" style={{ borderLeft: `4px solid ${player.color}` }}>
+                           <div key={player.profile.uid} className="cyber-card p-4 w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" style={{ borderLeft: `4px solid ${player.color}` }}>
                              <div className="flex items-center gap-3">
-                                 <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: player.color }}>
+                                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: player.color }}>
                                      <User className="h-5 w-5 text-white" />
                                  </div>
-                                 <div>
-                                    <div className="flex items-center gap-2">
-                                        <p className="text-lg font-semibold">{player.profile.username}</p>
+                                 <div className="flex-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <p className="text-lg font-semibold break-all">{player.profile.username}</p>
                                         {player.profile.plan === 'pro' && (
                                             <Gem className="h-4 w-4 text-amber-500" />
                                         )}
@@ -492,9 +492,9 @@ export default function ChallengePage() {
                                     <p className="text-sm text-muted-foreground">{player.profile.uid === user.uid ? '(You)' : ''}</p>
                                  </div>
                              </div>
-                             <div className="flex items-center gap-2">
+                             <div className="flex items-center gap-2 w-full sm:w-auto">
                                 <Select value={player.skillLevel} onValueChange={(val) => handleSkillChange(player.profile.uid, val as any)}>
-                                    <SelectTrigger className="w-[120px]">
+                                    <SelectTrigger className="w-full sm:w-[120px]">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
