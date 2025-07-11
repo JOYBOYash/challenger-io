@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { UserPlus, Search, Check, Hourglass, Eye, Users, Gem, Star, Zap, Trophy, ArrowRight } from 'lucide-react';
+import { UserPlus, Search, Check, Hourglass, Eye, Users, Gem, Star, Zap, Trophy, ArrowRight, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { searchUsers, getSuggestedUsers, sendConnectionRequest } from '@/app/actions/user';
 import { useRouter } from 'next/navigation';
@@ -152,6 +152,8 @@ const TIERS_DATA = [
     buttonText: 'Current Plan',
     upgradeButtonText: 'Upgrade to Pro',
     isPopular: true,
+    tag: 'Unlock All Features',
+    tagIcon: <Lock className="h-4 w-4" />,
   },
 ];
 
@@ -395,22 +397,22 @@ export default function HomePage() {
                         {tier.isPopular && (
                             <div className="absolute top-0 -translate-y-1/2 w-full flex justify-center">
                                 <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-2">
-                                    <Star className="h-4 w-4" /> Most Popular
+                                    {tier.tagIcon} {tier.tag}
                                 </div>
                             </div>
                         )}
 
-                        <div className="flex-1">
+                        <div className="flex-1 flex flex-col">
                             <h3 className="text-2xl font-bold font-headline text-primary">{tier.name}</h3>
                             <p className="mt-4 text-muted-foreground">{tier.description}</p>
                             <div className="mt-6">
                             <span className="text-5xl font-bold">{tier.price}</span>
                             <span className="text-lg text-muted-foreground">{tier.priceSuffix}</span>
                             </div>
-                            <ul className="mt-8 space-y-4">
+                            <ul className="mt-8 space-y-4 flex-1">
                             {tier.features.map((feature) => (
                                 <li key={feature.text} className="flex items-start gap-3">
-                                <div className="shrink-0">{feature.icon}</div>
+                                <div className="shrink-0 mt-1">{feature.icon}</div>
                                 <span>{feature.text}</span>
                                 </li>
                             ))}
