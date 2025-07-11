@@ -8,7 +8,7 @@ import Loading from '@/app/loading';
 import type { Problem } from '@/ai/flows/problem-curation';
 
 // Add the email(s) of any user you want to have automatic Pro access here.
-const PRO_USER_EMAILS = ['your-email@example.com'];
+const PRO_USER_EMAILS = ['joyboysskofficially@gmail.com'];
 
 export type UserProfile = {
     uid: string;
