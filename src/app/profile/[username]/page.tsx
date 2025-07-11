@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -14,6 +15,8 @@ import { findUserByUsername, sendConnectionRequest, acceptConnectionRequest, dec
 import { UserPlus, Check, Hourglass, UserX, Users, Gem, ArrowLeft } from 'lucide-react';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AVAILABLE_MEDALLIONS } from '@/app/profile/page';
 
 
 export default function PublicProfilePage() {
@@ -124,6 +127,7 @@ export default function PublicProfilePage() {
 
 
     return (
+        <TooltipProvider>
         <div className="cyber-grid flex-1">
             <div className="container mx-auto max-w-4xl px-4 md:px-6 py-12 md:py-20">
                 <div className="mb-6">
@@ -148,7 +152,17 @@ export default function PublicProfilePage() {
                                         {profileUser.plan === 'pro' && (
                                             <Gem className="h-6 w-6 text-amber-500" />
                                         )}
-                                        {profileUser.medallions && profileUser.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
+                                        {profileUser.medallions?.map(mId => {
+                                            const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
+                                            return m ? (
+                                                <Tooltip key={m.id}>
+                                                    <TooltipTrigger>
+                                                        <Image src={`https://placehold.co/32x32.png`} width={32} height={32} alt={m.name} data-ai-hint={`${m.id} icon`} />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent><p>{m.name}</p></TooltipContent>
+                                                </Tooltip>
+                                            ) : null;
+                                        })}
                                     </div>
                                     <p className="text-muted-foreground mb-6">{profileUser.email}</p>
                                 </div>
@@ -198,5 +212,6 @@ export default function PublicProfilePage() {
                 </AlertDialogContent>
             </AlertDialog>
         </div>
+        </TooltipProvider>
     );
 }

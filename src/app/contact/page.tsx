@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -15,6 +16,8 @@ import { searchUsers, getSuggestedUsers, sendConnectionRequest } from '@/app/act
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AVAILABLE_MEDALLIONS } from '@/app/profile/page';
 
 
 // Debounce hook to prevent excessive API calls
@@ -83,7 +86,17 @@ const UserCard = ({ userProfile, onLimitReached }: { userProfile: UserProfile, o
                            {userProfile.plan === 'pro' && (
                              <Gem className="h-4 w-4 text-amber-500" />
                            )}
-                           {userProfile.medallions && userProfile.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
+                            {userProfile.medallions?.map(mId => {
+                                const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
+                                return m ? (
+                                    <Tooltip key={m.id}>
+                                        <TooltipTrigger>
+                                            <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m.name} data-ai-hint={`${m.id} icon`} />
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>{m.name}</p></TooltipContent>
+                                    </Tooltip>
+                                ) : null;
+                            })}
                         </div>
                         <p className="text-sm text-muted-foreground">{userProfile.domain || 'Developer'}</p>
                     </div>
@@ -150,6 +163,7 @@ export default function ConnectPage() {
     if (!user) return <p className="text-center mt-10">Please log in to find challengers.</p>;
 
     return (
+        <TooltipProvider>
         <div className="cyber-grid flex-1">
             <div className="container mx-auto max-w-4xl px-4 md:px-6 py-12 md:py-20">
                 <div className="text-center space-y-4">
@@ -218,5 +232,6 @@ export default function ConnectPage() {
                 </AlertDialogContent>
             </AlertDialog>
         </div>
+        </TooltipProvider>
     );
 }

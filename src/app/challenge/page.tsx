@@ -1,4 +1,5 @@
 
+
 'use client';
 import { useState, useEffect, type SVGProps } from 'react';
 import { useRouter } from 'next/navigation';
@@ -24,6 +25,8 @@ import Loading from '@/app/loading';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { AVAILABLE_MEDALLIONS } from '@/app/profile/page';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const PLAYER_COLORS = ['#50C878', '#20B2AA', '#66CDAA', '#2E8B57'];
 
@@ -344,6 +347,7 @@ export default function ChallengePage() {
 
   if (gameState === 'setup') {
     return (
+     <TooltipProvider>
       <div className="flex flex-col min-h-screen cyber-grid">
         <ChallengeHeader />
         <div className="container mx-auto max-w-5xl px-4 md:px-6 py-12 md:py-20">
@@ -473,7 +477,17 @@ export default function ChallengePage() {
                                         {player.profile.plan === 'pro' && (
                                             <Gem className="h-4 w-4 text-amber-500" />
                                         )}
-                                        {player.profile.medallions && player.profile.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
+                                        {player.profile.medallions?.map(mId => {
+                                            const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
+                                            return m ? (
+                                                <Tooltip key={m.id}>
+                                                    <TooltipTrigger>
+                                                        <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m.name} data-ai-hint={`${m.id} icon`} />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent><p>{m.name}</p></TooltipContent>
+                                                </Tooltip>
+                                            ) : null;
+                                        })}
                                     </div>
                                     <p className="text-sm text-muted-foreground">{player.profile.uid === user.uid ? '(You)' : ''}</p>
                                  </div>
@@ -511,6 +525,7 @@ export default function ChallengePage() {
             </div>
         </div>
     </div>
+    </TooltipProvider>
     );
   }
 
@@ -542,6 +557,7 @@ export default function ChallengePage() {
     const savedChallengeTitles = user.savedChallenges?.map(c => c.problemTitle) || [];
 
     return (
+    <TooltipProvider>
         <div className="flex flex-col min-h-screen">
             <ChallengeHeader />
             <div className="container mx-auto max-w-5xl py-8 px-4 font-body flex flex-col items-center text-center flex-1">
@@ -563,7 +579,17 @@ export default function ChallengePage() {
                                             {player.profile.plan === 'pro' && (
                                                 <Gem className="h-4 w-4 text-amber-500" />
                                             )}
-                                            {player.profile.medallions && player.profile.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
+                                            {player.profile.medallions?.map(mId => {
+                                                const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
+                                                return m ? (
+                                                    <Tooltip key={m.id}>
+                                                        <TooltipTrigger>
+                                                            <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m.name} data-ai-hint={`${m.id} icon`} />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent><p>{m.name}</p></TooltipContent>
+                                                    </Tooltip>
+                                                ) : null;
+                                            })}
                                         </p>
                                         <p className="text-muted-foreground">Base Skill: {player.skillLevel}</p>
                                     </div>
@@ -612,10 +638,12 @@ export default function ChallengePage() {
                 </Button>
             </div>
         </div>
+    </TooltipProvider>
     )
   }
 
   return (
+    <TooltipProvider>
     <div className="flex min-h-screen w-full flex-col bg-background font-body cyber-grid">
       <ChallengeHeader />
       <div className="flex-1 overflow-auto p-4 md:p-8">
@@ -639,7 +667,17 @@ export default function ChallengePage() {
                                     <p className="font-semibold flex items-center gap-2">
                                         {p.profile.username} 
                                         {p.profile.plan === 'pro' && <Gem className="h-4 w-4 text-amber-500" />}
-                                        {p.profile.medallions && p.profile.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
+                                        {p.profile.medallions?.map(mId => {
+                                            const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
+                                            return m ? (
+                                                <Tooltip key={m.id}>
+                                                    <TooltipTrigger>
+                                                        <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m.name} data-ai-hint={`${m.id} icon`} />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent><p>{m.name}</p></TooltipContent>
+                                                </Tooltip>
+                                            ) : null;
+                                        })}
                                     </p>
                                     <p className="text-sm text-muted-foreground flex items-center gap-1">{SKILL_LEVELS[p.skillLevel].icon} {p.skillLevel}</p>
                                  </div>
@@ -702,5 +740,6 @@ export default function ChallengePage() {
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 }

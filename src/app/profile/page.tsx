@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -38,7 +39,7 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
-const AVAILABLE_MEDALLIONS = [
+export const AVAILABLE_MEDALLIONS = [
     { id: 'bolt', name: 'High Voltage', tier: 'free' },
     { id: 'star', name: 'Star Player', tier: 'free' },
     { id: 'rocket', name: 'Skyrocketer', tier: 'free' },
@@ -76,16 +77,28 @@ const ConnectionsList = ({ uids }: { uids: string[] }) => {
                         "p-4 flex items-center gap-4 hover:bg-accent transition-colors relative",
                         user.plan === 'pro' && "border-amber-500/50 bg-amber-950/20 hover:bg-amber-950/40"
                     )}>
+                        {user.plan === 'pro' && (
+                            <div className="absolute top-2 right-2">
+                                <Gem className="h-5 w-5 text-amber-500" />
+                            </div>
+                        )}
                         <Avatar>
                             <AvatarImage src={user.photoURL} alt={user.username} />
                             <AvatarFallback>{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <p className="font-semibold flex items-center gap-1">
+                            <p className="font-semibold flex items-center gap-1.5">
                                 {user.username}
-                                {user.medallions && user.medallions.map(m => {
-                                    const mData = AVAILABLE_MEDALLIONS.find(med => med.id === m);
-                                    return mData ? <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={mData.name} data-ai-hint={`${m} icon`} /> : null;
+                                {user.medallions?.map(mId => {
+                                    const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
+                                    return m ? (
+                                        <Tooltip key={m.id}>
+                                            <TooltipTrigger>
+                                                <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m.name} data-ai-hint={`${m.id} icon`} />
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>{m.name}</p></TooltipContent>
+                                        </Tooltip>
+                                    ) : null;
                                 })}
                             </p>
                             <p className="text-sm text-muted-foreground">{user.domain || 'Developer'}</p>
@@ -140,19 +153,31 @@ const PendingRequestsList = ({ uids }: { uids: string[] }) => {
             {users.map(requester => (
                 <Card key={requester.uid} className={cn(
                     "p-4 flex items-center justify-between relative",
-                    requester.plan === 'pro' && "border-amber-500/50 bg-amber-950/20"
+                    requester.plan === 'pro' && "border-amber-500/50 bg-amber-950/20 hover:bg-amber-950/40"
                 )}>
+                    {requester.plan === 'pro' && (
+                        <div className="absolute top-2 right-2">
+                            <Gem className="h-5 w-5 text-amber-500" />
+                        </div>
+                    )}
                      <div className="flex items-center gap-4">
                         <Avatar>
                             <AvatarImage src={requester.photoURL} alt={requester.username} />
                             <AvatarFallback>{requester.username?.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
-                             <p className="font-semibold flex items-center gap-1">
+                             <p className="font-semibold flex items-center gap-1.5">
                                 {requester.username}
-                                {requester.medallions && requester.medallions.map(m => {
-                                    const mData = AVAILABLE_MEDALLIONS.find(med => med.id === m);
-                                    return mData ? <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={mData.name} data-ai-hint={`${m} icon`} /> : null;
+                                {requester.medallions?.map(mId => {
+                                    const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
+                                    return m ? (
+                                        <Tooltip key={m.id}>
+                                            <TooltipTrigger>
+                                                <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m.name} data-ai-hint={`${m.id} icon`} />
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>{m.name}</p></TooltipContent>
+                                        </Tooltip>
+                                    ) : null;
                                 })}
                             </p>
                             <p className="text-sm text-muted-foreground">{requester.domain || 'Developer'}</p>
@@ -289,9 +314,16 @@ export default function ProfilePage() {
                                     <h1 className="text-3xl font-bold font-headline flex items-center gap-2">
                                         {user.username}
                                         {user.plan === 'pro' && !isEditing && <Gem className="h-6 w-6 text-amber-500" />}
-                                        {!isEditing && user.medallions && user.medallions.map(mId => {
+                                        {!isEditing && user.medallions?.map(mId => {
                                             const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
-                                            return m ? <Image key={m.id} src={`https://placehold.co/32x32.png`} width={32} height={32} alt={m.name} data-ai-hint={`${m.id} icon`} /> : null
+                                            return m ? (
+                                                <Tooltip key={m.id}>
+                                                    <TooltipTrigger>
+                                                        <Image src={`https://placehold.co/32x32.png`} width={32} height={32} alt={m.name} data-ai-hint={`${m.id} icon`} />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent><p>{m.name}</p></TooltipContent>
+                                                </Tooltip>
+                                            ) : null;
                                         })}
                                     </h1>
                                     <div className="flex items-center gap-2">
