@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     switch (event.eventType) {
       case 'transaction.completed':
          const status = event.data.status;
-         // Assuming any completed transaction for a subscription product grants "pro"
+         // Check if this transaction is for a subscription product
          const isSubscription = event.data.items.some(item => item.product?.custom_data?.is_subscription === 'true');
          if (status === 'completed' && isSubscription) {
            await updateUserProfile(firebaseUID, {
