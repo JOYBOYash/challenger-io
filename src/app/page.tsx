@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Script from 'next/script';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth, type UserProfile } from '@/context/auth-context';
@@ -19,7 +18,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AVAILABLE_MEDALLIONS } from '@/app/profile/page';
-import Loading from '@/app/loading';
 import { cn } from '@/lib/utils';
 import hero from '@/public/hero3.png';
 import mission from "@/public/rocket2.png";
@@ -240,7 +238,10 @@ export default function HomePage() {
         if (error || !checkoutURL) {
           throw new Error(error || 'Could not create checkout session.');
         }
-        window.location.href = checkoutURL;
+        paddleInstance?.Checkout.open({
+          transactionId: checkoutURL.split('/').pop()!
+        });
+        setIsBillingLoading(false);
       } catch (err: any) {
         toast({ title: 'Billing Error', description: err.message, variant: 'destructive' });
         setIsBillingLoading(false);

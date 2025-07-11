@@ -29,6 +29,7 @@ export interface PaddlePrice {
 export async function getProducts(): Promise<{ products?: PaddleProduct[]; error?: string }> {
     const apiKey = process.env.PADDLE_API_KEY;
     if (!apiKey) {
+      console.error('Paddle API Key is not configured.');
       return { error: 'Paddle API Key is not configured.' };
     }
 
