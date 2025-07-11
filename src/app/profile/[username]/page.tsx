@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useAuth, type UserProfile } from '@/context/auth-context';
+import { useAuth, type UserProfile, PRO_USER_EMAILS } from '@/context/auth-context';
 import Loading from '@/app/loading';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { findUserByUsername, sendConnectionRequest, acceptConnectionRequest, declineConnectionRequest } from '@/app/actions/user';
-import { UserPlus, Check, Hourglass, UserX, Users, Gem } from 'lucide-react';
+import { UserPlus, Check, Hourglass, UserX, Users, Gem, ArrowLeft } from 'lucide-react';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
@@ -36,11 +36,15 @@ export default function PublicProfilePage() {
                 notFound();
                 return;
             }
+            // Manually check for Pro status for the viewed user
+            if (foundUser.email && PRO_USER_EMAILS.includes(foundUser.email)) {
+                foundUser.plan = 'pro';
+            }
             setProfileUser(foundUser);
             setLoading(false);
         };
         fetchUser();
-    }, [username, notFound]);
+    }, [username]);
 
     useEffect(() => {
         if (!authLoading && currentUser?.username === username) {
@@ -122,6 +126,12 @@ export default function PublicProfilePage() {
     return (
         <div className="cyber-grid flex-1">
             <div className="container mx-auto max-w-4xl px-4 md:px-6 py-12 md:py-20">
+                <div className="mb-6">
+                    <Button variant="outline" onClick={() => router.back()}>
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back
+                    </Button>
+                </div>
                 <Card className="p-6 md:p-8">
                     <div className="flex flex-col md:flex-row items-start gap-8">
                         <div className="flex flex-col items-center w-full md:w-48 shrink-0">
