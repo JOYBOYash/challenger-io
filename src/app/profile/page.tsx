@@ -328,7 +328,7 @@ export default function ProfilePage() {
                                         </h1>
                                         <p className="text-muted-foreground break-all">{user.email}</p>
                                     </div>
-                                    <div className="flex sm:flex-col md:flex-row items-center gap-2 w-full sm:w-auto shrink-0">
+                                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto shrink-0">
                                         {isEditing ? (
                                             <>
                                                 <Button type="button" variant="ghost" onClick={handleCancelEdit} className="w-full">
@@ -434,7 +434,7 @@ export default function ProfilePage() {
                 </Card>
 
                 <Tabs defaultValue="challenges" className="mt-12">
-                    <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto md:h-10">
+                    <TabsList className="flex flex-wrap h-auto w-full justify-start md:w-auto">
                         <TabsTrigger value="challenges">Saved Challenges ({user.savedChallenges?.length || 0})</TabsTrigger>
                         <TabsTrigger value="connections">Connections ({user.connections?.length || 0})</TabsTrigger>
                         <TabsTrigger value="pending">Pending ({user.pendingConnections?.length || 0})</TabsTrigger>
@@ -452,7 +452,7 @@ export default function ProfilePage() {
                                         <CardContent className="flex-grow">
                                             <p className="text-muted-foreground line-clamp-3">{problem.problemDescription}</p>
                                         </CardContent>
-                                        <div className="p-4 pt-0 flex gap-2">
+                                        <div className="flex flex-col sm:flex-row gap-2 p-4 pt-0">
                                             {problem.url ? (
                                                 <Button asChild className="w-full">
                                                     <a href={problem.url} target="_blank" rel="noopener noreferrer">
@@ -474,7 +474,7 @@ export default function ProfilePage() {
                                                     </DialogContent>
                                                 </Dialog>
                                             )}
-                                            <Button variant="destructive" size="icon" onClick={() => handleRemoveChallenge(problem)}>
+                                            <Button variant="destructive" size="icon" onClick={() => handleRemoveChallenge(problem)} className="w-full sm:w-auto">
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
