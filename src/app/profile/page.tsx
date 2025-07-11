@@ -81,7 +81,10 @@ const ConnectionsList = ({ uids }: { uids: string[] }) => {
                             <p className="font-semibold flex items-center gap-1">
                                 {user.username}
                                 {user.plan === 'pro' && <Gem className="h-4 w-4 text-amber-500" />}
-                                {user.medallions && user.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
+                                {user.medallions && user.medallions.map(m => {
+                                    const mData = AVAILABLE_MEDALLIONS.find(med => med.id === m);
+                                    return mData ? <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={mData.name} data-ai-hint={`${m} icon`} /> : null;
+                                })}
                             </p>
                             <p className="text-sm text-muted-foreground">{user.domain || 'Developer'}</p>
                         </div>
@@ -143,7 +146,10 @@ const PendingRequestsList = ({ uids }: { uids: string[] }) => {
                              <p className="font-semibold flex items-center gap-1">
                                 {requester.username}
                                 {requester.plan === 'pro' && <Gem className="h-4 w-4 text-amber-500" />}
-                                {requester.medallions && requester.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
+                                {requester.medallions && requester.medallions.map(m => {
+                                    const mData = AVAILABLE_MEDALLIONS.find(med => med.id === m);
+                                    return mData ? <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={mData.name} data-ai-hint={`${m} icon`} /> : null;
+                                })}
                             </p>
                             <p className="text-sm text-muted-foreground">{requester.domain || 'Developer'}</p>
                         </div>
