@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Paddle } from '@paddle/paddle-js/node';
+import { Paddle } from '@paddle/paddle-js/dist/node.mjs';
 import { updateUserProfile } from '@/app/actions/user';
 import 'dotenv/config';
 
@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
     switch (event.eventType) {
       case 'transaction.completed':
          const status = event.data.status;
+         // Assuming any completed transaction for a subscription product grants "pro"
          const isSubscription = event.data.items.some(item => item.product?.custom_data?.is_subscription === 'true');
          if (status === 'completed' && isSubscription) {
            await updateUserProfile(firebaseUID, {

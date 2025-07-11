@@ -1,7 +1,7 @@
 'use server';
 
 import 'dotenv/config';
-import { Paddle } from '@paddle/paddle-js/node';
+import { Paddle } from '@paddle/paddle-js/dist/node.mjs';
 import { findUserById } from './user';
 import { initializeFirebase } from '@/lib/firebase';
 

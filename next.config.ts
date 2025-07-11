@@ -31,15 +31,6 @@ const nextConfig: NextConfig = {
       }
     ],
   },
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.resolve.alias['@paddle/paddle-js/node'] = path.resolve(
-        process.cwd(),
-        'node_modules/@paddle/paddle-js/dist/node.mjs'
-      );
-    }
-    return config;
-  },
 };
 
 export default nextConfig;
