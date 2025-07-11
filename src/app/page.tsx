@@ -387,60 +387,60 @@ export default function HomePage() {
                   {TIERS_DATA.map((tier) => {
                     const isCurrent = tier.id === currentPlanId;
                     return (
-                        <div
-                        key={tier.name}
-                        className={cn(
-                            'cyber-card p-8 flex flex-col relative',
-                            tier.isPopular ? 'border-primary shadow-2xl shadow-primary/10' : 'border-primary/20'
-                        )}
-                        >
-                        {tier.isPopular && (
-                            <div className="absolute top-0 -translate-y-1/2 w-full flex justify-center">
-                                <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-2">
-                                    {tier.tagIcon} {tier.tag}
+                        <div key={tier.name} className="relative">
+                            {tier.isPopular && (
+                                <div className="absolute top-0 -translate-y-1/2 w-full flex justify-center z-10">
+                                    <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-2">
+                                        {tier.tagIcon} {tier.tag}
+                                    </div>
+                                </div>
+                            )}
+                            <div
+                                className={cn(
+                                    'cyber-card p-8 flex flex-col h-full',
+                                    tier.isPopular ? 'border-primary shadow-2xl shadow-primary/10' : 'border-primary/20'
+                                )}
+                            >
+                                <div className="flex-1 flex flex-col">
+                                    <h3 className="text-2xl font-bold font-headline text-primary">{tier.name}</h3>
+                                    <p className="mt-4 text-muted-foreground">{tier.description}</p>
+                                    <div className="mt-6">
+                                    <span className="text-5xl font-bold">{tier.price}</span>
+                                    <span className="text-lg text-muted-foreground">{tier.priceSuffix}</span>
+                                    </div>
+                                    <ul className="mt-8 space-y-4 flex-1">
+                                    {tier.features.map((feature) => (
+                                        <li key={feature.text} className="flex items-start gap-3">
+                                        <div className="shrink-0 mt-1">{feature.icon}</div>
+                                        <span>{feature.text}</span>
+                                        </li>
+                                    ))}
+                                    </ul>
+                                </div>
+                                <div className="mt-8">
+                                    {user ? (
+                                        isCurrent ? (
+                                            <Button
+                                                className="w-full text-lg font-bold"
+                                                variant="secondary"
+                                                disabled
+                                            >
+                                            {tier.buttonText}
+                                            </Button>
+                                        ) : (
+                                            tier.upgradeButtonText && (
+                                                <Button className="w-full text-lg font-bold" disabled>
+                                                    {tier.upgradeButtonText}
+                                                </Button>
+                                            )
+                                        )
+                                    ) : (
+                                        <Button asChild className="w-full text-lg font-bold">
+                                            <Link href="/signup">Sign Up to Start</Link>
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
-                        )}
-
-                        <div className="flex-1 flex flex-col">
-                            <h3 className="text-2xl font-bold font-headline text-primary">{tier.name}</h3>
-                            <p className="mt-4 text-muted-foreground">{tier.description}</p>
-                            <div className="mt-6">
-                            <span className="text-5xl font-bold">{tier.price}</span>
-                            <span className="text-lg text-muted-foreground">{tier.priceSuffix}</span>
-                            </div>
-                            <ul className="mt-8 space-y-4 flex-1">
-                            {tier.features.map((feature) => (
-                                <li key={feature.text} className="flex items-start gap-3">
-                                <div className="shrink-0 mt-1">{feature.icon}</div>
-                                <span>{feature.text}</span>
-                                </li>
-                            ))}
-                            </ul>
-                        </div>
-                        <div className="mt-8">
-                            {user ? (
-                                isCurrent ? (
-                                    <Button
-                                        className="w-full text-lg font-bold"
-                                        variant="secondary"
-                                        disabled
-                                    >
-                                    {tier.buttonText}
-                                    </Button>
-                                ) : (
-                                    tier.upgradeButtonText && (
-                                        <Button className="w-full text-lg font-bold" disabled>
-                                            {tier.upgradeButtonText}
-                                        </Button>
-                                    )
-                                )
-                            ) : (
-                                <Button asChild className="w-full text-lg font-bold">
-                                    <Link href="/signup">Sign Up to Start</Link>
-                                </Button>
-                            )}
-                        </div>
                         </div>
                   )})}
                 </div>
