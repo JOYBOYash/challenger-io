@@ -72,7 +72,10 @@ const ConnectionsList = ({ uids }: { uids: string[] }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {users.map(user => (
                 <Link href={`/profile/${user.username}`} key={user.uid} className="block">
-                    <Card className="p-4 flex items-center gap-4 hover:bg-accent transition-colors">
+                    <Card className="p-4 flex items-center gap-4 hover:bg-accent transition-colors relative">
+                        {user.plan === 'pro' && (
+                             <Gem className="h-5 w-5 text-amber-500 absolute top-2 right-2" />
+                        )}
                         <Avatar>
                             <AvatarImage src={user.photoURL} alt={user.username} />
                             <AvatarFallback>{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
@@ -80,7 +83,6 @@ const ConnectionsList = ({ uids }: { uids: string[] }) => {
                         <div>
                             <p className="font-semibold flex items-center gap-1">
                                 {user.username}
-                                {user.plan === 'pro' && <Gem className="h-4 w-4 text-amber-500" />}
                                 {user.medallions && user.medallions.map(m => {
                                     const mData = AVAILABLE_MEDALLIONS.find(med => med.id === m);
                                     return mData ? <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={mData.name} data-ai-hint={`${m} icon`} /> : null;
@@ -136,7 +138,10 @@ const PendingRequestsList = ({ uids }: { uids: string[] }) => {
     return (
         <div className="space-y-4">
             {users.map(requester => (
-                <Card key={requester.uid} className="p-4 flex items-center justify-between">
+                <Card key={requester.uid} className="p-4 flex items-center justify-between relative">
+                     {requester.plan === 'pro' && (
+                        <Gem className="h-5 w-5 text-amber-500 absolute top-2 right-2" />
+                     )}
                      <div className="flex items-center gap-4">
                         <Avatar>
                             <AvatarImage src={requester.photoURL} alt={requester.username} />
@@ -145,7 +150,6 @@ const PendingRequestsList = ({ uids }: { uids: string[] }) => {
                         <div>
                              <p className="font-semibold flex items-center gap-1">
                                 {requester.username}
-                                {requester.plan === 'pro' && <Gem className="h-4 w-4 text-amber-500" />}
                                 {requester.medallions && requester.medallions.map(m => {
                                     const mData = AVAILABLE_MEDALLIONS.find(med => med.id === m);
                                     return mData ? <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={mData.name} data-ai-hint={`${m} icon`} /> : null;
