@@ -238,7 +238,7 @@ export default function HomePage() {
 
     if (planId === 'pro' && currentPlanId !== 'pro') {
       try {
-        const { checkoutURL, error } = await createCheckoutLink();
+        const { checkoutURL, error } = await createCheckoutLink(user.uid);
         if (error || !checkoutURL) {
           throw new Error(error || 'Could not create checkout session.');
         }

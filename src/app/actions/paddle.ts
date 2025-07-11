@@ -2,21 +2,14 @@
 
 import 'dotenv/config';
 import { findUserById } from './user';
-import { initializeFirebase } from '@/lib/firebase';
 
 const PADDLE_API_URL = 'https://sandbox-api.paddle.com'; // Use 'https://api.paddle.com' for production
 
-async function getCurrentUserId() {
-  const { auth } = initializeFirebase();
-  if (!auth?.currentUser) {
-    throw new Error('User not authenticated.');
-  }
-  return auth.currentUser.uid;
-}
-
-export async function createCheckoutLink(): Promise<{ checkoutURL?: string; error?: string }> {
+export async function createCheckoutLink(userId: string): Promise<{ checkoutURL?: string; error?: string }> {
   try {
-    const userId = await getCurrentUserId();
+    if (!userId) {
+      throw new Error('User not authenticated.');
+    }
     const user = await findUserById(userId);
 
     if (!user) {
