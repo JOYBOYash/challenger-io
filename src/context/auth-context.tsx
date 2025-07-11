@@ -15,8 +15,8 @@ export type UserProfile = {
     email: string;
     username: string;
     plan?: 'free' | 'pro';
-    razorpayCustomerId?: string;
-    razorpaySubscriptionId?: string;
+    paddleCustomerId?: string;
+    paddleSubscriptionId?: string;
     connections?: string[];
     pendingConnections?: string[];
     sentRequests?: string[];

@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserPlus, Search, Check, Hourglass, Eye, Users, Gem, Star, Zap, Trophy, ArrowRight, Lock, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { searchUsers, getSuggestedUsers, sendConnectionRequest } from '@/app/actions/user';
-import { createSubscription, verifyPayment } from '@/app/actions/razorpay';
+import { createCheckoutLink } from '@/app/actions/paddle';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ import hero from '@/public/hero3.png';
 import mission from "@/public/rocket2.png";
 import arena from "@/public/2vs.png";
 import connect from "@/public/3shake.png";
+import { initializePaddle, Paddle } from '@paddle/paddle-js';
 
 // --- Components from merged pages ---
 
@@ -175,7 +176,17 @@ export default function HomePage() {
   const [limitDialogMessage, setLimitDialogMessage] = useState('');
   
   const [isBillingLoading, setIsBillingLoading] = useState(false);
+  const [paddleInstance, setPaddleInstance] = useState<Paddle | undefined>();
   const { toast } = useToast();
+
+  useEffect(() => {
+    initializePaddle({
+      environment: 'sandbox', // Use 'production' for live
+      token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
+    }).then((paddle) => {
+      setPaddleInstance(paddle);
+    });
+  }, []);
 
   useEffect(() => {
     const handleSearch = async () => {
@@ -221,62 +232,19 @@ export default function HomePage() {
 
     if (planId === 'pro' && currentPlanId !== 'pro') {
       try {
-        const subData = await createSubscription();
-        if (!subData || subData.error) {
-          throw new Error(subData?.error || 'Could not create subscription.');
+        const { checkoutURL, error } = await createCheckoutLink();
+        if (error || !checkoutURL) {
+          throw new Error(error || 'Could not create checkout session.');
         }
-
-        const options = {
-          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-          subscription_id: subData.subscriptionId,
-          name: 'Challenger.io Pro',
-          description: 'Monthly Pro Subscription',
-          image: '/logo.svg', // You might need to create this logo file
-          handler: async function (response: any) {
-            const verificationResult = await verifyPayment({
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_subscription_id: response.razorpay_subscription_id,
-              razorpay_signature: response.razorpay_signature,
-            });
-
-            if (verificationResult.success) {
-              toast({ title: 'Payment Successful', description: 'Welcome to Pro!' });
-              router.push('/profile'); // or refresh to show new status
-            } else {
-              toast({ title: 'Payment Failed', description: 'Your payment could not be verified.', variant: 'destructive' });
-            }
-            setIsBillingLoading(false);
-          },
-          prefill: {
-            name: user.username,
-            email: user.email,
-          },
-          theme: {
-            color: '#10b981' // primary color
-          }
-        };
-        // @ts-ignore
-        const rzp = new window.Razorpay(options);
-        rzp.open();
-
-        rzp.on('payment.failed', function (response: any) {
-            toast({
-                title: 'Payment Failed',
-                description: response.error.description,
-                variant: 'destructive',
-            });
-            setIsBillingLoading(false);
-        });
-
+        // Redirect to Paddle's checkout
+        window.location.href = checkoutURL;
       } catch (err: any) {
         toast({ title: 'Billing Error', description: err.message, variant: 'destructive' });
         setIsBillingLoading(false);
       }
     } else if (planId === 'pro' && currentPlanId === 'pro') {
-      // Logic to manage subscription - typically redirect to a customer portal
+      // TODO: Implement customer portal logic
       toast({ title: 'Subscription Management', description: 'Redirecting to manage your subscription.' });
-      // You'd typically redirect to a portal URL provided by Razorpay or your own management page
-      // For now, let's just log it.
       console.log('Manage subscription clicked');
       setIsBillingLoading(false);
     } else {
@@ -287,7 +255,6 @@ export default function HomePage() {
 
   return (
     <TooltipProvider>
-      <Script id="razorpay-checkout-js" src="https://checkout.razorpay.com/v1/checkout.js" />
       <div className="flex flex-col min-h-screen cyber-grid">
         <main className="flex-1">
           {/* --- Hero Section --- */}
@@ -509,7 +476,7 @@ export default function HomePage() {
                                             tier.upgradeButtonText && (
                                                 <Button 
                                                     className="w-full text-lg font-bold" 
-                                                    disabled={isBillingLoading}
+                                                    disabled={isBillingLoading || !paddleInstance}
                                                     onClick={() => handleBillingAction(tier.id)}
                                                 >
                                                     {isBillingLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
