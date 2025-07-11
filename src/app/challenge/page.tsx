@@ -235,7 +235,6 @@ export default function ChallengePage() {
             const result = await curateProblems({
                 topic: selectedTopic,
                 players: playerInputs,
-                userPlan: user.plan || 'free',
             });
             problems = result.problems;
             

@@ -25,7 +25,6 @@ const tiers = [
     description: 'For dedicated developers who want to push their limits.',
     features: [
       { text: 'Unlimited AI Mode Challenges', icon: <Zap className="h-5 w-5 text-purple-500" /> },
-      { text: 'Powered by faster, premium AI models', icon: <Gem className="h-5 w-5 text-purple-500" /> },
       { text: 'Unlimited Classic Mode Challenges', icon: <Trophy className="h-5 w-5 text-purple-500" /> },
       { text: 'Up to 50 Connections', icon: <Users className="h-5 w-5 text-purple-500" /> },
     ],

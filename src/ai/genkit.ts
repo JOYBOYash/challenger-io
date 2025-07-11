@@ -1,19 +1,11 @@
 import { configureGenkit, genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
-import { groq } from 'genkitx-groq';
 
-// Default AI for Free tier
+// Default AI for all tiers
 export const ai = genkit({
   plugins: [googleAI()],
   model: 'googleai/gemini-1.5-flash-latest',
 });
 
-// Pro tier using Groq
-export const proAi = genkit({
-  plugins: [
-    groq({
-      apiKey: process.env.GROQ_API_KEY || '',
-    }),
-  ],
-  model: 'groq/gemma-7b-it',
-});
+// Pro tier functionality is now handled by usage limits, not a different model.
+export const proAi = ai;

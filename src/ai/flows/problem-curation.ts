@@ -9,22 +9,17 @@
  * - Problem - The type for a single generated coding problem.
  */
 
-import {ai, proAi} from '@/ai/genkit';
+import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {
-    CurateProblemsInputSchema as BaseCurateProblemsInputSchema,
+    CurateProblemsInputSchema,
     CurateProblemsOutputSchema,
     type Problem,
+    type CurateProblemsInput,
+    type CurateProblemsOutput,
 } from './problem-types';
-import type { CurateProblemsOutput } from './problem-types';
 
-// Extend the base schema to include the user's plan
-const CurateProblemsInputSchema = BaseCurateProblemsInputSchema.extend({
-    userPlan: z.enum(['free', 'pro']).default('free'),
-});
-
-export type CurateProblemsInput = z.infer<typeof CurateProblemsInputSchema>;
-export type { CurateProblemsOutput, Problem };
+export type { CurateProblemsInput, CurateProblemsOutput, Problem };
 
 
 export async function curateProblems(input: CurateProblemsInput): Promise<CurateProblemsOutput> {
@@ -65,22 +60,12 @@ const commonConfig = {
     ],
 };
 
-// Prompt for Free Tier (Gemini)
 const curateProblemsPrompt = ai.definePrompt({
   name: 'curateProblemsPrompt',
   input: {schema: CurateProblemsInputSchema},
   output: {schema: CurateProblemsOutputSchema},
   prompt: promptText,
   config: commonConfig,
-});
-
-// Prompt for Pro Tier (Groq)
-const curateProProblemsPrompt = proAi.definePrompt({
-    name: 'curateProProblemsPrompt',
-    input: { schema: CurateProblemsInputSchema },
-    output: { schema: CurateProblemsOutputSchema },
-    prompt: promptText,
-    config: commonConfig,
 });
 
 const curateProblemsFlow = ai.defineFlow(
@@ -90,13 +75,7 @@ const curateProblemsFlow = ai.defineFlow(
     outputSchema: CurateProblemsOutputSchema,
   },
   async input => {
-    if (input.userPlan === 'pro') {
-        console.log("Using Pro (Groq) model for problem generation.");
-        const {output} = await curateProProblemsPrompt(input);
-        return output!;
-    }
-    
-    console.log("Using Free (Gemini) model for problem generation.");
+    console.log("Using Gemini model for problem generation.");
     const {output} = await curateProblemsPrompt(input);
     return output!;
   }
