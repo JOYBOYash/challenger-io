@@ -72,10 +72,10 @@ const ConnectionsList = ({ uids }: { uids: string[] }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {users.map(user => (
                 <Link href={`/profile/${user.username}`} key={user.uid} className="block">
-                    <Card className="p-4 flex items-center gap-4 hover:bg-accent transition-colors relative">
-                        {user.plan === 'pro' && (
-                             <Gem className="h-5 w-5 text-amber-500 absolute top-2 right-2" />
-                        )}
+                    <Card className={cn(
+                        "p-4 flex items-center gap-4 hover:bg-accent transition-colors relative",
+                        user.plan === 'pro' && "border-amber-500/50 bg-amber-950/20 hover:bg-amber-950/40"
+                    )}>
                         <Avatar>
                             <AvatarImage src={user.photoURL} alt={user.username} />
                             <AvatarFallback>{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
@@ -138,10 +138,10 @@ const PendingRequestsList = ({ uids }: { uids: string[] }) => {
     return (
         <div className="space-y-4">
             {users.map(requester => (
-                <Card key={requester.uid} className="p-4 flex items-center justify-between relative">
-                     {requester.plan === 'pro' && (
-                        <Gem className="h-5 w-5 text-amber-500 absolute top-2 right-2" />
-                     )}
+                <Card key={requester.uid} className={cn(
+                    "p-4 flex items-center justify-between relative",
+                    requester.plan === 'pro' && "border-amber-500/50 bg-amber-950/20"
+                )}>
                      <div className="flex items-center gap-4">
                         <Avatar>
                             <AvatarImage src={requester.photoURL} alt={requester.username} />
