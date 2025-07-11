@@ -9,7 +9,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserPlus, Search, Check, Hourglass, Eye, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { searchUsers, getSuggestedUsers } from '@/app/actions/user';
+import { searchUsers, getSuggestedUsers, sendConnectionRequest } from '@/app/actions/user';
+import { useRouter } from 'next/navigation';
 
 // Debounce hook to prevent excessive API calls
 function useDebounce<T>(value: T, delay: number): T {
@@ -29,24 +30,59 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 const UserCard = ({ userProfile }: { userProfile: UserProfile }) => {
+    const { user: currentUser } = useAuth();
+    const { toast } = useToast();
+    const router = useRouter();
+
+    if (!currentUser) return null;
+
+    const isConnected = currentUser.connections?.includes(userProfile.uid);
+    const requestSent = currentUser.sentRequests?.includes(userProfile.uid);
+    const requestReceived = currentUser.pendingConnections?.includes(userProfile.uid);
+
+    const handleConnectClick = async () => {
+        const { success, message } = await sendConnectionRequest(currentUser.uid, userProfile.uid);
+        if (success) {
+            toast({ title: 'Request Sent!' });
+        } else {
+            toast({ title: 'Error', description: message || 'Could not send request.', variant: 'destructive' });
+        }
+    };
+
+    const renderButton = () => {
+        if (isConnected) {
+            return <Button variant="secondary" size="sm" disabled><Users className="mr-2 h-4 w-4" /> Connected</Button>;
+        }
+        if (requestSent) {
+            return <Button variant="secondary" size="sm" disabled><Hourglass className="mr-2 h-4 w-4" /> Sent</Button>;
+        }
+        if (requestReceived) {
+            return <Button size="sm" onClick={() => router.push(`/profile/${userProfile.username}`)}>Respond</Button>;
+        }
+        return <Button size="sm" onClick={handleConnectClick}><UserPlus className="mr-2 h-4 w-4" /> Connect</Button>;
+    };
+
     return (
         <Card>
             <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
+                <Link href={`/profile/${userProfile.username}`} className="flex items-center gap-4 group">
                     <Avatar>
                         <AvatarImage src={userProfile.photoURL} alt={userProfile.username} />
                         <AvatarFallback>{userProfile.username.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
-                        <p className="font-semibold text-lg">{userProfile.username}</p>
+                        <p className="font-semibold text-lg group-hover:text-primary">{userProfile.username}</p>
                         <p className="text-sm text-muted-foreground">{userProfile.domain || 'Developer'}</p>
                     </div>
+                </Link>
+                <div className="flex items-center gap-2">
+                    {renderButton()}
+                    <Button asChild size="sm" variant="outline">
+                        <Link href={`/profile/${userProfile.username}`}>
+                            <Eye className="h-4 w-4" />
+                        </Link>
+                    </Button>
                 </div>
-                <Button asChild>
-                    <Link href={`/profile/${userProfile.username}`}>
-                        <Eye className="mr-2 h-4 w-4" /> View Profile
-                    </Link>
-                </Button>
             </CardContent>
         </Card>
     );

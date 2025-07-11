@@ -19,17 +19,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Menu, Zap, LogOut, User as UserIcon } from 'lucide-react';
+import { Menu, Zap, LogOut, User as UserIcon, Gem } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
 import { signOut } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 
 const NAV_ITEMS = [
   { href: '/challenge', label: 'Challenge' },
+  { href: '/pricing', label: 'Pricing' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Connect' },
 ];
@@ -101,7 +103,14 @@ export function Navbar() {
                     <DropdownMenuContent className="w-56" align="end" forceMount>
                         <DropdownMenuLabel className="font-normal">
                           <div className="flex flex-col space-y-1">
-                            <p className="text-sm font-medium leading-none">{user.username}</p>
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium leading-none">{user.username}</p>
+                                {user.plan === 'pro' ? (
+                                    <Badge variant="default" className="ml-2 bg-purple-600"><Gem className="mr-1 h-3 w-3" /> PRO</Badge>
+                                ) : (
+                                    <Badge variant="secondary" className="ml-2">Free</Badge>
+                                )}
+                            </div>
                             <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                           </div>
                         </DropdownMenuLabel>

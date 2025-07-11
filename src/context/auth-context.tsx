@@ -11,6 +11,7 @@ export type UserProfile = {
     uid: string;
     email: string;
     username: string;
+    plan?: 'free' | 'pro';
     connections?: string[];
     pendingConnections?: string[];
     sentRequests?: string[];

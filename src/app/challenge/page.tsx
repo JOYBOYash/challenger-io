@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { LuckyWheel } from '@/components/lucky-wheel';
 import { ProblemDisplay } from '@/components/problem-display';
 import { Icons } from '@/components/icons';
-import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft, X, UserPlus, Search, Bookmark, ExternalLink } from 'lucide-react';
+import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy, Code, CodeXml, Braces, ChevronLeft, X, UserPlus, Search, Bookmark, ExternalLink, Timer } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
@@ -112,6 +112,8 @@ export default function ChallengePage() {
   const [lastSpunQuestion, setLastSpunQuestion] = useState<GameQuestion | null>(null);
   const [isAutoAssigning, setIsAutoAssigning] = useState(false);
   const [viewedProblem, setViewedProblem] = useState<GameQuestion | null>(null);
+  const [timeLeft, setTimeLeft] = useState('');
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -159,6 +161,30 @@ export default function ChallengePage() {
     }
   }, [gameState, questions, players, lastSpunQuestion, currentPlayerIndex, isSpinning, unassignedQuestions]);
 
+    const isAiDisabled = user?.plan === 'free' && user.lastAiChallengeTimestamp && (new Date().getTime() - user.lastAiChallengeTimestamp) < (24 * 60 * 60 * 1000);
+
+    useEffect(() => {
+        if (isAiDisabled && user?.lastAiChallengeTimestamp) {
+            const interval = setInterval(() => {
+                const twentyFourHours = 24 * 60 * 60 * 1000;
+                const now = new Date().getTime();
+                const timePassed = now - user.lastAiChallengeTimestamp!;
+                const timeRemaining = twentyFourHours - timePassed;
+                
+                if (timeRemaining <= 0) {
+                    setTimeLeft('');
+                    clearInterval(interval);
+                } else {
+                    const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+                    setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+                }
+            }, 1000);
+            return () => clearInterval(interval);
+        }
+    }, [isAiDisabled, user?.lastAiChallengeTimestamp]);
+
   const handleSkillChange = (playerId: string, skillLevel: SkillLevel) => {
     setPlayers(players.map(p => p.profile.uid === playerId ? { ...p, skillLevel } : p));
   };
@@ -200,22 +226,23 @@ export default function ChallengePage() {
         let problems: Problem[];
 
         if (problemSource === 'ai') {
-            const twentyFourHours = 24 * 60 * 60 * 1000;
-            const now = new Date().getTime();
-            const lastGenTime = user.lastAiChallengeTimestamp || 0;
-            if (now - lastGenTime < twentyFourHours) {
-                toast({ title: 'Daily Limit Reached', description: 'You can generate one AI challenge round per day.', variant: 'destructive' });
+             if(isAiDisabled) {
+                toast({ title: 'Daily Limit Reached', description: 'Your next AI challenge credit will be available soon.', variant: 'destructive' });
                 setGameState('setup');
                 return;
-            }
+             }
             
             const result = await curateProblems({
                 topic: selectedTopic,
                 players: playerInputs,
+                userPlan: user.plan || 'free',
             });
             problems = result.problems;
-            // Update timestamp after successful generation
-            await updateUserProfile(user.uid, { lastAiChallengeTimestamp: now });
+            
+            // Update timestamp after successful generation for free users
+            if (user.plan === 'free') {
+                await updateUserProfile(user.uid, { lastAiChallengeTimestamp: new Date().getTime() });
+            }
 
         } else { // 'classic' mode
             const result = await fetchPlatformProblems({
@@ -325,6 +352,21 @@ export default function ChallengePage() {
             </div>
 
             <div className="cyber-card p-8">
+                {isAiDisabled && (
+                    <Card className="mb-6 bg-destructive/10 border-destructive/30">
+                        <CardContent className="p-4 text-center">
+                            <p className="font-semibold text-destructive-foreground">You are on cooldown for AI Mode.</p>
+                            <p className="text-sm text-destructive-foreground/80">
+                                Your next free challenge is available in:
+                            </p>
+                             <p className="font-bold text-lg text-destructive-foreground mt-1 flex items-center justify-center gap-2">
+                                <Timer className="h-5 w-5" /> {timeLeft}
+                            </p>
+                             <Button variant="link" asChild className="text-destructive-foreground/90"><Link href="/pricing">Upgrade to Pro for unlimited use.</Link></Button>
+                        </CardContent>
+                    </Card>
+                )}
+
                 <div className="grid md:grid-cols-2 gap-8 mb-8">
                     <div className="grid gap-3">
                          <Label htmlFor="topic" className="font-medium text-lg flex items-center gap-2"><BookCopy className="text-primary"/> Challenge Topic</Label>
@@ -346,10 +388,13 @@ export default function ChallengePage() {
                             className="grid grid-cols-2 gap-4"
                         >
                             <div>
-                            <RadioGroupItem value="ai" id="ai" className="peer sr-only" />
+                            <RadioGroupItem value="ai" id="ai" className="peer sr-only" disabled={isAiDisabled} />
                             <Label
                                 htmlFor="ai"
-                                className="flex flex-col items-center justify-center text-center rounded-md border-2 border-muted bg-card p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                className={cn(
+                                    "flex flex-col items-center justify-center text-center rounded-md border-2 border-muted bg-card p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary",
+                                    isAiDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                                )}
                             >
                                 <Zap className="mb-3 h-6 w-6" />
                                 AI Mode
@@ -446,7 +491,7 @@ export default function ChallengePage() {
                     </div>
                 </div>
 
-                <Button size="lg" className="w-full font-bold text-lg" onClick={handleStartGame} disabled={!isSetupValid}>
+                <Button size="lg" className="w-full font-bold text-lg" onClick={handleStartGame} disabled={!isSetupValid || (problemSource === 'ai' && isAiDisabled)}>
                     Start Challenge <ArrowRight className="ml-2" />
                 </Button>
             </div>

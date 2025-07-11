@@ -82,6 +82,7 @@ export default function SignUpPage() {
         uid: user.uid,
         username: values.username,
         email: values.email,
+        plan: 'free', // Set default plan
         connections: [],
         pendingConnections: [],
         sentRequests: [],

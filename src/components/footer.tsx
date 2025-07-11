@@ -12,6 +12,7 @@ export function Footer() {
                     </Link>
                     <nav className="flex flex-wrap items-center justify-center gap-4 md:gap-8">
                         <Link href="/challenge" className="text-base text-muted-foreground transition-colors hover:text-primary font-medium">Challenge</Link>
+                        <Link href="/pricing" className="text-base text-muted-foreground transition-colors hover:text-primary font-medium">Pricing</Link>
                         <Link href="/about" className="text-base text-muted-foreground transition-colors hover:text-primary font-medium">About</Link>
                         <Link href="/contact" className="text-base text-muted-foreground transition-colors hover:text-primary font-medium">Connect</Link>
                     </nav>

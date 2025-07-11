@@ -9,27 +9,29 @@
  * - Problem - The type for a single generated coding problem.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, proAi} from '@/ai/genkit';
+import {z} from 'genkit';
 import {
-    CurateProblemsInputSchema,
+    CurateProblemsInputSchema as BaseCurateProblemsInputSchema,
     CurateProblemsOutputSchema,
-    type CurateProblemsInput,
-    type CurateProblemsOutput,
     type Problem,
 } from './problem-types';
+import type { CurateProblemsOutput } from './problem-types';
 
-export type { CurateProblemsInput, CurateProblemsOutput, Problem };
+// Extend the base schema to include the user's plan
+const CurateProblemsInputSchema = BaseCurateProblemsInputSchema.extend({
+    userPlan: z.enum(['free', 'pro']).default('free'),
+});
+
+export type CurateProblemsInput = z.infer<typeof CurateProblemsInputSchema>;
+export type { CurateProblemsOutput, Problem };
 
 
 export async function curateProblems(input: CurateProblemsInput): Promise<CurateProblemsOutput> {
   return curateProblemsFlow(input);
 }
 
-const curateProblemsPrompt = ai.definePrompt({
-  name: 'curateProblemsPrompt',
-  input: {schema: CurateProblemsInputSchema},
-  output: {schema: CurateProblemsOutputSchema},
-  prompt: `You are an expert and highly creative LeetCode problem creator. Your task is to generate a batch of UNIQUE and interesting coding problems based on a given topic and a list of player skill levels.
+const promptText = `You are an expert and highly creative LeetCode problem creator. Your task is to generate a batch of UNIQUE and interesting coding problems based on a given topic and a list of player skill levels.
 
 **CRITICAL INSTRUCTIONS:**
 1.  **DO NOT** generate common, textbook problems. Avoid well-known challenges like "Two Sum", "Reverse a String", "FizzBuzz", etc. Your goal is to create something fresh that a user likely hasn't seen before.
@@ -48,8 +50,9 @@ Generate a problem for each of the following players:
 - Player with skill level: {{{this.skillLevel}}}
 {{/each}}
 
-Your final output must be a JSON object with a single key "problems" which is an array of problem objects.`,
-  config: {
+Your final output must be a JSON object with a single key "problems" which is an array of problem objects.`;
+
+const commonConfig = {
     safetySettings: [
       {
         category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
@@ -60,7 +63,24 @@ Your final output must be a JSON object with a single key "problems" which is an
         threshold: 'BLOCK_ONLY_HIGH',
       },
     ],
-  },
+};
+
+// Prompt for Free Tier (Gemini)
+const curateProblemsPrompt = ai.definePrompt({
+  name: 'curateProblemsPrompt',
+  input: {schema: CurateProblemsInputSchema},
+  output: {schema: CurateProblemsOutputSchema},
+  prompt: promptText,
+  config: commonConfig,
+});
+
+// Prompt for Pro Tier (Groq)
+const curateProProblemsPrompt = proAi.definePrompt({
+    name: 'curateProProblemsPrompt',
+    input: { schema: CurateProblemsInputSchema },
+    output: { schema: CurateProblemsOutputSchema },
+    prompt: promptText,
+    config: commonConfig,
 });
 
 const curateProblemsFlow = ai.defineFlow(
@@ -70,6 +90,13 @@ const curateProblemsFlow = ai.defineFlow(
     outputSchema: CurateProblemsOutputSchema,
   },
   async input => {
+    if (input.userPlan === 'pro') {
+        console.log("Using Pro (Groq) model for problem generation.");
+        const {output} = await curateProProblemsPrompt(input);
+        return output!;
+    }
+    
+    console.log("Using Free (Gemini) model for problem generation.");
     const {output} = await curateProblemsPrompt(input);
     return output!;
   }

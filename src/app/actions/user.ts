@@ -110,15 +110,26 @@ export async function searchUsers(currentUserId: string, searchTerm: string): Pr
   return users;
 }
 
-export async function sendConnectionRequest(requesterId: string, recipientId: string): Promise<{success: boolean}> {
+export async function sendConnectionRequest(requesterId: string, recipientId: string): Promise<{success: boolean, message?: string}> {
   const { db, error } = initializeFirebase();
   if (error || !db) {
     console.error("Firebase error in sendConnectionRequest:", error?.message);
-    return { success: false };
+    return { success: false, message: 'Database error.' };
   }
   const requesterRef = doc(db, 'users', requesterId);
   const recipientRef = doc(db, 'users', recipientId);
   try {
+    const requesterSnap = await getDoc(requesterRef);
+    if (!requesterSnap.exists()) {
+        return { success: false, message: 'Requester does not exist.' };
+    }
+    const requesterData = requesterSnap.data() as UserProfile;
+    
+    const limit = requesterData.plan === 'pro' ? 50 : 10;
+    if ((requesterData.connections?.length || 0) >= limit) {
+        return { success: false, message: 'You have reached your connection limit.' };
+    }
+
     const batch = writeBatch(db);
     batch.update(requesterRef, { sentRequests: arrayUnion(recipientId) });
     batch.update(recipientRef, { pendingConnections: arrayUnion(requesterId) });
@@ -126,7 +137,7 @@ export async function sendConnectionRequest(requesterId: string, recipientId: st
     return { success: true };
   } catch (e) {
     console.error("Error sending connection request:", e);
-    return { success: false };
+    return { success: false, message: 'An unexpected error occurred.' };
   }
 }
 

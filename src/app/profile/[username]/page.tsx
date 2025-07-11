@@ -61,11 +61,11 @@ export default function PublicProfilePage() {
     
     const handleSendRequest = async () => {
         if (!currentUser) return;
-        const { success } = await sendConnectionRequest(currentUser.uid, profileUser.uid);
+        const { success, message } = await sendConnectionRequest(currentUser.uid, profileUser.uid);
         if (success) {
             toast({ title: "Request Sent!" });
         } else {
-            toast({ title: "Error sending request", variant: 'destructive' });
+            toast({ title: "Error", description: message, variant: 'destructive' });
         }
     };
     

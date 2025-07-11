@@ -9,20 +9,20 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen cyber-grid">
       <main className="flex-1">
         <section className="relative w-full h-[80vh] flex items-center justify-center text-center overflow-hidden">
-          <Image
+           <Image
             src={hero}
-            alt="Futuristic coding interface background"
+            alt="Abstract data stream background"
+            data-ai-hint="abstract data stream"
             layout="fill"
             objectFit="cover"
             className="absolute inset-0 w-full h-full opacity-20"
             priority
           />
-
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent"></div>
 
           {/* Main Hero Content */}
-          <div className="relative z-10 container px-4 md:px-6">
+          <div className="relative container px-4 md:px-6">
             <div className="flex flex-col items-center space-y-4">
               <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm text-primary font-medium">
                 From Rookie to Veteran
