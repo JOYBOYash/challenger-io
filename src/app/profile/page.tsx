@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth, type UserProfile } from '@/context/auth-context';
 import Loading from '@/app/loading';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -17,10 +18,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { updateUserProfile, removeChallenge, getUsersByIds, acceptConnectionRequest, declineConnectionRequest } from '@/app/actions/user';
-import { Edit, Save, Trash2, X, Eye, ExternalLink, User, Users, UserPlus, Check, UserX, Gem } from 'lucide-react';
+import { Edit, Save, Trash2, X, Eye, ExternalLink, User, Users, UserPlus, Check, UserX, Gem, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ProblemDisplay } from '@/components/problem-display';
 import type { Problem } from '@/ai/flows/problem-curation';
+import { cn } from '@/lib/utils';
 
 const profileSchema = z.object({
     bio: z.string().max(250, "Bio can't be more than 250 characters.").optional(),
@@ -29,6 +31,9 @@ const profileSchema = z.object({
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
+
+const AVAILABLE_MEDALLIONS = ['skull', 'crown', 'bolt', 'star', 'rocket', 'diamond'];
+
 
 const ConnectionsList = ({ uids }: { uids: string[] }) => {
     const [users, setUsers] = useState<UserProfile[]>([]);
@@ -133,6 +138,13 @@ export default function ProfilePage() {
     const { user, loading } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const { toast } = useToast();
+    const [selectedMedallions, setSelectedMedallions] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (user?.medallions) {
+            setSelectedMedallions(user.medallions);
+        }
+    }, [user?.medallions]);
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
@@ -150,6 +162,7 @@ export default function ProfilePage() {
                 domain: user.domain || '',
                 skills: user.skills?.join(', ') || '',
             });
+            setSelectedMedallions(user.medallions || []);
         }
     }, [user, form]);
 
@@ -159,6 +172,7 @@ export default function ProfilePage() {
             domain: user?.domain || '',
             skills: user?.skills?.join(', ') || '',
         });
+        setSelectedMedallions(user?.medallions || []);
         setIsEditing(false);
     };
 
@@ -168,6 +182,7 @@ export default function ProfilePage() {
         const profileDataToUpdate: Partial<UserProfile> = {
             ...data,
             skills: data.skills ? data.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
+            medallions: selectedMedallions,
         };
         
         const { success } = await updateUserProfile(user.uid, profileDataToUpdate);
@@ -189,6 +204,29 @@ export default function ProfilePage() {
             toast({ title: 'Error', description: 'Could not remove the challenge.', variant: 'destructive' });
         }
     }
+    
+    const handleMedallionToggle = (medallion: string) => {
+        if (!user) return;
+        const maxMedallions = user.plan === 'pro' ? 3 : 1;
+        
+        setSelectedMedallions(current => {
+            const isSelected = current.includes(medallion);
+            if (isSelected) {
+                return current.filter(m => m !== medallion);
+            } else {
+                if (current.length < maxMedallions) {
+                    return [...current, medallion];
+                } else {
+                    toast({
+                        title: "Medallion Limit Reached",
+                        description: `You can only select up to ${maxMedallions} medallions. ${user.plan === 'free' ? 'Upgrade to Pro to select more!' : ''}`,
+                        variant: 'destructive',
+                    });
+                    return current;
+                }
+            }
+        });
+    };
 
     if (loading) return <Loading />;
     if (!user) return <p className="text-center mt-10">Please log in to view your profile.</p>;
@@ -212,7 +250,12 @@ export default function ProfilePage() {
                         <div className="w-full">
                             <form onSubmit={form.handleSubmit(onSubmit)}>
                                 <div className="flex justify-between items-center mb-4">
-                                    <h1 className="text-3xl font-bold font-headline">{user.username}</h1>
+                                    <h1 className="text-3xl font-bold font-headline flex items-center gap-2">
+                                        {user.username}
+                                        {user.medallions && user.medallions.map(m => (
+                                            <Image key={m} src={`https://placehold.co/32x32.png`} width={32} height={32} alt={m} data-ai-hint="emblem badge" />
+                                        ))}
+                                    </h1>
                                     <div className="flex items-center gap-2">
                                         {isEditing ? (
                                             <>
@@ -233,6 +276,26 @@ export default function ProfilePage() {
                                 <p className="text-muted-foreground mb-6">{user.email}</p>
 
                                 <div className="space-y-6">
+                                    {isEditing && (
+                                        <div>
+                                            <Label className="text-lg font-semibold flex items-center gap-2"><Sparkles className="text-amber-500" /> Medallions</Label>
+                                            <p className="text-xs text-muted-foreground mb-2">
+                                                {user.plan === 'pro' ? 'As a Pro member, you can select up to 3 medallions.' : 'Select 1 medallion to display. Upgrade to Pro to select more!'}
+                                            </p>
+                                            <div className="flex flex-wrap gap-2 p-2 rounded-md border bg-background/50">
+                                                {AVAILABLE_MEDALLIONS.map(m => (
+                                                    <button
+                                                        type="button"
+                                                        key={m}
+                                                        onClick={() => handleMedallionToggle(m)}
+                                                        className={cn("p-1 rounded-md transition-all", selectedMedallions.includes(m) ? 'bg-primary/20 ring-2 ring-primary' : 'hover:bg-accent')}
+                                                    >
+                                                        <Image src={`https://placehold.co/48x48.png`} width={48} height={48} alt={m} data-ai-hint={`${m} icon`} />
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                     <div>
                                         <Label htmlFor="domain" className="text-lg font-semibold">Domain</Label>
                                         {isEditing ? (

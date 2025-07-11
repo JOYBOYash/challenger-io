@@ -92,6 +92,7 @@ export default function SignUpPage() {
         skills: [],
         savedChallenges: [],
         lastAiChallengeTimestamp: 0,
+        medallions: [],
       });
       
       toast({ title: 'Account Created!', description: 'Welcome to Challenger.io!' });

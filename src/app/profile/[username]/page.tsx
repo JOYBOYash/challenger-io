@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useAuth, type UserProfile } from '@/context/auth-context';
 import Loading from '@/app/loading';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -133,6 +134,7 @@ export default function PublicProfilePage() {
                                 <div>
                                     <div className="flex items-center gap-3">
                                         <h1 className="text-3xl font-bold font-headline">{profileUser.username}</h1>
+                                        {profileUser.medallions && profileUser.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
                                         {profileUser.plan === 'pro' && (
                                             <Badge variant="default" className="bg-amber-500 text-amber-950 text-base"><Gem className="mr-2 h-4 w-4"/> PRO</Badge>
                                         )}

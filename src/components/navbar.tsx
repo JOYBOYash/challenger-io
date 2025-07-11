@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -104,7 +105,10 @@ export function Navbar() {
                         <DropdownMenuLabel className="font-normal">
                           <div className="flex flex-col space-y-1">
                             <div className="flex items-center justify-between">
-                                <p className="text-sm font-medium leading-none">{user.username}</p>
+                                <p className="text-sm font-medium leading-none flex items-center gap-1.5">
+                                    {user.username}
+                                    {user.medallions && user.medallions.map(m => <Image key={m} src={`https://placehold.co/16x16.png`} width={16} height={16} alt={m} data-ai-hint="emblem badge" />)}
+                                </p>
                                 {user.plan === 'pro' ? (
                                     <Badge variant="default" className="ml-2 bg-amber-500 text-amber-950"><Gem className="mr-1 h-3 w-3" /> PRO</Badge>
                                 ) : (

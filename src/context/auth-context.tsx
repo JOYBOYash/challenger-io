@@ -24,6 +24,7 @@ export type UserProfile = {
     skills?: string[];
     savedChallenges?: Problem[];
     lastAiChallengeTimestamp?: number;
+    medallions?: string[];
 };
 
 interface AuthContextType {

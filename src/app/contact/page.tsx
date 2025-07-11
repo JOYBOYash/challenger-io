@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth, type UserProfile } from '@/context/auth-context';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -78,6 +79,7 @@ const UserCard = ({ userProfile, onLimitReached }: { userProfile: UserProfile, o
                     <div>
                         <div className="flex items-center gap-2">
                            <p className="font-semibold text-lg group-hover:text-primary">{userProfile.username}</p>
+                           {userProfile.medallions && userProfile.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
                            {userProfile.plan === 'pro' && (
                              <Badge variant="default" className="bg-amber-500 text-amber-950"><Gem className="h-3 w-3 mr-1"/> PRO</Badge>
                            )}
