@@ -81,8 +81,9 @@ const ConnectionsList = ({ uids }: { uids: string[] }) => {
                             <p className="font-semibold flex items-center gap-1">
                                 {user.username}
                                 {user.plan === 'pro' && <Gem className="h-4 w-4 text-amber-500" />}
+                                {user.medallions && user.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
                             </p>
-                            <p className="text-sm text-muted-foreground">{user.domain}</p>
+                            <p className="text-sm text-muted-foreground">{user.domain || 'Developer'}</p>
                         </div>
                     </Card>
                 </Link>
@@ -142,8 +143,9 @@ const PendingRequestsList = ({ uids }: { uids: string[] }) => {
                              <p className="font-semibold flex items-center gap-1">
                                 {requester.username}
                                 {requester.plan === 'pro' && <Gem className="h-4 w-4 text-amber-500" />}
+                                {requester.medallions && requester.medallions.map(m => <Image key={m} src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m} data-ai-hint="emblem badge" />)}
                             </p>
-                            <p className="text-sm text-muted-foreground">{requester.domain}</p>
+                            <p className="text-sm text-muted-foreground">{requester.domain || 'Developer'}</p>
                         </div>
                     </div>
                     <div className="flex gap-2">
