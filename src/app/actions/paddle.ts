@@ -1,13 +1,12 @@
 'use server';
 
 import 'dotenv/config';
-import { Paddle } from '@paddle/paddle-js';
-import { findUserById, updateUserProfile } from './user';
+import { Paddle } from '@paddle/paddle-js/node';
+import { findUserById } from './user';
 import { initializeFirebase } from '@/lib/firebase';
 
 const paddle = new Paddle({
-  vendor: Number(process.env.PADDLE_VENDOR_ID),
-  authCode: process.env.PADDLE_AUTH_CODE!,
+  apiKey: process.env.PADDLE_API_KEY!,
   environment: 'sandbox', // Use 'production' for live
 });
 
@@ -33,8 +32,8 @@ export async function createCheckoutLink(): Promise<{ checkoutURL?: string; erro
       throw new Error('Paddle Pro Price ID is not configured.');
     }
 
-    const checkout = await paddle.checkouts.create({
-      items: [{ priceId }],
+    const checkout = await paddle.transactions.create({
+      items: [{ priceId, quantity: 1 }],
       customer: {
         email: user.email,
       },

@@ -25,7 +25,7 @@ import hero from '@/public/hero3.png';
 import mission from "@/public/rocket2.png";
 import arena from "@/public/2vs.png";
 import connect from "@/public/3shake.png";
-import { initializePaddle, Paddle } from '@paddle/paddle-js';
+import type { Paddle } from '@paddle/paddle-js';
 
 // --- Components from merged pages ---
 
@@ -180,12 +180,18 @@ export default function HomePage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    initializePaddle({
-      environment: 'sandbox', // Use 'production' for live
-      token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
-    }).then((paddle) => {
-      setPaddleInstance(paddle);
-    });
+    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN) {
+        import('@paddle/paddle-js').then(({ initializePaddle }) => {
+            initializePaddle({
+                environment: 'sandbox', // Use 'production' for live
+                token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
+            }).then((paddle) => {
+                if (paddle) {
+                    setPaddleInstance(paddle);
+                }
+            });
+        });
+    }
   }, []);
 
   useEffect(() => {
@@ -243,9 +249,22 @@ export default function HomePage() {
         setIsBillingLoading(false);
       }
     } else if (planId === 'pro' && currentPlanId === 'pro') {
-      // TODO: Implement customer portal logic
-      toast({ title: 'Subscription Management', description: 'Redirecting to manage your subscription.' });
-      console.log('Manage subscription clicked');
+      if (paddleInstance && user.paddleSubscriptionId) {
+            paddleInstance.Checkout.open({
+                settings: {
+                    displayMode: "overlay",
+                    theme: "dark"
+                },
+                items: [
+                    {
+                        subscriptionId: user.paddleSubscriptionId,
+                        // priceId: 'YOUR_PRO_PRICE_ID' // You might need this depending on what changes are allowed
+                    }
+                ]
+            });
+        } else {
+            toast({ title: 'Subscription Management', description: 'Could not open management portal.' });
+        }
       setIsBillingLoading(false);
     } else {
         setIsBillingLoading(false);
@@ -466,7 +485,7 @@ export default function HomePage() {
                                             <Button
                                                 className="w-full text-lg font-bold"
                                                 variant={tier.id === 'pro' ? 'default' : 'secondary'}
-                                                disabled={isBillingLoading}
+                                                disabled={isBillingLoading || !paddleInstance}
                                                 onClick={() => handleBillingAction(tier.id)}
                                             >
                                                 {isBillingLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

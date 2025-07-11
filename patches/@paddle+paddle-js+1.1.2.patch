@@ -1,0 +1,15 @@
+diff --git a/node_modules/@paddle/paddle-js/package.json b/node_modules/@paddle/paddle-js/package.json
+index 585cde9..c60c821 100644
+--- a/node_modules/@paddle/paddle-js/package.json
++++ b/node_modules/@paddle/paddle-js/package.json
+@@ -21,6 +21,9 @@
+     "types": "./dist/index.d.ts",
+     "import": "./dist/index.esm.js",
+     "require": "./dist/index.cjs.js"
++  },
++  "./node": {
++    "import": "./dist/node/index.js"
+   },
+   "files": [
+     "dist"
+
