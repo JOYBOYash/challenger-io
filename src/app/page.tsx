@@ -184,15 +184,11 @@ export default function HomePage() {
     async function fetchProducts() {
         setIsLoadingProducts(true);
         const fetchedProducts = await getProducts();
-        if (fetchedProducts) {
-            setProducts(fetchedProducts);
-        } else {
-             toast({ title: 'Error', description: 'Could not load pricing plans.', variant: 'destructive' });
-        }
+        setProducts(fetchedProducts || []);
         setIsLoadingProducts(false);
     }
     fetchProducts();
-  }, [toast]);
+  }, []);
 
 
   useEffect(() => {
@@ -503,11 +499,11 @@ export default function HomePage() {
                      <div className="mt-8 h-12 bg-muted rounded w-full"></div>
                    </div>
                 ) : (
-                    products && products.filter(p => p.name.toLowerCase() === 'pro').map(product => {
+                    products.filter(p => p.name.toLowerCase() !== 'free').map(product => {
                         const monthlyPrice = product.prices.find(p => p.billing_cycle?.interval === 'month');
                         if (!monthlyPrice) return null;
 
-                        const isCurrent = currentPlanId === 'pro';
+                        const isCurrent = user?.plan === 'pro';
 
                         return (
                             <div key={product.id} className="relative">
