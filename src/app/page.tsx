@@ -162,7 +162,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN) {
-        import('@paddle/paddle-js').then(({ initializePaddle, Paddle }) => {
+        import('@paddle/paddle-js').then(({ initializePaddle }) => {
              initializePaddle({
                 environment: 'sandbox',
                 token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
@@ -183,11 +183,11 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchProducts() {
         setIsLoadingProducts(true);
-        const { products, error } = await getProducts();
-        if (error) {
-            toast({ title: 'Error', description: 'Could not load pricing plans.', variant: 'destructive' });
-        } else if (products) {
-            setProducts(products);
+        const fetchedProducts = await getProducts();
+        if (fetchedProducts) {
+            setProducts(fetchedProducts);
+        } else {
+             toast({ title: 'Error', description: 'Could not load pricing plans.', variant: 'destructive' });
         }
         setIsLoadingProducts(false);
     }
@@ -244,7 +244,9 @@ export default function HomePage() {
           throw new Error(error || 'Could not create checkout session.');
         }
         paddleInstance?.Checkout.open({
-          transactionId: checkoutURL.split('/').pop()!
+          checkout: {
+            id: checkoutURL.split('/').pop()!
+          }
         });
       } catch (err: any) {
         toast({ title: 'Billing Error', description: err.message, variant: 'destructive' });

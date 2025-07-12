@@ -25,11 +25,11 @@ export interface PaddlePrice {
 }
 
 
-export async function getProducts(): Promise<{ products?: PaddleProduct[]; error?: string }> {
+export async function getProducts(): Promise<PaddleProduct[]> {
     const apiKey = process.env.PADDLE_API_KEY;
     if (!apiKey) {
       console.error('Paddle API Key is not configured.');
-      return { error: 'Paddle API Key is not configured.' };
+      return [];
     }
 
     try {
@@ -45,15 +45,14 @@ export async function getProducts(): Promise<{ products?: PaddleProduct[]; error
 
         if (!response.ok) {
             console.error('Paddle API Error:', data);
-            const errorMessage = data?.error?.detail || 'Failed to fetch Paddle products.';
-            throw new Error(errorMessage);
+            throw new Error(data?.error?.detail || 'Failed to fetch Paddle products.');
         }
 
-        return { products: data.data };
+        return data.data || [];
 
     } catch (error: any) {
         console.error('Error fetching Paddle products:', error);
-        return { error: error.message || 'An unexpected error occurred.' };
+        return [];
     }
 }
 
@@ -104,7 +103,7 @@ export async function createCheckoutLink(userId: string, priceId: string): Promi
       throw new Error(errorMessage);
     }
     
-    return { checkoutURL: data.data.url };
+    return { checkoutURL: data.data.checkout.url };
 
   } catch (error: any) {
     console.error('Error creating Paddle checkout link:', error);
