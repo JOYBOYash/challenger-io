@@ -1,3 +1,4 @@
+
 'use server';
 
 import 'dotenv/config';
@@ -11,12 +12,12 @@ interface CreateOrderParams {
     userId: string;
 }
 
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID!,
-    key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
 export async function createOrder({ amount, currency, userId }: CreateOrderParams) {
+    const razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID!,
+        key_secret: process.env.RAZORPAY_KEY_SECRET!,
+    });
+
     try {
         const options = {
             amount,
@@ -54,16 +55,26 @@ export async function verifyPayment(params: VerifyPaymentParams) {
     const isAuthentic = expectedSignature === razorpay_signature;
 
     if (isAuthentic) {
-        // Fetch order details to get userId from notes
-        const order = await razorpay.orders.fetch(razorpay_order_id);
-        const userId = order.notes?.userId;
+        // We need a razorpay instance to fetch the order.
+        const razorpay = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID!,
+            key_secret: process.env.RAZORPAY_KEY_SECRET!,
+        });
 
-        if (userId) {
-            await updateUserProfile(userId, {
-                plan: 'pro',
-                razorpayPaymentId: razorpay_payment_id,
-            });
-            return { success: true, userId };
+        // Fetch order details to get userId from notes
+        try {
+            const order = await razorpay.orders.fetch(razorpay_order_id);
+            const userId = order.notes?.userId;
+
+            if (userId) {
+                await updateUserProfile(userId, {
+                    plan: 'pro',
+                    razorpayPaymentId: razorpay_payment_id,
+                });
+                return { success: true, userId };
+            }
+        } catch (error) {
+            console.error('Error fetching Razorpay order for verification:', error);
         }
     }
     
