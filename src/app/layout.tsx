@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from '@/components/main-layout';
 import { AuthProvider } from '@/context/auth-context';
+import { FirebaseProvider } from '@/firebase/provider';
 
 export const metadata: Metadata = {
   title: 'Challenger.io',
@@ -22,10 +23,12 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased h-full flex flex-col">
-        <AuthProvider>
-            <MainLayout>{children}</MainLayout>
-            <Toaster />
-        </AuthProvider>
+        <FirebaseProvider>
+          <AuthProvider>
+              <MainLayout>{children}</MainLayout>
+              <Toaster />
+          </AuthProvider>
+        </FirebaseProvider>
       </body>
     </html>
   );

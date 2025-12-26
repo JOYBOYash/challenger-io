@@ -7,13 +7,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { initializeFirebase } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { useFirebase } from '@/firebase/hooks';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -24,6 +24,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const { auth } = useFirebase();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -32,14 +33,12 @@ export default function LoginPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
-    const { auth, error: firebaseError } = initializeFirebase();
-    if (firebaseError || !auth) {
+    if (!auth) {
       toast({
         title: 'Configuration Error',
         description: 'Firebase is not configured correctly. Check the console for more details.',
         variant: 'destructive',
       });
-      console.error(firebaseError);
       setIsLoading(false);
       return;
     }

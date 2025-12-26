@@ -3,9 +3,12 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { initializeFirebase } from '@/lib/firebase';
 import Loading from '@/app/loading';
 import type { Problem } from '@/ai/flows/problem-curation';
+import { useFirebase } from '@/firebase/hooks';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 // Add the email(s) of any user you want to have automatic Pro access here.
 export const PRO_USER_EMAILS = ['joyboysskofficially@gmail.com'];
@@ -44,12 +47,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<UserProfile | null>(null);
     const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
     const [loading, setLoading] = useState(true);
+    const { auth, db } = useFirebase();
 
     useEffect(() => {
-        const { auth, db, error } = initializeFirebase();
-
-        if (error || !auth) {
-            console.error("AuthProvider Error: Failed to initialize Firebase.", error);
+        if (!auth) {
             setLoading(false);
             return;
         }
@@ -60,28 +61,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 if (db) {
                     const docRef = doc(db, 'users', authUser.uid);
                     
-                    const unsubscribeFirestore = onSnapshot(docRef, (docSnap) => {
-                        if (docSnap.exists()) {
-                            const userData = docSnap.data() as UserProfile;
-                            
-                            // Override plan to 'pro' if user's email is in the special list
-                            if (authUser.email && PRO_USER_EMAILS.includes(authUser.email)) {
-                                userData.plan = 'pro';
+                    const unsubscribeFirestore = onSnapshot(docRef, 
+                        (docSnap) => {
+                            if (docSnap.exists()) {
+                                const userData = docSnap.data() as UserProfile;
+                                
+                                // Override plan to 'pro' if user's email is in the special list
+                                if (authUser.email && PRO_USER_EMAILS.includes(authUser.email)) {
+                                    userData.plan = 'pro';
+                                }
+                                
+                                setUser(userData);
+                            } else {
+                                setUser(null);
                             }
-                            
-                            setUser(userData);
-                        } else {
+                            setLoading(false);
+                        }, 
+                        async (err) => {
+                            const permissionError = new FirestorePermissionError({
+                                path: docRef.path,
+                                operation: 'get',
+                            });
+                            errorEmitter.emit('permission-error', permissionError);
                             setUser(null);
+                            setLoading(false);
                         }
-                        setLoading(false);
-                    }, (err) => {
-                        console.error("Firestore snapshot error:", err);
-                        setUser(null);
-                        setLoading(false);
-                    });
+                    );
                     
-                    // This will be the cleanup function for the auth subscription.
-                    // When the user logs out, we need to detach the firestore listener.
                     return () => unsubscribeFirestore();
                 } else {
                      setUser(null);
@@ -94,14 +100,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
         });
 
-        // This is the cleanup function for the useEffect hook.
         return () => unsubscribeAuth();
-    }, []);
+    }, [auth, db]);
 
     const value = { user, firebaseUser, loading };
 
     return (
         <AuthContext.Provider value={value}>
+            <FirebaseErrorListener />
             {loading ? <Loading /> : children}
         </AuthContext.Provider>
     );

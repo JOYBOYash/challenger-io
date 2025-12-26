@@ -9,7 +9,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { initializeFirebase } from '@/lib/firebase';
 import { isUsernameTaken } from '@/app/actions/user';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { PRO_USER_EMAILS } from '@/context/auth-context';
+import { useFirebase } from '@/firebase/hooks';
 
 const formSchema = z.object({
   username: z.string().min(3, { message: 'Username must be at least 3 characters.' }).max(20, { message: 'Username must be less than 20 characters.' })
@@ -33,6 +33,7 @@ export default function SignUpPage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const { auth, db } = useFirebase();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,14 +55,12 @@ export default function SignUpPage() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
 
-    const { auth, db, error } = initializeFirebase();
-    if (error || !auth || !db) {
+    if (!auth || !db) {
         toast({
             title: 'Configuration Error',
             description: 'Firebase is not configured correctly. Check the console for more details.',
             variant: 'destructive',
         });
-        console.error(error);
         setIsLoading(false);
         return;
     }

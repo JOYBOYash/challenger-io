@@ -7,9 +7,9 @@ import type { Problem } from '@/ai/flows/problem-curation';
 
 
 export async function updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<{success: boolean}> {
-    const { db, error } = initializeFirebase();
-    if (error || !db) {
-        console.error("Firebase error in updateUserProfile:", error?.message);
+    const { db } = initializeFirebase();
+    if (!db) {
+        console.error("Firebase error in updateUserProfile: db is null");
         return { success: false };
     }
     const userRef = doc(db, 'users', userId);
@@ -23,9 +23,9 @@ export async function updateUserProfile(userId: string, data: Partial<UserProfil
 }
 
 export async function saveChallenge(userId: string, problem: Problem): Promise<{success: boolean}> {
-    const { db, error } = initializeFirebase();
-    if (error || !db) {
-        console.error("Firebase error in saveChallenge:", error?.message);
+    const { db } = initializeFirebase();
+    if (!db) {
+        console.error("Firebase error in saveChallenge: db is null");
         return { success: false };
     }
     const userRef = doc(db, 'users', userId);
@@ -39,9 +39,9 @@ export async function saveChallenge(userId: string, problem: Problem): Promise<{
 }
 
 export async function removeChallenge(userId: string, problem: Problem): Promise<{success: boolean}> {
-    const { db, error } = initializeFirebase();
-    if (error || !db) {
-        console.error("Firebase error in removeChallenge:", error?.message);
+    const { db } = initializeFirebase();
+    if (!db) {
+        console.error("Firebase error in removeChallenge: db is null");
         return { success: false };
     }
     const userRef = doc(db, 'users', userId);
@@ -56,9 +56,9 @@ export async function removeChallenge(userId: string, problem: Problem): Promise
 
 
 export async function findUserByUsername(username: string): Promise<UserProfile | null> {
-  const { db, error } = initializeFirebase();
-  if (error || !db) {
-    console.error("Firebase error in findUserByUsername:", error?.message);
+  const { db } = initializeFirebase();
+  if (!db) {
+    console.error("Firebase error in findUserByUsername: db is null");
     return null;
   }
 
@@ -77,9 +77,9 @@ export async function findUserByUsername(username: string): Promise<UserProfile 
 }
 
 export async function findUserById(uid: string): Promise<UserProfile | null> {
-    const { db, error } = initializeFirebase();
-    if (error || !db) {
-        console.error("Firebase error in findUserById:", error?.message);
+    const { db } = initializeFirebase();
+    if (!db) {
+        console.error("Firebase error in findUserById: db is null");
         return null;
     }
     if (!uid) return null;
@@ -92,9 +92,9 @@ export async function findUserById(uid: string): Promise<UserProfile | null> {
 }
 
 export async function isUsernameTaken(username: string): Promise<boolean> {
-  const { db, error } = initializeFirebase();
-  if (error || !db) {
-    console.error("Firebase error in isUsernameTaken:", error?.message);
+  const { db } = initializeFirebase();
+  if (!db) {
+    console.error("Firebase error in isUsernameTaken: db is null");
     return true; // Fail safe, prevent username creation
   }
   const usersRef = collection(db, 'users');
@@ -104,8 +104,8 @@ export async function isUsernameTaken(username: string): Promise<boolean> {
 }
 
 export async function searchUsers(currentUserId: string, searchTerm: string): Promise<UserProfile[]> {
-  const { db, error } = initializeFirebase();
-  if (error || !db || !searchTerm) {
+  const { db } = initializeFirebase();
+  if (!db || !searchTerm) {
     return [];
   }
   const usersRef = collection(db, 'users');
@@ -126,9 +126,9 @@ export async function searchUsers(currentUserId: string, searchTerm: string): Pr
 }
 
 export async function sendConnectionRequest(requesterId: string, recipientId: string): Promise<{success: boolean; message?: string; reason?: 'limit_reached' | 'already_connected' | 'unknown'}> {
-  const { db, error } = initializeFirebase();
-  if (error || !db) {
-    console.error("Firebase error in sendConnectionRequest:", error?.message);
+  const { db } = initializeFirebase();
+  if (!db) {
+    console.error("Firebase error in sendConnectionRequest: db is null");
     return { success: false, message: 'Database error.', reason: 'unknown' };
   }
   const requesterRef = doc(db, 'users', requesterId);
@@ -157,9 +157,9 @@ export async function sendConnectionRequest(requesterId: string, recipientId: st
 }
 
 export async function acceptConnectionRequest(userId: string, requesterId: string): Promise<{success: boolean}> {
-  const { db, error } = initializeFirebase();
-  if (error || !db) {
-    console.error("Firebase error in acceptConnectionRequest:", error?.message);
+  const { db } = initializeFirebase();
+  if (!db) {
+    console.error("Firebase error in acceptConnectionRequest: db is null");
     return { success: false };
   }
   const userRef = doc(db, 'users', userId);
@@ -181,9 +181,9 @@ export async function acceptConnectionRequest(userId: string, requesterId: strin
 }
 
 export async function declineConnectionRequest(userId: string, requesterId: string): Promise<{success: boolean}> {
-  const { db, error } = initializeFirebase();
-  if (error || !db) {
-    console.error("Firebase error in declineConnectionRequest:", error?.message);
+  const { db } = initializeFirebase();
+  if (!db) {
+    console.error("Firebase error in declineConnectionRequest: db is null");
     return { success: false };
   }
   const userRef = doc(db, 'users', userId);
@@ -201,8 +201,8 @@ export async function declineConnectionRequest(userId: string, requesterId: stri
 }
 
 export async function getUsersByIds(uids: string[]): Promise<UserProfile[]> {
-    const { db, error } = initializeFirebase();
-    if (error || !db || uids.length === 0) {
+    const { db } = initializeFirebase();
+    if (!db || uids.length === 0) {
         return [];
     }
     
@@ -217,8 +217,8 @@ export async function getUsersByIds(uids: string[]): Promise<UserProfile[]> {
 }
 
 export async function getConnectedUsers(userId: string): Promise<UserProfile[]> {
-    const { db, error } = initializeFirebase();
-    if (error || !db) {
+    const { db } = initializeFirebase();
+    if (!db) {
         return [];
     }
     
@@ -241,8 +241,8 @@ export async function getConnectedUsers(userId: string): Promise<UserProfile[]> 
 
 // Non-AI based user suggestion based on shared skills.
 export async function getSuggestedUsers(currentUser: UserProfile): Promise<UserProfile[]> {
-    const { db, error } = initializeFirebase();
-    if (error || !db) {
+    const { db } = initializeFirebase();
+    if (!db) {
         return [];
     }
 

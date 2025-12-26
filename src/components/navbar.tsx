@@ -25,10 +25,10 @@ import { Menu, Zap, LogOut, User as UserIcon, Gem } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
 import { signOut } from 'firebase/auth';
-import { initializeFirebase } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { useFirebase } from '@/firebase/hooks';
 
 
 const NAV_ITEMS = [
@@ -43,12 +43,11 @@ export function Navbar() {
   const router = useRouter();
   const { user, firebaseUser } = useAuth();
   const { toast } = useToast();
+  const { auth } = useFirebase();
 
   const handleLogout = async () => {
-    const { auth, error } = initializeFirebase();
-    if (error || !auth) {
+    if (!auth) {
         toast({ title: "Logout Failed", description: "Firebase not configured.", variant: "destructive" });
-        console.error(error);
         return;
     }
 
