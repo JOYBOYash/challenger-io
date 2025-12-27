@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -42,16 +43,18 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Another rule is needed for write batches that affect multiple documents,
-    // specifically for sending a connection request.
+    // This separate rule is CRITICAL for connection requests, which is a write
+    // batch that affects multiple documents.
     match /users/{recipientId} {
+       // This allows an authenticated user (the sender) to update the recipient's doc
+       // ONLY if they are adding themselves to the pendingConnections list.
        allow update: if isUserAuthenticated() && isSendingRequest(recipientId);
     }
 
 
-    // --- Functions for Update Logic ---
+    // --- Helper Functions for Complex Update Logic ---
 
-    // A simple profile edit only changes these specific fields.
+    // A simple profile edit only changes these specific, non-critical fields.
     function isProfileEdit(requestData, existingData) {
       return requestData.bio == request.resource.data.bio &&
              requestData.domain == request.resource.data.domain &&
@@ -74,7 +77,7 @@ service cloud.firestore {
                           requestData.pendingConnections.size() == existingData.pendingConnections.size() - 1;
         let isDeclining = requestData.pendingConnections.size() == existingData.pendingConnections.size() - 1;
         
-        return isAccepting || isDeclining;
+        return (isAccepting || isDeclining);
     }
     
     // When sending a request, the sender is trying to update the recipient's doc.
@@ -96,3 +99,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

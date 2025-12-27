@@ -1,3 +1,4 @@
+
 'use server';
 
 import { initializeFirebase } from '@/lib/firebase';
@@ -284,3 +285,5 @@ export async function getSuggestedUsers(currentUser: UserProfile): Promise<UserP
         .slice(0, 10)
         .map(item => item.user);
 }
+
+    
