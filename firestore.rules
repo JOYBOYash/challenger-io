@@ -24,10 +24,12 @@ service cloud.firestore {
       // --- WRITES ---
 
       // CREATE: Allow a user to create their own document, but not one for someone else.
-      allow create: if isOwner(userId)
-                    && request.resource.data.uid == request.auth.uid
+      // This rule is critical for signup. It ensures the document ID being created
+      // MUST match the UID of the user making the request.
+      allow create: if request.auth.uid == userId
+                    && request.resource.data.uid == userId
                     && request.resource.data.username is string
-                    && request.resource.data.email == request.auth.email;
+                    && request.resource.data.email == request.auth.token.email;
 
       // UPDATE: This is the most complex rule.
       allow update: if isOwner(userId) &&
@@ -62,13 +64,15 @@ service cloud.firestore {
              requestData.medallions == request.resource.data.medallions &&
              requestData.lastAiChallengeTimestamp == request.resource.data.lastAiChallengeTimestamp &&
              requestData.photoURL == existingData.photoURL && // Ensure core fields are not changed
-             requestData.uid == existingData.uid;
+             requestData.uid == existingData.uid &&
+             requestData.email == existingData.email;
     }
 
     // When saving/removing a challenge, only the 'savedChallenges' array should change.
     function isChallengeUpdate(requestData, existingData) {
        return requestData.savedChallenges != existingData.savedChallenges &&
-              requestData.keys().removeAll(['savedChallenges']).size() == existingData.keys().removeAll(['savedChallenges']).size();
+              requestData.keys().removeAll(['savedChallenges']).size() == existingData.keys().removeAll(['savedChallenges']).size() &&
+              requestData.uid == existingData.uid; // Must not change UID
     }
     
     // When a user accepts or declines a request, they modify their own doc.
@@ -77,27 +81,27 @@ service cloud.firestore {
                           requestData.pendingConnections.size() == existingData.pendingConnections.size() - 1;
         let isDeclining = requestData.pendingConnections.size() == existingData.pendingConnections.size() - 1;
         
-        return (isAccepting || isDeclining);
+        let otherFieldsUnchanged = requestData.keys().removeAll(['connections', 'pendingConnections']).size() == existingData.keys().removeAll(['connections', 'pendingConnections']).size();
+        
+        return (isAccepting || isDeclining) && otherFieldsUnchanged && requestData.uid == existingData.uid;
     }
     
     // When sending a request, the sender is trying to update the recipient's doc.
     // We allow this ONLY if the ONLY change is adding the sender's UID to the `pendingConnections` array.
     function isSendingRequest(recipientId) {
+      // The document being written to.
       let recipientDoc = get(/databases/$(database)/documents/users/$(recipientId));
       let senderId = request.auth.uid;
       
-      // Ensure the only field being changed is 'pendingConnections'
-      let isOnlyPendingChanged = request.resource.data.keys().hasAll(['pendingConnections']) &&
-                                request.resource.data.keys().size() == recipientDoc.data.keys().size() + 1;
-
-      // Ensure the sender's ID is being added to the list
-      let isAddingSender = request.resource.data.pendingConnections.hasAll(recipientDoc.data.pendingConnections) &&
-                           request.resource.data.pendingConnections.hasAny([senderId]) &&
-                           request.resource.data.pendingConnections.size() == recipientDoc.data.pendingConnections.size() + 1;
+      // Ensure the only field being changed is 'pendingConnections' and it's an addition.
+      let isOnlyPendingChanged = request.resource.data.keys().toSet().difference(recipientDoc.data.keys().toSet()).hasOnly(['pendingConnections']);
+      
+      // Check if the new pendingConnections list is exactly the old one plus the new senderId.
+      let isAddingSender = request.resource.data.pendingConnections.toSet().hasAll(recipientDoc.data.pendingConnections.toSet()) &&
+                           request.resource.data.pendingConnections.size() == recipientDoc.data.pendingConnections.size() + 1 &&
+                           request.resource.data.pendingConnections.hasAny([senderId]);
                            
-      return isAddingSender;
+      return isOnlyPendingChanged && isAddingSender;
     }
   }
 }
-
-    
