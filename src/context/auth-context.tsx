@@ -6,7 +6,6 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import Loading from '@/app/loading';
 import type { Problem } from '@/ai/flows/problem-curation';
 import { useFirebase } from '@/firebase/hooks';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 
@@ -66,7 +65,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                             if (docSnap.exists()) {
                                 const userData = docSnap.data() as UserProfile;
                                 
-                                // Override plan to 'pro' if user's email is in the special list
                                 if (authUser.email && PRO_USER_EMAILS.includes(authUser.email)) {
                                     userData.plan = 'pro';
                                 }
@@ -107,7 +105,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return (
         <AuthContext.Provider value={value}>
-            <FirebaseErrorListener />
             {loading ? <Loading /> : children}
         </AuthContext.Provider>
     );

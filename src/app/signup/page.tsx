@@ -18,6 +18,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Loader2 } from 'lucide-react';
 import { PRO_USER_EMAILS } from '@/context/auth-context';
 import { useFirebase } from '@/firebase/hooks';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 const formSchema = z.object({
   username: z.string().min(3, { message: 'Username must be at least 3 characters.' }).max(20, { message: 'Username must be less than 20 characters.' })
@@ -69,10 +71,8 @@ export default function SignUpPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
-      // Generate a photoURL from the username
       const photoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(values.username)}&background=random&color=fff`;
 
-      // Update the user's profile in Firebase Auth
       await updateProfile(user, {
           displayName: values.username,
           photoURL,
@@ -80,8 +80,8 @@ export default function SignUpPage() {
 
       const isPro = PRO_USER_EMAILS.includes(values.email);
 
-      // Create the user document in Firestore
-      await setDoc(doc(db, 'users', user.uid), {
+      const userDocRef = doc(db, 'users', user.uid);
+      const newUserProfileData = {
         uid: user.uid,
         username: values.username,
         email: values.email,
@@ -96,11 +96,25 @@ export default function SignUpPage() {
         savedChallenges: [],
         lastAiChallengeTimestamp: 0,
         medallions: [],
-      });
-      
-      toast({ title: 'Account Created!', description: 'Welcome to Challenger.io!' });
-      router.push('/profile');
+      };
+
+      setDoc(userDocRef, newUserProfileData)
+        .then(() => {
+            toast({ title: 'Account Created!', description: 'Welcome to Challenger.io!' });
+            router.push('/profile');
+        })
+        .catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: userDocRef.path,
+                operation: 'create',
+                requestResourceData: newUserProfileData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            setIsLoading(false);
+        });
+
     } catch (error: any) {
+      setIsLoading(false);
       if (error.code === 'auth/email-already-in-use') {
          toast({
           title: 'Sign Up Failed',
@@ -114,8 +128,6 @@ export default function SignUpPage() {
           variant: 'destructive',
         });
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 

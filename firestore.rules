@@ -7,25 +7,19 @@ service cloud.firestore {
     // Rules for the 'users' collection
     match /users/{userId} {
       
-      // ANYONE can read a user's public profile information.
-      // This is necessary for public profile pages and user search.
-      allow get: if true;
+      // READ: Any authenticated user can read public profile data.
+      // This is necessary for profile pages, search, and connection features.
+      allow get: if request.auth != null;
 
-      // AUTHENTICATED users can list/query users for the search functionality.
+      // LIST: Authenticated users can list/query users for search functionality.
       allow list: if request.auth != null;
 
-      // CREATE: A user can create their own profile document.
+      // CREATE: A user can create their own profile document upon signup.
       // The document ID must match their authentication UID.
       allow create: if request.auth != null && request.auth.uid == userId;
 
       // UPDATE: A user can only update their own profile.
-      // They can only update specific, non-critical fields.
-      // They cannot change their plan, connections, or request lists directly.
-      allow update: if request.auth != null && request.auth.uid == userId
-                    && request.resource.data.diff(resource.data).affectedKeys()
-                       .hasOnly(['bio', 'domain', 'skills', 'medallions', 'savedChallenges', 'lastAiChallengeTimestamp', 'photoURL', 'username', 'pendingConnections', 'sentRequests', 'connections']);
+      allow update: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
-
-    
