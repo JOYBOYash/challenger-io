@@ -98,24 +98,25 @@ export default function SignUpPage() {
         medallions: [],
       };
 
-      setDoc(userDocRef, newUserProfileData)
-        .then(() => {
-            toast({ title: 'Account Created!', description: 'Welcome to Challenger.io!' });
-            router.push('/profile');
-        })
-        .catch(async (serverError) => {
-            const permissionError = new FirestorePermissionError({
-                path: userDocRef.path,
-                operation: 'create',
-                requestResourceData: newUserProfileData,
-            });
-            errorEmitter.emit('permission-error', permissionError);
-            setIsLoading(false);
-        });
+      // By setting the document here, we ensure the user is fully authenticated
+      // which allows Firestore security rules to validate the request.
+      await setDoc(userDocRef, newUserProfileData);
+      
+      toast({ title: 'Account Created!', description: 'Welcome to Challenger.io!' });
+      router.push('/profile');
 
     } catch (error: any) {
       setIsLoading(false);
-      if (error.code === 'auth/email-already-in-use') {
+      // Check for Firestore permission error specifically if needed, otherwise general auth errors.
+      if (error.code && error.code.includes('permission-denied')) {
+          const permissionError = new FirestorePermissionError({
+                path: `users/${auth.currentUser?.uid}`, // Approximate path
+                operation: 'create',
+                requestResourceData: { email: values.email, username: values.username },
+            });
+          errorEmitter.emit('permission-error', permissionError);
+      }
+      else if (error.code === 'auth/email-already-in-use') {
          toast({
           title: 'Sign Up Failed',
           description: 'This email is already in use. Please log in instead.',
