@@ -100,21 +100,31 @@ export default function SignUpPage() {
 
       // By setting the document here, we ensure the user is fully authenticated
       // which allows Firestore security rules to validate the request.
-      await setDoc(userDocRef, newUserProfileData);
+      await setDoc(userDocRef, newUserProfileData).catch((error) => {
+        // This catch block is crucial for debugging permission errors on signup
+        const permissionError = new FirestorePermissionError({
+            path: `users/${user.uid}`,
+            operation: 'create',
+            requestResourceData: newUserProfileData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        // Re-throw the original error to be caught by the outer try-catch
+        throw error;
+      });
       
       toast({ title: 'Account Created!', description: 'Welcome to Challenger.io!' });
       router.push('/profile');
 
     } catch (error: any) {
       setIsLoading(false);
-      // Check for Firestore permission error specifically if needed, otherwise general auth errors.
+      // This will now catch the re-thrown error from the setDoc call, or other auth errors.
       if (error.code && error.code.includes('permission-denied')) {
-          const permissionError = new FirestorePermissionError({
-                path: `users/${auth.currentUser?.uid}`, // Approximate path
-                operation: 'create',
-                requestResourceData: { email: values.email, username: values.username },
-            });
-          errorEmitter.emit('permission-error', permissionError);
+          // The error emitter has already been called, so we can just show a generic message.
+          toast({
+              title: 'Sign Up Failed',
+              description: 'Could not create your user profile due to a permissions issue.',
+              variant: 'destructive',
+          });
       }
       else if (error.code === 'auth/email-already-in-use') {
          toast({
