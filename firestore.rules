@@ -1,10 +1,9 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // --- Helper Functions ---
     function isUserAuthenticated() {
       return request.auth != null;
     }
@@ -13,29 +12,87 @@ service cloud.firestore {
       return isUserAuthenticated() && request.auth.uid == userId;
     }
 
-    // Rules for the 'users' collection
+    // --- Rules for the 'users' collection ---
     match /users/{userId} {
-      
-      // --- READS ---
-      // READ: Any authenticated user can read public profile data.
-      // This is necessary for profile pages, search, and connection features.
-      allow get: if isUserAuthenticated();
 
-      // LIST: Authenticated users can list/query users for search functionality.
-      allow list: if isUserAuthenticated();
+      // --- READS ---
+      // Allow any authenticated user to read from the users collection.
+      // This is necessary for profile pages, search, and connection features.
+      allow read: if isUserAuthenticated();
 
       // --- WRITES ---
-      // CREATE: A user can create their own profile document upon signup.
-      // The document ID must match their authentication UID.
-      allow create: if isOwner(userId);
 
-      // UPDATE: A user can only update their own profile.
-      // More complex connection-related updates are handled by server-side actions (Cloud Functions)
-      // which bypass these client-side rules. For client-side updates (profile edit, saving challenges):
-      allow update: if isOwner(userId);
+      // CREATE: Allow a user to create their own document, but not one for someone else.
+      allow create: if isOwner(userId)
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.username is string
+                    && request.resource.data.email == request.auth.email;
+
+      // UPDATE: This is the most complex rule.
+      allow update: if isOwner(userId) &&
+                     // Case 1: Simple profile edit (bio, skills, medallions etc.)
+                     (isProfileEdit(request.resource.data, resource.data) ||
+                     // Case 2: Saving/Removing a challenge
+                      isChallengeUpdate(request.resource.data, resource.data) ||
+                     // Case 3: Accepting/Declining a connection request
+                      isManagingConnection(request.resource.data, resource.data)
+                     );
 
       // DELETE: Don't allow clients to delete user profiles.
       allow delete: if false;
+    }
+
+    // Another rule is needed for write batches that affect multiple documents,
+    // specifically for sending a connection request.
+    match /users/{recipientId} {
+       allow update: if isUserAuthenticated() && isSendingRequest(recipientId);
+    }
+
+
+    // --- Functions for Update Logic ---
+
+    // A simple profile edit only changes these specific fields.
+    function isProfileEdit(requestData, existingData) {
+      return requestData.bio == request.resource.data.bio &&
+             requestData.domain == request.resource.data.domain &&
+             requestData.skills == request.resource.data.skills &&
+             requestData.medallions == request.resource.data.medallions &&
+             requestData.lastAiChallengeTimestamp == request.resource.data.lastAiChallengeTimestamp &&
+             requestData.photoURL == existingData.photoURL && // Ensure core fields are not changed
+             requestData.uid == existingData.uid;
+    }
+
+    // When saving/removing a challenge, only the 'savedChallenges' array should change.
+    function isChallengeUpdate(requestData, existingData) {
+       return requestData.savedChallenges != existingData.savedChallenges &&
+              requestData.keys().removeAll(['savedChallenges']).size() == existingData.keys().removeAll(['savedChallenges']).size();
+    }
+    
+    // When a user accepts or declines a request, they modify their own doc.
+    function isManagingConnection(requestData, existingData) {
+        let isAccepting = requestData.connections.size() == existingData.connections.size() + 1 &&
+                          requestData.pendingConnections.size() == existingData.pendingConnections.size() - 1;
+        let isDeclining = requestData.pendingConnections.size() == existingData.pendingConnections.size() - 1;
+        
+        return isAccepting || isDeclining;
+    }
+    
+    // When sending a request, the sender is trying to update the recipient's doc.
+    // We allow this ONLY if the ONLY change is adding the sender's UID to the `pendingConnections` array.
+    function isSendingRequest(recipientId) {
+      let recipientDoc = get(/databases/$(database)/documents/users/$(recipientId));
+      let senderId = request.auth.uid;
+      
+      // Ensure the only field being changed is 'pendingConnections'
+      let isOnlyPendingChanged = request.resource.data.keys().hasAll(['pendingConnections']) &&
+                                request.resource.data.keys().size() == recipientDoc.data.keys().size() + 1;
+
+      // Ensure the sender's ID is being added to the list
+      let isAddingSender = request.resource.data.pendingConnections.hasAll(recipientDoc.data.pendingConnections) &&
+                           request.resource.data.pendingConnections.hasAny([senderId]) &&
+                           request.resource.data.pendingConnections.size() == recipientDoc.data.pendingConnections.size() + 1;
+                           
+      return isAddingSender;
     }
   }
 }
