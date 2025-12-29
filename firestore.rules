@@ -38,8 +38,6 @@ service cloud.firestore {
       // UPDATE: Allow a user to update their own document.
       // The server action 'updateUserProfile' ensures that only safe fields are updated.
       // However, we add extra protection here to ensure critical fields can never be changed.
-      // This rule works for partial updates by checking that if a field exists in the request,
-      // it must not change the existing value in the database.
       allow update: if isOwner(userId)
                     // The user cannot change their UID or email
                     && request.resource.data.uid == resource.data.uid
