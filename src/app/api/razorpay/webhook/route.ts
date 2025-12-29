@@ -1,6 +1,7 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { updateUserProfile } from '@/app/actions/user';
+import { securelyUpdateUserPlan } from '@/app/actions/user';
 import 'dotenv/config';
 
 export async function POST(req: NextRequest) {
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
             const userId = order.notes?.userId;
 
             if (userId) {
-                await updateUserProfile(userId, {
+                await securelyUpdateUserPlan(userId, {
                     plan: 'pro',
                     razorpayPaymentId: payment.id,
                 });
@@ -43,3 +44,5 @@ export async function POST(req: NextRequest) {
         return new NextResponse(`Webhook Handler Error: ${error.message}`, { status: 500 });
     }
 }
+
+    

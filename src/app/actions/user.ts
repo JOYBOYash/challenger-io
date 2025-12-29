@@ -43,7 +43,7 @@ export async function updateUserProfile(userId: string, data: Partial<Pick<UserP
 }
 
 // This function is for internal/admin use, like after a payment is verified.
-export async function securelyUpdateUserPlan(userId: string, data: Partial<Pick<UserProfile, 'plan' | 'razorpayPaymentId' | 'lastAiChallengeTimestamp'>>): Promise<{success: boolean}> {
+export async function securelyUpdateUserPlan(userId: string, data: Partial<Pick<UserProfile, 'plan' | 'razorpayPaymentId'>>): Promise<{success: boolean}> {
     const { db } = initializeFirebase();
     if (!db) {
         return { success: false };
@@ -321,3 +321,5 @@ export async function getSuggestedUsers(currentUser: UserProfile): Promise<UserP
         .slice(0, 10)
         .map(item => item.user);
 }
+
+    

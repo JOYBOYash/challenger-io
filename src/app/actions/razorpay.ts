@@ -4,7 +4,7 @@
 import 'dotenv/config';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
-import { updateUserProfile } from './user';
+import { securelyUpdateUserPlan } from './user';
 
 interface CreateOrderParams {
     amount: number; // amount in smallest currency unit (e.g., paise)
@@ -67,7 +67,7 @@ export async function verifyPayment(params: VerifyPaymentParams) {
             const userId = order.notes?.userId;
 
             if (userId) {
-                await updateUserProfile(userId, {
+                await securelyUpdateUserPlan(userId, {
                     plan: 'pro',
                     razorpayPaymentId: razorpay_payment_id,
                 });
@@ -80,3 +80,5 @@ export async function verifyPayment(params: VerifyPaymentParams) {
     
     return { success: false };
 }
+
+    

@@ -11,8 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserPlus, Search, Check, Hourglass, Eye, Users, Gem, Star, Zap, Trophy, ArrowRight, Lock, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { searchUsers, getSuggestedUsers, sendConnectionRequest, updateUserProfile } from '@/app/actions/user';
-import { createOrder } from '@/app/actions/razorpay';
+import { searchUsers, getSuggestedUsers, sendConnectionRequest } from '@/app/actions/user';
+import { createOrder, verifyPayment } from '@/app/actions/razorpay';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -226,9 +226,18 @@ export default function HomePage() {
         description: 'Pro Plan Subscription',
         order_id: order.id,
         handler: async function (response: any) {
-            await updateUserProfile(user.uid, { plan: 'pro', razorpayPaymentId: response.razorpay_payment_id });
-            toast({ title: 'Payment Successful', description: 'Welcome to the Pro plan!' });
-            router.push('/profile');
+            const verificationResult = await verifyPayment({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verificationResult.success) {
+                toast({ title: 'Payment Successful', description: 'Welcome to the Pro plan!' });
+                router.push('/profile');
+            } else {
+                toast({ title: 'Payment Verification Failed', description: 'Your payment could not be verified. Please contact support.', variant: 'destructive' });
+            }
         },
         prefill: {
           name: user.username,
@@ -598,3 +607,5 @@ export default function HomePage() {
     </TooltipProvider>
   );
 }
+
+    
