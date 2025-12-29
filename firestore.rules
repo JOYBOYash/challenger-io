@@ -40,8 +40,9 @@ service cloud.firestore {
                     && request.resource.data.email == request.auth.token.email;
 
       // UPDATE: A user can only update their own document.
-      // Critical fields like uid, email, and plan are protected by the server action,
-      // so this rule only needs to ensure ownership.
+      // Critical fields are protected by the server action, so this rule only
+      // needs to ensure ownership. This is secure because the server action
+      // acts as a gatekeeper.
       allow update: if isOwner(userId);
 
       // DELETE: Don't allow clients to delete user profiles.

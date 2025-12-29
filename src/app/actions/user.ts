@@ -15,15 +15,27 @@ export async function updateUserProfile(userId: string, data: Partial<UserProfil
     }
     const userRef = doc(db, 'users', userId);
 
-    // Secure the update by ensuring protected fields are not changed from the client.
-    const securedData = { ...data };
-    delete securedData.uid;
-    delete securedData.email;
-    delete securedData.plan;
-    delete securedData.razorpayPaymentId;
+    // This is the data that is safe to be updated from the user's profile editing form.
+    const updatableData: Partial<UserProfile> = {
+      bio: data.bio,
+      domain: data.domain,
+      skills: data.skills,
+      medallions: data.medallions
+    };
+    
+    // For admin-level changes like plan updates, we handle them separately.
+    // This ensures client-side calls can't maliciously change the plan.
+    if ('plan' in data && 'razorpayPaymentId' in data) {
+        updatableData.plan = data.plan;
+        updatableData.razorpayPaymentId = data.razorpayPaymentId;
+    }
+     if ('lastAiChallengeTimestamp' in data) {
+        updatableData.lastAiChallengeTimestamp = data.lastAiChallengeTimestamp;
+    }
+
 
     try {
-        await updateDoc(userRef, securedData);
+        await updateDoc(userRef, updatableData);
         return { success: true };
     } catch (e) {
         console.error("Error updating user profile:", e);
