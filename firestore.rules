@@ -18,14 +18,12 @@ service cloud.firestore {
 
       // --- READS ---
       // Allow any authenticated user to read any user's profile.
-      // This is necessary for profile pages, search, and connection features.
       allow read: if isUserAuthenticated();
 
       // --- LIST (QUERY) ---
-      // Allow ANYONE (even unauthenticated users) to query the users collection.
-      // This is REQUIRED for the `isUsernameTaken` check during signup.
-      // This is safe because the `read` rule above still prevents them from
-      // actually getting document data unless they are authenticated.
+      // Allow ANYONE (even unauthenticated) to query the users collection for the
+      // `isUsernameTaken` check during signup. This is safe because the `read`
+      // rule above still prevents them from getting document data.
       allow list: if true;
 
       // --- WRITES ---
@@ -35,17 +33,16 @@ service cloud.firestore {
                     && request.resource.data.uid == userId
                     && request.resource.data.email == request.auth.token.email;
 
-      // UPDATE: Allow a user to update their own document.
-      // The server action 'updateUserProfile' ensures that only safe fields are updated.
-      // However, we add extra protection here to ensure critical fields can never be changed.
+      // UPDATE: A user can only update their own document.
+      // This rule now correctly handles partial updates. It ensures that if a protected
+      // field (like 'plan') is included in an update request, its value is not changed.
+      // It allows all other fields to be freely updated by the owner.
       allow update: if isOwner(userId)
                     // The user cannot change their UID or email
                     && request.resource.data.uid == resource.data.uid
                     && request.resource.data.email == resource.data.email
                     // The user cannot change their plan from the client.
-                    // Plan changes must be done via a secure server action.
-                    && request.resource.data.plan == resource.data.plan;
-
+                    && (!('plan' in request.resource.data) || request.resource.data.plan == resource.data.plan);
 
       // DELETE: Don't allow clients to delete user profiles.
       allow delete: if false;
