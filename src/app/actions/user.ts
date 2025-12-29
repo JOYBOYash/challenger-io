@@ -16,12 +16,12 @@ export async function updateUserProfile(userId: string, data: Partial<UserProfil
     const userRef = doc(db, 'users', userId);
 
     // This is the data that is safe to be updated from the user's profile editing form.
-    const updatableData: Partial<UserProfile> = {
-      bio: data.bio,
-      domain: data.domain,
-      skills: data.skills,
-      medallions: data.medallions
-    };
+    // We explicitly only take the fields we want to allow the user to change.
+    const updatableData: { [key: string]: any } = {};
+    if (data.bio !== undefined) updatableData.bio = data.bio;
+    if (data.domain !== undefined) updatableData.domain = data.domain;
+    if (data.skills !== undefined) updatableData.skills = data.skills;
+    if (data.medallions !== undefined) updatableData.medallions = data.medallions;
     
     // For admin-level changes like plan updates, we handle them separately.
     // This ensures client-side calls can't maliciously change the plan.
