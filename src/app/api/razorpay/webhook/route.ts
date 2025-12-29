@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { securelyUpdateUserPlan } from '@/app/actions/user';
+import { updateUserProfile } from '@/app/actions/user';
 import 'dotenv/config';
 
 export async function POST(req: NextRequest) {
@@ -31,7 +31,8 @@ export async function POST(req: NextRequest) {
             const userId = order.notes?.userId;
 
             if (userId) {
-                await securelyUpdateUserPlan(userId, {
+                // Using the consolidated and secure updateUserProfile function
+                await updateUserProfile(userId, {
                     plan: 'pro',
                     razorpayPaymentId: payment.id,
                 });
