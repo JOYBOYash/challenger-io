@@ -17,9 +17,10 @@ service cloud.firestore {
     match /users/{userId} {
 
       // --- READS ---
-      // Allow any authenticated user to read any user's profile.
-      // This is necessary for profile pages, search, and connection features.
-      allow read: if isUserAuthenticated();
+      // A user can always read their own document.
+      // Any authenticated user can read any other user's document.
+      // This is necessary for public profile pages.
+      allow read: if isOwner(userId) || isUserAuthenticated();
 
       // --- LIST (QUERY) ---
       // Allow ANYONE (even unauthenticated) to query the users collection.
