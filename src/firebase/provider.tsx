@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext } from 'react';
+import React, { createContext, useMemo } from 'react';
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
@@ -19,14 +19,30 @@ export const FirebaseContext = createContext<FirebaseContextValue>({
 });
 
 export function FirebaseProvider({ children }: { children: React.ReactNode }) {
-  let app: FirebaseApp;
-  if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApps()[0];
-  }
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+  const { app, auth, db } = useMemo(() => {
+    if (typeof window === 'undefined') {
+      // On the server, we don't initialize Firebase. Server actions will do this.
+      return { app: null, auth: null, db: null };
+    }
+
+    let app: FirebaseApp;
+    if (!getApps().length) {
+      if (
+        !firebaseConfig.apiKey ||
+        !firebaseConfig.authDomain ||
+        !firebaseConfig.projectId
+      ) {
+        console.error("Firebase config is missing on the client.");
+        return { app: null, auth: null, db: null };
+      }
+      app = initializeApp(firebaseConfig);
+    } else {
+      app = getApps()[0];
+    }
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    return { app, auth, db };
+  }, []);
 
   return (
     <FirebaseContext.Provider value={{ app, auth, db }}>

@@ -20,7 +20,7 @@ export default function TermsAndConditionsPage() {
             <CardTitle className="text-4xl font-headline">Terms and Conditions</CardTitle>
           </CardHeader>
           <CardContent className="prose prose-invert max-w-none">
-            <p>Last updated: {new Date().toLocaleDateString()}</p>
+            <p>Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
             <p>Please read these terms and conditions carefully before using Our Service.</p>
             
             <h2>1. Interpretation and Definitions</h2>
@@ -43,7 +43,7 @@ export default function TermsAndConditionsPage() {
             <p>We reserve the right, at Our sole discretion, to modify or replace these Terms at any time. If a revision is material We will make reasonable efforts to provide at least 30 days' notice prior to any new terms taking effect. What constitutes a material change will be determined at Our sole discretion.</p>
             
             <h2>7. Contact Us</h2>
-            <p>If you have any questions about these Terms and Conditions, You can contact us by email at [Your Contact Email].</p>
+            <p>If you have any questions about these Terms and Conditions, You can contact us by using the form on our <Link href="/contact">contact page</Link>.</p>
           </CardContent>
         </Card>
       </div>

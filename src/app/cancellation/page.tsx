@@ -20,7 +20,7 @@ export default function CancellationPage() {
             <CardTitle className="text-4xl font-headline">Cancellation & Refund Policy</CardTitle>
           </CardHeader>
           <CardContent className="prose prose-invert max-w-none">
-            <p>Last updated: {new Date().toLocaleDateString()}</p>
+            <p>Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
             
             <h2>Subscription Cancellation</h2>
             <p>You can cancel your subscription at any time. Your access to the Pro features will continue until the end of your current billing period.</p>

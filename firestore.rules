@@ -31,7 +31,8 @@ service cloud.firestore {
       // --- WRITES ---
 
       // CREATE: Allow a user to create their own user document upon signup.
-      // The check for email against the auth token is removed as it's unreliable on create.
+      // The check for email is removed as it's unreliable and not needed
+      // since the UID is the definitive link to the auth token.
       allow create: if isOwner(userId)
                     && request.resource.data.uid == userId;
 
@@ -41,8 +42,8 @@ service cloud.firestore {
       // It allows all other fields to be freely updated by the owner.
       allow update: if isOwner(userId)
                     // The user cannot change their UID or email
-                    && request.resource.data.uid == resource.data.uid
-                    && request.resource.data.email == resource.data.email
+                    && (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid)
+                    && (!('email' in request.resource.data) || request.resource.data.email == resource.data.email)
                     // The user cannot change their plan from the client.
                     && (!('plan' in request.resource.data) || request.resource.data.plan == resource.data.plan);
 

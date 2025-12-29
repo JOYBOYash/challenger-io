@@ -67,6 +67,7 @@ export async function verifyPayment(params: VerifyPaymentParams) {
             const userId = order.notes?.userId;
 
             if (userId) {
+                // This is a secure, server-to-server call.
                 await securelyUpdateUserPlan(userId, {
                     plan: 'pro',
                     razorpayPaymentId: razorpay_payment_id,
@@ -80,5 +81,3 @@ export async function verifyPayment(params: VerifyPaymentParams) {
     
     return { success: false };
 }
-
-    

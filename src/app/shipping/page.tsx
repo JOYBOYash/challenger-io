@@ -20,7 +20,7 @@ export default function ShippingPolicyPage() {
             <CardTitle className="text-4xl font-headline">Shipping Policy</CardTitle>
           </CardHeader>
           <CardContent className="prose prose-invert max-w-none">
-            <p>Last updated: {new Date().toLocaleDateString()}</p>
+            <p>Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
             
             <h2>Digital Services</h2>
             <p>Challenger.io is a digital service provider. All our products and services are delivered electronically via the internet.</p>

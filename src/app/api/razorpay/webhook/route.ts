@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
     try {
         const event = JSON.parse(body);
 
+        // We only care about the payment capture event
         if (event.event === 'payment.captured') {
             const payment = event.payload.payment.entity;
             const order = event.payload.order.entity;
@@ -35,6 +36,8 @@ export async function POST(req: NextRequest) {
                     razorpayPaymentId: payment.id,
                 });
                 console.log(`Updated user ${userId} to Pro plan via webhook.`);
+            } else {
+                console.warn('Razorpay webhook received for order without userId in notes.');
             }
         }
 
@@ -44,5 +47,3 @@ export async function POST(req: NextRequest) {
         return new NextResponse(`Webhook Handler Error: ${error.message}`, { status: 500 });
     }
 }
-
-    

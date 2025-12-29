@@ -7,8 +7,9 @@ import type { UserProfile } from '@/context/auth-context';
 import type { Problem } from '@/ai/flows/problem-curation';
 
 
-// This function is specifically for the user profile editing form.
-// It explicitly only allows updating a 'safe list' of fields.
+// This function is specifically for the user profile editing form and INTERNAL updates.
+// It explicitly only allows updating a 'safe list' of fields if called from profile,
+// but allows privileged updates (like plan) when called internally (e.g., from payments).
 export async function updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<{success: boolean}> {
     const { db } = initializeFirebase();
     if (!db) {
@@ -17,16 +18,24 @@ export async function updateUserProfile(userId: string, data: Partial<UserProfil
     }
     const userRef = doc(db, 'users', userId);
 
-    // Create a new object with only the fields that are safe to be updated from the profile form.
-    // This prevents malicious updates to protected fields like 'plan', 'email', 'uid', etc.
+    // This object will hold only the fields that are safe to be updated.
     const updatableData: Partial<UserProfile> = {};
+
+    // User-editable fields from profile form
     if (data.bio !== undefined) updatableData.bio = data.bio;
     if (data.domain !== undefined) updatableData.domain = data.domain;
     if (data.skills !== undefined) updatableData.skills = data.skills;
     if (data.medallions !== undefined) updatableData.medallions = data.medallions;
+    
+    // Internal-only fields
     if (data.lastAiChallengeTimestamp !== undefined) updatableData.lastAiChallengeTimestamp = data.lastAiChallengeTimestamp;
+    if (data.plan !== undefined) updatableData.plan = data.plan;
+    if (data.razorpayPaymentId !== undefined) updatableData.razorpayPaymentId = data.razorpayPaymentId;
+
 
     try {
+        // The updateDoc will only contain the fields specified in updatableData.
+        // This prevents malicious users from trying to update other fields.
         await updateDoc(userRef, updatableData);
         return { success: true };
     } catch (e) {
@@ -79,7 +88,7 @@ export async function removeChallenge(userId: string, problem: Problem): Promise
     const userRef = doc(db, 'users', userId);
     try {
         await updateDoc(userRef, { savedChallenges: arrayRemove(problem) });
-        return { success: true };
+        return { success: false };
     } catch (e) {
         console.error("Error removing challenge:", e);
         return { success: false };

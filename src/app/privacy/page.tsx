@@ -20,7 +20,7 @@ export default function PrivacyPolicyPage() {
             <CardTitle className="text-4xl font-headline">Privacy Policy</CardTitle>
           </CardHeader>
           <CardContent className="prose prose-invert max-w-none">
-            <p>Last updated: {new Date().toLocaleDateString()}</p>
+            <p>Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
             
             <h2>1. Information We Collect</h2>
             <p>We collect information you provide directly to us, such as when you create an account, subscribe to our services, or communicate with us. This may include your name, email address, and payment information.</p>

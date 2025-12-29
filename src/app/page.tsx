@@ -7,15 +7,14 @@ import Image from 'next/image';
 import { useAuth, type UserProfile } from '@/context/auth-context';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { UserPlus, Search, Check, Hourglass, Eye, Users, Gem, Star, Zap, Trophy, ArrowRight, Lock, Loader2 } from 'lucide-react';
+import { UserPlus, Search, Hourglass, Eye, Users, Gem, Zap, Trophy, ArrowRight, Lock, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { searchUsers, getSuggestedUsers, sendConnectionRequest } from '@/app/actions/user';
 import { createOrder, verifyPayment } from '@/app/actions/razorpay';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AVAILABLE_MEDALLIONS } from '@/app/profile/page';
 import { cn } from '@/lib/utils';
@@ -234,6 +233,8 @@ export default function HomePage() {
 
             if (verificationResult.success) {
                 toast({ title: 'Payment Successful', description: 'Welcome to the Pro plan!' });
+                // The user's profile will update automatically via the onSnapshot listener.
+                // We can redirect them to their profile.
                 router.push('/profile');
             } else {
                 toast({ title: 'Payment Verification Failed', description: 'Your payment could not be verified. Please contact support.', variant: 'destructive' });
@@ -607,5 +608,3 @@ export default function HomePage() {
     </TooltipProvider>
   );
 }
-
-    

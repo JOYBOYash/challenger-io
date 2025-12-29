@@ -22,10 +22,13 @@ function initializeFirebase() {
         !firebaseConfig.projectId
     ) {
         const error = new Error("Firebase configuration is missing or incomplete. Please check your environment variables.");
+        // In a server environment, you might want to throw this error.
+        // On the client, returning it allows for graceful UI handling.
         return { app: null, auth: null, db: null, error };
     }
     
     try {
+        // Get the existing app instance if it exists, otherwise initialize a new one.
         app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
         auth = getAuth(app);
         db = getFirestore(app);
@@ -36,4 +39,5 @@ function initializeFirebase() {
     }
 }
 
+// Export the function that initializes and returns the services.
 export { initializeFirebase };

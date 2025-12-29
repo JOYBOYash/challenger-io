@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,40 +21,35 @@ import { useFirebase } from '@/firebase/hooks';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 
-const formSchema = z.object({
-  username: z.string().min(3, { message: 'Username must be at least 3 characters.' }).max(20, { message: 'Username must be less than 20 characters.' })
-    .refine(async (username) => !(await isUsernameTaken(username)), {
-        message: 'This username is already taken.',
-    }),
+// We create a separate schema for client-side validation that doesn't call the async refine.
+const clientSchema = z.object({
+  username: z.string().min(3, { message: 'Username must be at least 3 characters.' }).max(20, { message: 'Username must be less than 20 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
 });
 
+const serverSchema = clientSchema.refine(async (data) => {
+    return !(await isUsernameTaken(data.username));
+}, {
+    message: 'This username is already taken.',
+    path: ['username'],
+});
+
+
 export default function SignUpPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const { auth, db } = useFirebase();
   
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof clientSchema>>({
+    resolver: zodResolver(clientSchema),
     defaultValues: { username: '', email: '', password: '' },
     mode: 'onChange',
   });
 
-  useEffect(() => {
-    const from = searchParams.get('from');
-    if (from === 'login-fail') {
-        toast({
-            title: "Account Not Found",
-            description: "No account exists with those login details. Please create a new account.",
-            variant: "destructive"
-        });
-    }
-  }, [searchParams, toast]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof clientSchema>) => {
     setIsLoading(true);
 
     if (!auth || !db) {
@@ -66,6 +61,18 @@ export default function SignUpPage() {
         setIsLoading(false);
         return;
     }
+
+    // Server-side validation
+    const serverValidation = await serverSchema.safeParseAsync(values);
+    if (!serverValidation.success) {
+        const error = serverValidation.error.flatten().fieldErrors.username?.[0];
+        if (error) {
+            form.setError('username', { type: 'manual', message: error });
+        }
+        setIsLoading(false);
+        return;
+    }
+
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
@@ -98,35 +105,15 @@ export default function SignUpPage() {
         medallions: [],
       };
 
-      // By setting the document here, we ensure the user is fully authenticated
-      // which allows Firestore security rules to validate the request.
-      setDoc(userDocRef, newUserProfileData).catch((error) => {
-        // This catch block is crucial for debugging permission errors on signup
-        const permissionError = new FirestorePermissionError({
-            path: userDocRef.path,
-            operation: 'create',
-            requestResourceData: newUserProfileData,
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        // Re-throw the original error to be caught by the outer try-catch
-        throw error;
-      });
+      // Set the document. This is allowed by our 'create' rule.
+      await setDoc(userDocRef, newUserProfileData);
       
       toast({ title: 'Account Created!', description: 'Welcome to Challenger.io!' });
       router.push('/profile');
 
     } catch (error: any) {
       setIsLoading(false);
-      // This will now catch the re-thrown error from the setDoc call, or other auth errors.
-      if (error.code && error.code.includes('permission-denied')) {
-          // The error emitter has already been called, so we can just show a generic message.
-          toast({
-              title: 'Sign Up Failed',
-              description: 'Could not create your user profile due to a permissions issue.',
-              variant: 'destructive',
-          });
-      }
-      else if (error.code === 'auth/email-already-in-use') {
+      if (error.code === 'auth/email-already-in-use') {
          toast({
           title: 'Sign Up Failed',
           description: 'This email is already in use. Please log in instead.',
@@ -138,6 +125,16 @@ export default function SignUpPage() {
           description: error.message || 'An unexpected error occurred.',
           variant: 'destructive',
         });
+        // This is a good place to log more detailed errors for debugging.
+        console.error("Signup Error:", error);
+        // We can also re-throw the error if we want it to be caught by a higher-level boundary.
+        // For instance, the FirebaseErrorListener could catch this if we wrap it.
+        const permissionError = new FirestorePermissionError({
+            path: `users/${auth.currentUser?.uid || 'unknown'}`,
+            operation: 'create',
+            requestResourceData: values,
+        });
+        errorEmitter.emit('permission-error', permissionError);
       }
     }
   };

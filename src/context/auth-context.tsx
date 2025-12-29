@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         if (!auth) {
+            // This can happen during server-side rendering or if Firebase fails to init.
             setLoading(false);
             return;
         }
@@ -65,22 +66,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                             if (docSnap.exists()) {
                                 const userData = docSnap.data() as UserProfile;
                                 
+                                // This logic correctly promotes a user based on their email.
                                 if (authUser.email && PRO_USER_EMAILS.includes(authUser.email)) {
                                     userData.plan = 'pro';
                                 }
                                 
                                 setUser(userData);
                             } else {
+                                // This case can happen if a user is authenticated but their Firestore doc doesn't exist yet.
                                 setUser(null);
                             }
                             setLoading(false);
                         }, 
-                        async (err) => {
+                        (err) => {
+                            // This error handling is critical. It will catch permission errors on read.
                             const permissionError = new FirestorePermissionError({
                                 path: docRef.path,
                                 operation: 'get',
                             });
                             errorEmitter.emit('permission-error', permissionError);
+                            console.error("Firestore snapshot error:", err);
                             setUser(null);
                             setLoading(false);
                         }
@@ -88,16 +93,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     
                     return () => unsubscribeFirestore();
                 } else {
+                     // If db is not available, we can't fetch profile.
                      setUser(null);
                      setLoading(false);
                 }
             } else {
+                // User is logged out.
                 setFirebaseUser(null);
                 setUser(null);
                 setLoading(false);
             }
         });
 
+        // Cleanup subscription on unmount
         return () => unsubscribeAuth();
     }, [auth, db]);
 
