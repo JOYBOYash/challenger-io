@@ -100,10 +100,10 @@ export default function SignUpPage() {
 
       // By setting the document here, we ensure the user is fully authenticated
       // which allows Firestore security rules to validate the request.
-      await setDoc(userDocRef, newUserProfileData).catch((error) => {
+      setDoc(userDocRef, newUserProfileData).catch((error) => {
         // This catch block is crucial for debugging permission errors on signup
         const permissionError = new FirestorePermissionError({
-            path: `users/${user.uid}`,
+            path: userDocRef.path,
             operation: 'create',
             requestResourceData: newUserProfileData,
         });
