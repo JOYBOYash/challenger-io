@@ -36,13 +36,14 @@ service cloud.firestore {
                     && request.resource.data.email == request.auth.token.email;
 
       // UPDATE: Allow a user to update their own document.
-      // We also protect critical fields from being changed.
+      // The server action 'updateUserProfile' ensures that only safe fields are updated.
+      // However, we add extra protection here to ensure critical fields can never be changed.
       allow update: if isOwner(userId)
                     // The user cannot change their UID or email
                     && request.resource.data.uid == resource.data.uid
                     && request.resource.data.email == resource.data.email
                     // The user cannot change their plan from the client.
-                    // Plan changes must be done via a secure server action (e.g., after payment).
+                    // Plan changes must be done via a secure server action.
                     && request.resource.data.plan == resource.data.plan;
 
 

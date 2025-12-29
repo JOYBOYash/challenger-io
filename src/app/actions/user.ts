@@ -7,7 +7,9 @@ import type { UserProfile } from '@/context/auth-context';
 import type { Problem } from '@/ai/flows/problem-curation';
 
 
-export async function updateUserProfile(userId: string, data: Partial<Pick<UserProfile, 'bio' | 'domain' | 'skills' | 'medallions'>>): Promise<{success: boolean}> {
+// This function is specifically for the user profile editing form.
+// It explicitly only allows updating a 'safe list' of fields.
+export async function updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<{success: boolean}> {
     const { db } = initializeFirebase();
     if (!db) {
         console.error("Firebase error in updateUserProfile: db is null");
@@ -15,23 +17,14 @@ export async function updateUserProfile(userId: string, data: Partial<Pick<UserP
     }
     const userRef = doc(db, 'users', userId);
 
-    // This is the data that is safe to be updated from the user's profile editing form.
-    // We explicitly only take the fields we want to allow the user to change.
-    const updatableData: { [key: string]: any } = {};
+    // Create a new object with only the fields that are safe to be updated from the profile form.
+    // This prevents malicious updates to protected fields like 'plan', 'email', 'uid', etc.
+    const updatableData: Partial<UserProfile> = {};
     if (data.bio !== undefined) updatableData.bio = data.bio;
     if (data.domain !== undefined) updatableData.domain = data.domain;
     if (data.skills !== undefined) updatableData.skills = data.skills;
     if (data.medallions !== undefined) updatableData.medallions = data.medallions;
-    
-    // For admin-level changes like plan updates, we handle them separately and they are not exposed here.
-    // This ensures client-side calls from the profile page can't maliciously change the plan.
-    if ('plan' in data || 'razorpayPaymentId' in data) {
-       // do nothing, these fields cannot be updated from the user profile form
-    }
-     if ('lastAiChallengeTimestamp' in data) {
-        updatableData.lastAiChallengeTimestamp = (data as any).lastAiChallengeTimestamp;
-    }
-
+    if (data.lastAiChallengeTimestamp !== undefined) updatableData.lastAiChallengeTimestamp = data.lastAiChallengeTimestamp;
 
     try {
         await updateDoc(userRef, updatableData);
@@ -43,9 +36,11 @@ export async function updateUserProfile(userId: string, data: Partial<Pick<UserP
 }
 
 // This function is for internal/admin use, like after a payment is verified.
+// It is separate and more privileged than the general updateUserProfile function.
 export async function securelyUpdateUserPlan(userId: string, data: Partial<Pick<UserProfile, 'plan' | 'razorpayPaymentId'>>): Promise<{success: boolean}> {
     const { db } = initializeFirebase();
     if (!db) {
+        console.error("Firebase error in securelyUpdateUserPlan: db is null");
         return { success: false };
     }
     const userRef = doc(db, 'users', userId);
@@ -321,5 +316,3 @@ export async function getSuggestedUsers(currentUser: UserProfile): Promise<UserP
         .slice(0, 10)
         .map(item => item.user);
 }
-
-    
