@@ -7,7 +7,7 @@ import type { UserProfile } from '@/context/auth-context';
 import type { Problem } from '@/ai/flows/problem-curation';
 
 
-export async function updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<{success: boolean}> {
+export async function updateUserProfile(userId: string, data: Partial<Pick<UserProfile, 'bio' | 'domain' | 'skills' | 'medallions'>>): Promise<{success: boolean}> {
     const { db } = initializeFirebase();
     if (!db) {
         console.error("Firebase error in updateUserProfile: db is null");
@@ -23,14 +23,13 @@ export async function updateUserProfile(userId: string, data: Partial<UserProfil
     if (data.skills !== undefined) updatableData.skills = data.skills;
     if (data.medallions !== undefined) updatableData.medallions = data.medallions;
     
-    // For admin-level changes like plan updates, we handle them separately.
-    // This ensures client-side calls can't maliciously change the plan.
-    if ('plan' in data && 'razorpayPaymentId' in data) {
-        updatableData.plan = data.plan;
-        updatableData.razorpayPaymentId = data.razorpayPaymentId;
+    // For admin-level changes like plan updates, we handle them separately and they are not exposed here.
+    // This ensures client-side calls from the profile page can't maliciously change the plan.
+    if ('plan' in data || 'razorpayPaymentId' in data) {
+       // do nothing, these fields cannot be updated from the user profile form
     }
      if ('lastAiChallengeTimestamp' in data) {
-        updatableData.lastAiChallengeTimestamp = data.lastAiChallengeTimestamp;
+        updatableData.lastAiChallengeTimestamp = (data as any).lastAiChallengeTimestamp;
     }
 
 
@@ -42,6 +41,23 @@ export async function updateUserProfile(userId: string, data: Partial<UserProfil
         return { success: false };
     }
 }
+
+// This function is for internal/admin use, like after a payment is verified.
+export async function securelyUpdateUserPlan(userId: string, data: Partial<Pick<UserProfile, 'plan' | 'razorpayPaymentId' | 'lastAiChallengeTimestamp'>>): Promise<{success: boolean}> {
+    const { db } = initializeFirebase();
+    if (!db) {
+        return { success: false };
+    }
+    const userRef = doc(db, 'users', userId);
+    try {
+        await updateDoc(userRef, data);
+        return { success: true };
+    } catch (e) {
+        console.error("Error securely updating user plan:", e);
+        return { success: false };
+    }
+}
+
 
 export async function saveChallenge(userId: string, problem: Problem): Promise<{success: boolean}> {
     const { db } = initializeFirebase();

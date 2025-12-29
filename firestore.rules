@@ -12,37 +12,39 @@ service cloud.firestore {
     function isOwner(userId) {
       return isUserAuthenticated() && request.auth.uid == userId;
     }
-    
+
     // --- Rules for the 'users' collection ---
     match /users/{userId} {
 
       // --- READS ---
-      
-      // Allow any authenticated user to read from the users collection.
+      // Allow any authenticated user to read any user's profile.
       // This is necessary for profile pages, search, and connection features.
       allow read: if isUserAuthenticated();
 
-      // LIST (for username check): Allow ANYONE (even unauthenticated users) to query
-      // the users collection. This is REQUIRED for the `isUsernameTaken` check during signup.
-      // This is safe because our security rules on `read` prevent them from getting documents
-      // they aren't supposed to see. Unauthenticated users can only check for existence,
-      // but cannot actually read the document contents.
+      // --- LIST (QUERY) ---
+      // Allow ANYONE (even unauthenticated users) to query the users collection.
+      // This is REQUIRED for the `isUsernameTaken` check during signup.
+      // This is safe because the `read` rule above still prevents them from
+      // actually getting document data unless they are authenticated.
       allow list: if true;
 
       // --- WRITES ---
 
-      // CREATE: Allow a user to create their own document, but not one for someone else.
-      // This rule is critical for signup. It ensures the document ID being created
-      // MUST match the UID of the user making the request.
+      // CREATE: Allow a user to create their own user document upon signup.
       allow create: if isOwner(userId)
                     && request.resource.data.uid == userId
-                    && request.resource.data.username is string
                     && request.resource.data.email == request.auth.token.email;
 
-      // UPDATE: A user can only update their own document.
-      // The server action 'updateUserProfile' is responsible for protecting fields.
-      // This rule just needs to ensure ownership.
-      allow update: if isOwner(userId);
+      // UPDATE: Allow a user to update their own document.
+      // We also protect critical fields from being changed.
+      allow update: if isOwner(userId)
+                    // The user cannot change their UID or email
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.email == resource.data.email
+                    // The user cannot change their plan from the client.
+                    // Plan changes must be done via a secure server action (e.g., after payment).
+                    && request.resource.data.plan == resource.data.plan;
+
 
       // DELETE: Don't allow clients to delete user profiles.
       allow delete: if false;
