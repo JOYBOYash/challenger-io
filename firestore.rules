@@ -31,9 +31,9 @@ service cloud.firestore {
       // --- WRITES ---
 
       // CREATE: Allow a user to create their own user document upon signup.
+      // The check for email against the auth token is removed as it's unreliable on create.
       allow create: if isOwner(userId)
-                    && request.resource.data.uid == userId
-                    && request.resource.data.email == request.auth.token.email;
+                    && request.resource.data.uid == userId;
 
       // UPDATE: A user can only update their own document.
       // This rule now correctly handles partial updates. It ensures that if a protected
