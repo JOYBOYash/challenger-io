@@ -49,15 +49,19 @@ export default function LoginPage() {
       router.push('/profile');
     } catch (error: any) {
       if (error.code === 'auth/invalid-credential') {
-        router.push('/signup?from=login-fail');
+        toast({
+          title: 'Login Failed',
+          description: 'No account found with these credentials. Please sign up.',
+          variant: 'destructive'
+        });
       } else {
         toast({
           title: 'Login Failed',
           description: error.message || 'An unexpected error occurred.',
           variant: 'destructive',
         });
-        setIsLoading(false);
       }
+      setIsLoading(false);
     }
   };
 

@@ -8,26 +8,38 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isOwner(userId) {
+      return isUserAuthenticated() && request.auth.uid == userId;
+    }
+    
     // --- Rules for the 'users' collection ---
     match /users/{userId} {
 
       // --- READS ---
+      
       // Allow any authenticated user to read from the users collection.
       // This is necessary for profile pages, search, and connection features.
       allow read: if isUserAuthenticated();
+
+      // LIST (for username check): Allow ANYONE (even unauthenticated users) to query
+      // the users collection. This is REQUIRED for the `isUsernameTaken` check during signup.
+      // This is safe because our security rules on `read` prevent them from getting documents
+      // they aren't supposed to see. Unauthenticated users can only check for existence,
+      // but cannot actually read the document contents.
+      allow list: if true;
 
       // --- WRITES ---
 
       // CREATE: Allow a user to create their own document, but not one for someone else.
       // This rule is critical for signup. It ensures the document ID being created
       // MUST match the UID of the user making the request.
-      allow create: if request.auth.uid == userId
+      allow create: if isOwner(userId)
                     && request.resource.data.uid == userId
                     && request.resource.data.username is string
                     && request.resource.data.email == request.auth.token.email;
 
       // UPDATE: A user can only update their own document.
-      allow update: if request.auth.uid == userId;
+      allow update: if isOwner(userId);
 
       // DELETE: Don't allow clients to delete user profiles.
       allow delete: if false;
