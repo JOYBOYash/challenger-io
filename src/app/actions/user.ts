@@ -14,8 +14,16 @@ export async function updateUserProfile(userId: string, data: Partial<UserProfil
         return { success: false };
     }
     const userRef = doc(db, 'users', userId);
+
+    // Secure the update by ensuring protected fields are not changed from the client.
+    const securedData = { ...data };
+    delete securedData.uid;
+    delete securedData.email;
+    delete securedData.plan;
+    delete securedData.razorpayPaymentId;
+
     try {
-        await updateDoc(userRef, data);
+        await updateDoc(userRef, securedData);
         return { success: true };
     } catch (e) {
         console.error("Error updating user profile:", e);
@@ -285,5 +293,3 @@ export async function getSuggestedUsers(currentUser: UserProfile): Promise<UserP
         .slice(0, 10)
         .map(item => item.user);
 }
-
-    
