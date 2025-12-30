@@ -44,20 +44,57 @@ export default function LoginPage() {
     }
 
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
+      console.log('Attempting login with email:', values.email);
+      const result = await signInWithEmailAndPassword(auth, values.email, values.password);
+      console.log('Login successful:', result.user.email);
+      
+      // Wait a moment for auth state to be set before redirecting
       toast({ title: 'Login Successful', description: "Welcome back!" });
-      router.push('/profile');
+      
+      // Give the app a moment to process the auth state
+      setTimeout(() => {
+        router.push('/profile');
+      }, 500);
     } catch (error: any) {
-      if (error.code === 'auth/invalid-credential') {
+      console.error('Login error code:', error.code);
+      console.error('Login error:', error);
+      
+      // Firebase 'auth/invalid-credential' is returned for BOTH wrong password AND non-existent user (for security)
+      // We'll inform the user about password since that's the most common case
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
         toast({
           title: 'Login Failed',
-          description: 'No account found with these credentials. Please sign up.',
+          description: 'Incorrect email or password. Please check and try again, or sign up if you don\'t have an account.',
+          variant: 'destructive'
+        });
+      } else if (error.code === 'auth/wrong-password') {
+        toast({
+          title: 'Incorrect Password',
+          description: 'The password you entered is incorrect. Please try again.',
+          variant: 'destructive'
+        });
+      } else if (error.code === 'auth/user-disabled') {
+        toast({
+          title: 'Account Disabled',
+          description: 'This account has been disabled. Please contact support.',
+          variant: 'destructive'
+        });
+      } else if (error.code === 'auth/too-many-requests') {
+        toast({
+          title: 'Too Many Login Attempts',
+          description: 'Too many failed login attempts. Please try again later.',
+          variant: 'destructive'
+        });
+      } else if (error.code === 'auth/network-request-failed') {
+        toast({
+          title: 'Network Error',
+          description: 'Please check your internet connection and try again.',
           variant: 'destructive'
         });
       } else {
         toast({
           title: 'Login Failed',
-          description: error.message || 'An unexpected error occurred.',
+          description: error.message || 'An unexpected error occurred. Please try again.',
           variant: 'destructive',
         });
       }

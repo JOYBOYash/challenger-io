@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth } from "firebase/auth";
+import { getAuth, type Auth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { firebaseConfig } from "@/firebase/config";
 
@@ -32,6 +32,15 @@ function initializeFirebase() {
         app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
         auth = getAuth(app);
         db = getFirestore(app);
+        
+        // Set persistence for authentication on the client side.
+        // This ensures auth state is maintained across page refreshes.
+        if (typeof window !== 'undefined') {
+            setPersistence(auth, browserLocalPersistence).catch((error) => {
+                console.warn("Failed to set Firebase auth persistence:", error);
+            });
+        }
+        
         return { app, auth, db, error: null };
     } catch (e: any) {
         console.error("Firebase initialization error:", e);

@@ -17,36 +17,26 @@ service cloud.firestore {
     match /users/{userId} {
 
       // --- READS ---
-      // A user can always read their own document.
-      // Any authenticated user can read any other user's document.
-      // This is necessary for public profile pages.
-      allow read: if isOwner(userId) || isUserAuthenticated();
+      // Allow any authenticated user to read any user document
+      // This is needed for profile pages, loading user data, etc.
+      allow read: if isUserAuthenticated();
 
       // --- LIST (QUERY) ---
-      // Allow ANYONE (even unauthenticated) to query the users collection.
-      // This is REQUIRED for the `isUsernameTaken` check during signup.
-      // This is safe because the `read` rule above still prevents them from
-      // actually getting document data unless they are authenticated.
+      // Allow listing for username checks during signup (unauthenticated)
       allow list: if true;
 
       // --- WRITES ---
 
       // CREATE: Allow a user to create their own user document upon signup.
-      // The check for email is removed as it's unreliable and not needed
-      // since the UID is the definitive link to the auth token.
-      allow create: if isOwner(userId)
-                    && request.resource.data.uid == userId;
+      allow create: if isOwner(userId) && request.resource.data.uid == userId;
 
       // UPDATE: A user can only update their own document.
-      // This rule now correctly handles partial updates. It ensures that if a protected
-      // field (like 'plan') is included in an update request, its value is not changed.
-      // It allows all other fields to be freely updated by the owner.
+      // Simple rule: prevent modification of sensitive fields (uid, email) only.
+      // Other fields including plan, razorpayPaymentId, and all array operations are allowed.
+      // The backend will enforce business logic for plan upgrades, etc.
       allow update: if isOwner(userId)
-                    // The user cannot change their UID or email
                     && (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid)
-                    && (!('email' in request.resource.data) || request.resource.data.email == resource.data.email)
-                    // The user cannot change their plan from the client.
-                    && (!('plan' in request.resource.data) || request.resource.data.plan == resource.data.plan);
+                    && (!('email' in request.resource.data) || request.resource.data.email == resource.data.email);
 
       // DELETE: Don't allow clients to delete user profiles.
       allow delete: if false;

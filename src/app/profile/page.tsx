@@ -16,10 +16,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from '@/hooks/use-toast';
+import { useUserActions } from '@/hooks/useUserActions';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { updateUserProfile, removeChallenge, getUsersByIds, acceptConnectionRequest, declineConnectionRequest } from '@/app/actions/user';
+import { removeChallenge, getUsersByIds, acceptConnectionRequest, declineConnectionRequest } from '@/app/actions/user';
 import { Edit, Save, Trash2, X, Eye, ExternalLink, User, Users, UserPlus, Check, UserX, Gem, Sparkles, Lock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ProblemDisplay } from '@/components/problem-display';
@@ -197,6 +198,7 @@ export default function ProfilePage() {
     const { user, loading } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const { toast } = useToast();
+    const { updateUserProfile } = useUserActions();
     const [selectedMedallions, setSelectedMedallions] = useState<string[]>([]);
     const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
     const router = useRouter();
@@ -241,13 +243,13 @@ export default function ProfilePage() {
             medallions: selectedMedallions,
         };
         
-        const { success } = await updateUserProfile(user.uid, profileDataToUpdate);
+        const { success, error } = await updateUserProfile(user.uid, profileDataToUpdate);
         
         if (success) {
             toast({ title: 'Profile Updated', description: 'Your changes have been saved.' });
             setIsEditing(false);
         } else {
-            toast({ title: 'Update Failed', description: 'Could not update your profile.', variant: 'destructive' });
+            toast({ title: 'Update Failed', description: error || 'Could not update your profile.', variant: 'destructive' });
         }
     };
 

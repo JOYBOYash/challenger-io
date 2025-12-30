@@ -55,13 +55,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return;
         }
 
+        let unsubscribeFirestore: (() => void) | null = null;
+
         const unsubscribeAuth = onAuthStateChanged(auth, (authUser) => {
+            // Clean up previous Firestore listener if it exists
+            if (unsubscribeFirestore) {
+                unsubscribeFirestore();
+                unsubscribeFirestore = null;
+            }
+
             if (authUser) {
                 setFirebaseUser(authUser);
                 if (db) {
                     const docRef = doc(db, 'users', authUser.uid);
                     
-                    const unsubscribeFirestore = onSnapshot(docRef, 
+                    unsubscribeFirestore = onSnapshot(docRef, 
                         (docSnap) => {
                             if (docSnap.exists()) {
                                 const userData = docSnap.data() as UserProfile;
@@ -90,8 +98,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                             setLoading(false);
                         }
                     );
-                    
-                    return () => unsubscribeFirestore();
                 } else {
                      // If db is not available, we can't fetch profile.
                      setUser(null);
@@ -106,7 +112,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
 
         // Cleanup subscription on unmount
-        return () => unsubscribeAuth();
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeFirestore) {
+                unsubscribeFirestore();
+            }
+        };
     }, [auth, db]);
 
     const value = { user, firebaseUser, loading };

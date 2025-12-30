@@ -17,10 +17,10 @@ import { ArrowRight, Zap, Users, RotateCw, Crown, Shield, User, Trophy, BookCopy
 import { nanoid } from 'nanoid';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
+import { useUserActions } from "@/hooks/useUserActions";
 import { curateProblems, type Problem } from '@/ai/flows/problem-curation';
 import { fetchPlatformProblems } from '@/ai/flows/platformInspiredProblemCuration';
 import { useAuth, type UserProfile } from '@/context/auth-context';
-import { getConnectedUsers, saveChallenge, updateUserProfile } from '@/app/actions/user';
 import Loading from '@/app/loading';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
@@ -105,6 +105,8 @@ const ChallengeHeader = () => (
 export default function ChallengePage() {
   const { user, loading, firebaseUser } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
+  const { saveChallenge, updateUserProfile, getConnectedUsers } = useUserActions();
   const [gameState, setGameState] = useState<'setup' | 'generating' | 'playing' | 'finished'>('setup');
   const [players, setPlayers] = useState<Player[]>([]);
   const [connections, setConnections] = useState<UserProfile[]>([]);
@@ -118,8 +120,6 @@ export default function ChallengePage() {
   const [isAutoAssigning, setIsAutoAssigning] = useState(false);
   const [viewedProblem, setViewedProblem] = useState<GameQuestion | null>(null);
   const [timeLeft, setTimeLeft] = useState('');
-
-  const { toast } = useToast();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -247,7 +247,10 @@ export default function ChallengePage() {
             
             // Update timestamp after successful generation for free users
             if (user.plan === 'free') {
-                await updateUserProfile(user.uid, { lastAiChallengeTimestamp: new Date().getTime() });
+                const { success, error } = await updateUserProfile(user.uid, { lastAiChallengeTimestamp: new Date().getTime() });
+                if (!success) {
+                    console.error('Failed to update challenge timestamp:', error);
+                }
             }
 
         } else { // 'classic' mode
@@ -327,11 +330,11 @@ export default function ChallengePage() {
 
   const handleSaveChallenge = async (problem: Problem) => {
     if (!user) return;
-    const { success } = await saveChallenge(user.uid, problem);
+    const { success, error } = await saveChallenge(user.uid, problem);
     if (success) {
         toast({ title: "Challenge Saved!", description: "View it on your profile." });
     } else {
-        toast({ title: "Error", description: "Could not save the challenge.", variant: "destructive" });
+        toast({ title: "Error", description: error || "Could not save the challenge.", variant: "destructive" });
     }
   }
 

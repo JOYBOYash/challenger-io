@@ -1,7 +1,7 @@
 'use client';
-import React, { createContext, useMemo } from 'react';
+import React, { createContext, useMemo, useEffect } from 'react';
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getAuth, type Auth } from 'firebase/auth';
+import { getAuth, type Auth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
@@ -41,8 +41,18 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     }
     const auth = getAuth(app);
     const db = getFirestore(app);
+    
     return { app, auth, db };
   }, []);
+
+  // Set persistence in a separate effect to ensure it runs after initialization
+  useEffect(() => {
+    if (auth && typeof window !== 'undefined') {
+      setPersistence(auth, browserLocalPersistence).catch((error) => {
+        console.warn("Failed to set Firebase auth persistence:", error);
+      });
+    }
+  }, [auth]);
 
   return (
     <FirebaseContext.Provider value={{ app, auth, db }}>
