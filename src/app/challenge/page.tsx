@@ -152,14 +152,17 @@ export default function ChallengePage() {
       
       setIsAutoAssigning(true);
       const timer = setTimeout(() => {
-        setLastSpunQuestion(lastQuestion);
-        setPlayers(prev => {
-            const newPlayers = [...prev];
-            if(newPlayers[currentPlayerIndex] && !newPlayers[currentPlayerIndex].problem) {
-               newPlayers[currentPlayerIndex].problem = lastQuestion;
-            }
-            return newPlayers;
-        });
+          console.log('Auto-assigning last question', lastQuestion.id, 'to player index', currentPlayerIndex);
+          setLastSpunQuestion(lastQuestion);
+          setPlayers(prev => {
+                const newPlayers = [...prev];
+                if (newPlayers[currentPlayerIndex] && !newPlayers[currentPlayerIndex].problem) {
+                    newPlayers[currentPlayerIndex].problem = lastQuestion;
+                } else {
+                    console.warn('Auto-assign: player already has problem or index OOB', currentPlayerIndex);
+                }
+                return newPlayers;
+          });
       }, 1200);
 
       return () => clearTimeout(timer);
@@ -262,20 +265,29 @@ export default function ChallengePage() {
         }
 
         if (problems.length !== players.length) {
-            throw new Error("Did not return the correct number of problems for all players.");
+            console.warn('curateProblems returned', problems.length, 'problems for', players.length, 'players. Proceeding with best-effort mapping.');
         }
 
-        const gameQuestions = problems.map((problem, index) => {
+        const count = Math.min(problems.length, players.length);
+        const gameQuestions: GameQuestion[] = [];
+        for (let index = 0; index < count; index++) {
             const player = players[index];
-            return {
+            const problem = problems[index];
+            gameQuestions.push({
                 id: nanoid(),
                 problem: problem,
                 forPlayerSkill: player.skillLevel,
                 icon: SKILL_LEVELS[player.skillLevel].wheelIcon,
                 displayNumber: index + 1,
-            };
-        });
-        
+            });
+        }
+        if (problems.length > players.length) {
+            console.warn('More problems returned than players — extra problems will be ignored.');
+        } else if (problems.length < players.length) {
+            console.warn('Fewer problems returned than players — some players will not receive a problem automatically.');
+        }
+
+        console.log('Generated gameQuestions:', gameQuestions.map(g => ({ id: g.id, title: g.problem.problemTitle, forPlayerSkill: g.forPlayerSkill })));
         setQuestions(gameQuestions);
         setCurrentPlayerIndex(0);
         setLastSpunQuestion(null);
@@ -296,10 +308,15 @@ export default function ChallengePage() {
   const handleSpinEnd = async (questionId: string) => {
     const winningQuestion = questions.find(q => q.id === questionId);
     if (winningQuestion) {
+        console.log('handleSpinEnd: winningQuestion', winningQuestion.id, 'for player index', currentPlayerIndex);
         setLastSpunQuestion(winningQuestion);
         setPlayers(prev => {
             const newPlayers = [...prev];
-            newPlayers[currentPlayerIndex].problem = winningQuestion;
+            if (newPlayers[currentPlayerIndex]) {
+                newPlayers[currentPlayerIndex].problem = winningQuestion;
+            } else {
+                console.warn('handleSpinEnd: currentPlayerIndex out of range', currentPlayerIndex);
+            }
             return newPlayers;
         });
     }

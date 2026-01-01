@@ -31,7 +31,7 @@ export default function PublicProfilePage() {
     const { toast } = useToast();
     const router = useRouter();
 
-    const { sendConnectionRequest, acceptConnectionRequest, declineConnectionRequest, getUsersByIds } = useUserActions();
+    const { sendConnectionRequest, acceptConnectionRequest, declineConnectionRequest, getUsersByIds, removeConnection } = useUserActions();
 
     const [connectionsProfiles, setConnectionsProfiles] = useState<UserProfile[]>([]);
     const [pendingProfiles, setPendingProfiles] = useState<UserProfile[]>([]);
@@ -154,10 +154,27 @@ export default function PublicProfilePage() {
         }
     };
 
+    const handleDisconnect = async () => {
+        if (!currentUser) return;
+        try {
+            const { success, error } = await removeConnection(currentUser.uid, profileUser.uid);
+            if (success) {
+                toast({ title: 'Disconnected' });
+                window.location.reload();
+            } else {
+                console.error('removeConnection error:', error);
+                toast({ title: 'Error disconnecting', description: error || 'Unknown error', variant: 'destructive' });
+            }
+        } catch (e) {
+            console.error('handleDisconnect error:', e);
+            toast({ title: 'Error disconnecting', variant: 'destructive' });
+        }
+    };
+
     const renderConnectButton = () => {
         switch(buttonState) {
             case 'connected':
-                return <Button disabled variant="secondary"><Users className="mr-2" /> Connected</Button>;
+                return <Button variant="destructive" onClick={handleDisconnect}><Users className="mr-2" /> Disconnect</Button>;
             case 'request_sent':
                 return <Button disabled variant="secondary"><Hourglass className="mr-2" /> Request Sent</Button>;
             case 'request_received':

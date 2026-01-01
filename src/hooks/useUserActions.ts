@@ -359,6 +359,57 @@ export function useUserActions() {
     }
   };
 
+  const removeConnection = async (userId: string, otherUserId: string): Promise<{ success: boolean; error?: string }> => {
+    if (!db) {
+      return { success: false, error: 'Firestore not initialized' };
+    }
+
+    try {
+      const batch = writeBatch(db);
+      const userRef = doc(db, 'users', userId);
+      const otherRef = doc(db, 'users', otherUserId);
+
+      // Remove each other from connections and also clean up any pending/sent references
+      batch.update(userRef, {
+        connections: arrayRemove(otherUserId),
+        pendingConnections: arrayRemove(otherUserId),
+        sentRequests: arrayRemove(otherUserId)
+      });
+      batch.update(otherRef, {
+        connections: arrayRemove(userId),
+        pendingConnections: arrayRemove(userId),
+        sentRequests: arrayRemove(userId)
+      });
+
+      await batch.commit();
+      return { success: true };
+    } catch (e: any) {
+      console.error('Error removing connection:', e);
+      return { success: false, error: e.message };
+    }
+  };
+
+  const withdrawSentRequest = async (fromUserId: string, toUserId: string): Promise<{ success: boolean; error?: string }> => {
+    if (!db) {
+      return { success: false, error: 'Firestore not initialized' };
+    }
+
+    try {
+      const batch = writeBatch(db);
+      const fromRef = doc(db, 'users', fromUserId);
+      const toRef = doc(db, 'users', toUserId);
+
+      batch.update(fromRef, { sentRequests: arrayRemove(toUserId) });
+      batch.update(toRef, { pendingConnections: arrayRemove(fromUserId) });
+
+      await batch.commit();
+      return { success: true };
+    } catch (e: any) {
+      console.error('Error withdrawing sent request:', e);
+      return { success: false, error: e.message };
+    }
+  };
+
   return {
     updateUserProfile,
     saveChallenge,
@@ -369,6 +420,8 @@ export function useUserActions() {
     sendConnectionRequest,
     acceptConnectionRequest,
     declineConnectionRequest,
+    withdrawSentRequest,
+    removeConnection,
     searchUsers,
     getSuggestedUsers,
     isUsernameTaken,

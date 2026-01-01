@@ -54,7 +54,9 @@ export const AVAILABLE_MEDALLIONS = [
 
 
 const ConnectionsList = ({ uids }: { uids: string[] }) => {
-    const { getUsersByIds } = useUserActions();
+    const { getUsersByIds, removeConnection } = useUserActions();
+    const { user: currentUser } = useAuth();
+    const { toast } = useToast();
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -84,40 +86,64 @@ const ConnectionsList = ({ uids }: { uids: string[] }) => {
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {users.map(user => (
-                <Link href={`/profile/${user.username}`} key={user.uid} className="block">
-                    <Card className={cn(
-                        "p-4 flex items-center gap-4 hover:bg-accent transition-colors relative",
-                        user.plan === 'pro' && "border-amber-500/50 bg-amber-950/20 hover:bg-amber-950/40"
-                    )}>
-                        {user.plan === 'pro' && (
-                            <div className="absolute top-2 right-2">
-                                <Gem className="h-5 w-5 text-amber-500" />
+            {users.map(u => (
+                <div key={u.uid} className="relative">
+                    <Link href={`/profile/${u.username}`} className="block">
+                        <Card className={cn(
+                            "p-4 flex items-center gap-4 hover:bg-accent transition-colors relative",
+                            u.plan === 'pro' && "border-amber-500/50 bg-amber-950/20 hover:bg-amber-950/40"
+                        )}>
+                            {u.plan === 'pro' && (
+                                <div className="absolute top-2 right-2">
+                                    <Gem className="h-5 w-5 text-amber-500" />
+                                </div>
+                            )}
+                            <Avatar>
+                                <AvatarImage src={u.photoURL} alt={u.username} />
+                                <AvatarFallback>{u.username?.charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="font-semibold flex items-center gap-1.5">
+                                    {u.username}
+                                    {u.medallions?.map(mId => {
+                                        const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
+                                        return m ? (
+                                            <Tooltip key={m.id}>
+                                                <TooltipTrigger>
+                                                    <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m.name} data-ai-hint={`${m.id} icon`} />
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>{m.name}</p></TooltipContent>
+                                            </Tooltip>
+                                        ) : null;
+                                    })}
+                                </p>
+                                <p className="text-sm text-muted-foreground">{u.domain || 'Developer'}</p>
                             </div>
-                        )}
-                        <Avatar>
-                            <AvatarImage src={user.photoURL} alt={user.username} />
-                            <AvatarFallback>{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <p className="font-semibold flex items-center gap-1.5">
-                                {user.username}
-                                {user.medallions?.map(mId => {
-                                    const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
-                                    return m ? (
-                                        <Tooltip key={m.id}>
-                                            <TooltipTrigger>
-                                                <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m.name} data-ai-hint={`${m.id} icon`} />
-                                            </TooltipTrigger>
-                                            <TooltipContent><p>{m.name}</p></TooltipContent>
-                                        </Tooltip>
-                                    ) : null;
-                                })}
-                            </p>
-                            <p className="text-sm text-muted-foreground">{user.domain || 'Developer'}</p>
+                        </Card>
+                    </Link>
+                    {currentUser && (
+                        <div className="absolute top-2 right-2">
+                            <Button size="icon" variant="destructive" onClick={async (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                try {
+                                    const { success, error } = await removeConnection(currentUser.uid, u.uid);
+                                    if (success) {
+                                        toast({ title: 'Disconnected' });
+                                        setUsers(prev => prev.filter(x => x.uid !== u.uid));
+                                    } else {
+                                        toast({ title: 'Error disconnecting', description: error || 'Unknown error', variant: 'destructive' });
+                                    }
+                                } catch (err) {
+                                    console.error('ConnectionsList disconnect error:', err);
+                                    toast({ title: 'Error disconnecting', variant: 'destructive' });
+                                }
+                            }}>
+                                <X className="h-4 w-4" />
+                            </Button>
                         </div>
-                    </Card>
-                </Link>
+                    )}
+                </div>
             ))}
         </div>
     );
@@ -212,6 +238,97 @@ const PendingRequestsList = ({ uids }: { uids: string[] }) => {
                     <div className="flex gap-2">
                         <Button size="icon" onClick={() => handleAccept(requester.uid)}><Check className="h-4 w-4" /></Button>
                         <Button size="icon" variant="destructive" onClick={() => handleDecline(requester.uid)}><X className="h-4 w-4" /></Button>
+                    </div>
+                </Card>
+            ))}
+        </div>
+    );
+};
+
+const SentRequestsList = ({ uids }: { uids: string[] }) => {
+    const { user } = useAuth();
+    const { getUsersByIds, withdrawSentRequest } = useUserActions();
+    const [users, setUsers] = useState<UserProfile[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const { toast } = useToast();
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            console.log('SentRequestsList: uids to fetch:', uids);
+            if (uids.length > 0) {
+                setIsLoading(true);
+                try {
+                    const res = await getUsersByIds(uids);
+                    console.log('SentRequestsList: fetched', res.length, 'users', res.map(r => r.uid));
+                    setUsers(res);
+                } catch (err) {
+                    console.error('SentRequestsList: error fetching users:', err);
+                } finally {
+                    setIsLoading(false);
+                }
+            } else {
+                setIsLoading(false);
+            }
+        };
+        fetchUsers();
+    }, [uids]);
+
+    const handleWithdraw = async (toUserId: string) => {
+        if (!user) return;
+        try {
+            const { success, error } = await withdrawSentRequest(user.uid, toUserId);
+            if (success) {
+                toast({ title: 'Request withdrawn' });
+                setUsers(prev => prev.filter(u => u.uid !== toUserId));
+            } else {
+                toast({ title: 'Error withdrawing request', description: error || 'Unknown error', variant: 'destructive' });
+            }
+        } catch (e) {
+            console.error('handleWithdraw error:', e);
+            toast({ title: 'Error withdrawing request', variant: 'destructive' });
+        }
+    };
+
+    if (isLoading) return <div className="text-muted-foreground text-center py-4">Loading sent requests...</div>;
+    if (users.length === 0) return <div className="text-muted-foreground text-center py-4">No sent requests.</div>;
+
+    return (
+        <div className="space-y-4">
+            {users.map(requestee => (
+                <Card key={requestee.uid} className={cn(
+                    "p-4 flex items-center justify-between relative",
+                    requestee.plan === 'pro' && "border-amber-500/50 bg-amber-950/20 hover:bg-amber-950/40"
+                )}>
+                    {requestee.plan === 'pro' && (
+                        <div className="absolute top-2 right-2">
+                            <Gem className="h-5 w-5 text-amber-500" />
+                        </div>
+                    )}
+                     <div className="flex items-center gap-4">
+                        <Avatar>
+                            <AvatarImage src={requestee.photoURL} alt={requestee.username} />
+                            <AvatarFallback>{requestee.username?.charAt(0).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                             <p className="font-semibold flex items-center gap-1.5">
+                                {requestee.username}
+                                {requestee.medallions?.map(mId => {
+                                    const m = AVAILABLE_MEDALLIONS.find(med => med.id === mId);
+                                    return m ? (
+                                        <Tooltip key={m.id}>
+                                            <TooltipTrigger>
+                                                <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={m.name} data-ai-hint={`${m.id} icon`} />
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>{m.name}</p></TooltipContent>
+                                        </Tooltip>
+                                    ) : null;
+                                })}
+                            </p>
+                            <p className="text-sm text-muted-foreground">{requestee.domain || 'Developer'}</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button size="icon" variant="destructive" onClick={() => handleWithdraw(requestee.uid)}><X className="h-4 w-4" /></Button>
                     </div>
                 </Card>
             ))}
@@ -523,7 +640,7 @@ export default function ProfilePage() {
                         <PendingRequestsList uids={user.pendingConnections || []} />
                     </TabsContent>
                     <TabsContent value="sent" className="mt-6">
-                         <ConnectionsList uids={user.sentRequests || []} />
+                        <SentRequestsList uids={user.sentRequests || []} />
                     </TabsContent>
                 </Tabs>
             </div>
