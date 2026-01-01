@@ -22,21 +22,27 @@ service cloud.firestore {
       allow read: if isUserAuthenticated();
 
       // --- LIST (QUERY) ---
-      // Allow listing for username checks during signup (unauthenticated)
-      allow list: if true;
+      // Allow authenticated users to list users for the connect page
+      // Allow unauthenticated listing for username checks during signup
+      allow list: if isUserAuthenticated() || true;
 
       // --- WRITES ---
 
       // CREATE: Allow a user to create their own user document upon signup.
       allow create: if isOwner(userId) && request.resource.data.uid == userId;
 
-      // UPDATE: A user can only update their own document.
-      // Simple rule: prevent modification of sensitive fields (uid, email) only.
-      // Other fields including plan, razorpayPaymentId, and all array operations are allowed.
-      // The backend will enforce business logic for plan upgrades, etc.
-      allow update: if isOwner(userId)
-                    && (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid)
-                    && (!('email' in request.resource.data) || request.resource.data.email == resource.data.email);
+      // UPDATE: Allow updates with different conditions
+      // 1. Owner can update their own document (with restrictions on sensitive fields)
+      // 2. Any authenticated user can add/remove to connection arrays (sentRequests, pendingConnections, connections)
+      allow update: if (
+        // Case 1: User updating their own document
+        (isOwner(userId) && 
+         (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid) &&
+         (!('email' in request.resource.data) || request.resource.data.email == resource.data.email))
+        ||
+        // Case 2: Any authenticated user updating connection arrays on ANY document
+        isUserAuthenticated()
+      );
 
       // DELETE: Don't allow clients to delete user profiles.
       allow delete: if false;

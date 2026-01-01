@@ -74,14 +74,18 @@ export function useUserActions() {
 
   const getConnectedUsers = async (userId: string): Promise<UserProfile[]> => {
     if (!db) {
+      console.log('getConnectedUsers: db not initialized');
       return [];
     }
 
     try {
+      console.log('getConnectedUsers: fetching for user', userId);
       const userRef = doc(db, 'users', userId);
+      
       const userSnap = await getDoc(userRef);
 
       if (!userSnap.exists()) {
+        console.log('getConnectedUsers: user document does not exist');
         return [];
       }
 
@@ -89,12 +93,14 @@ export function useUserActions() {
       const connectionIds = userData.connections || [];
 
       if (connectionIds.length === 0) {
+        console.log('getConnectedUsers: user has no connections');
         return [];
       }
 
+      console.log('getConnectedUsers: found', connectionIds.length, 'connections');
       return getUsersByIds(connectionIds);
     } catch (e: any) {
-      console.error('Error getting connected users:', e);
+      console.error('Error getting connected users:', e.message);
       return [];
     }
   };
@@ -114,8 +120,120 @@ export function useUserActions() {
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => doc.data() as UserProfile);
     } catch (e: any) {
-      console.error('Error getting users by IDs:', e);
+      console.error('Error getting users by IDs:', e.message);
       return [];
+    }
+  };
+
+  const getAllUsers = async (): Promise<UserProfile[]> => {
+    if (!db) {
+      console.log('getAllUsers: ERROR - db is null/undefined. Firebase not initialized.');
+      return [];
+    }
+
+    console.log('getAllUsers: Firebase db instance exists, attempting query...');
+
+    try {
+      const usersRef = collection(db, 'users');
+      console.log('getAllUsers: created collection reference');
+      
+      const q = query(usersRef, limit(100));
+      console.log('getAllUsers: created query');
+      
+      const startTime = Date.now();
+      console.log('getAllUsers: starting getDocs query...');
+      
+      // No timeout - just let Firestore respond naturally
+      const querySnapshot = await getDocs(q);
+      
+      const elapsed = Date.now() - startTime;
+      console.log(`getAllUsers: SUCCESS - Got ${querySnapshot.docs.length} documents in ${elapsed}ms`);
+      
+      const result = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          uid: doc.id,
+          ...data
+        } as UserProfile;
+      });
+      
+      return result;
+    } catch (e: any) {
+      console.error('getAllUsers error details:', {
+        code: e.code,
+        message: e.message,
+        name: e.name,
+      });
+      
+      // If it's a permission error, log that specifically
+      if (e.code === 'permission-denied') {
+        console.error('getAllUsers: PERMISSION DENIED - Check your Firestore security rules');
+      }
+      
+      // Return empty array - don't retry endlessly
+      return [];
+    }
+  };
+
+  const sendConnectionRequest = async (fromUserId: string, toUserId: string): Promise<{ success: boolean; error?: string }> => {
+    if (!db) {
+      console.error('sendConnectionRequest: db not initialized');
+      return { success: false, error: 'Firestore not initialized' };
+    }
+
+    try {
+      console.log('sendConnectionRequest: sending request from', fromUserId, 'to', toUserId);
+      const batch = writeBatch(db);
+      
+      // Add to sender's sentRequests
+      const fromUserRef = doc(db, 'users', fromUserId);
+      batch.update(fromUserRef, { sentRequests: arrayUnion(toUserId) });
+      
+      // Add to receiver's pendingConnections
+      const toUserRef = doc(db, 'users', toUserId);
+      batch.update(toUserRef, { pendingConnections: arrayUnion(fromUserId) });
+      
+      console.log('sendConnectionRequest: committing batch...');
+      await batch.commit();
+      console.log('sendConnectionRequest: success');
+      return { success: true };
+    } catch (e: any) {
+      console.error('sendConnectionRequest error:', {
+        code: e.code,
+        message: e.message,
+        name: e.name
+      });
+      return { success: false, error: e.message };
+    }
+  };
+
+  const acceptConnectionRequest = async (userId: string, fromUserId: string): Promise<{ success: boolean; error?: string }> => {
+    if (!db) {
+      return { success: false, error: 'Firestore not initialized' };
+    }
+
+    try {
+      const batch = writeBatch(db);
+      
+      // Add to current user's connections and remove from pendingConnections
+      const userRef = doc(db, 'users', userId);
+      batch.update(userRef, { 
+        connections: arrayUnion(fromUserId),
+        pendingConnections: arrayRemove(fromUserId)
+      });
+      
+      // Add to sender's connections and remove from sentRequests
+      const fromUserRef = doc(db, 'users', fromUserId);
+      batch.update(fromUserRef, { 
+        connections: arrayUnion(userId),
+        sentRequests: arrayRemove(userId)
+      });
+      
+      await batch.commit();
+      return { success: true };
+    } catch (e: any) {
+      console.error('Error accepting connection request:', e);
+      return { success: false, error: e.message };
     }
   };
 
@@ -124,5 +242,9 @@ export function useUserActions() {
     saveChallenge,
     removeChallenge,
     getConnectedUsers,
+    getUsersByIds,
+    getAllUsers,
+    sendConnectionRequest,
+    acceptConnectionRequest,
   };
 }

@@ -153,28 +153,40 @@ export async function sendConnectionRequest(requesterId: string, recipientId: st
     console.error("Firebase error in sendConnectionRequest: db is null");
     return { success: false, message: 'Database error.', reason: 'unknown' };
   }
+  
+  console.log('sendConnectionRequest: starting - requester:', requesterId, 'recipient:', recipientId);
+  
   const requesterRef = doc(db, 'users', requesterId);
   const recipientRef = doc(db, 'users', recipientId);
   try {
     const requesterSnap = await getDoc(requesterRef);
     if (!requesterSnap.exists()) {
+        console.error('sendConnectionRequest: Requester does not exist');
         return { success: false, message: 'Requester does not exist.', reason: 'unknown' };
     }
     const requesterData = requesterSnap.data() as UserProfile;
     
     const limit = requesterData.plan === 'pro' ? 50 : 10;
     if ((requesterData.connections?.length || 0) >= limit) {
+        console.warn('sendConnectionRequest: Connection limit reached');
         return { success: false, message: `You have reached your connection limit of ${limit}. Upgrade to Pro for more connections.`, reason: 'limit_reached' };
     }
 
+    console.log('sendConnectionRequest: executing batch update...');
     const batch = writeBatch(db);
     batch.update(requesterRef, { sentRequests: arrayUnion(recipientId) });
     batch.update(recipientRef, { pendingConnections: arrayUnion(requesterId) });
     await batch.commit();
+    console.log('sendConnectionRequest: success');
     return { success: true };
-  } catch (e) {
-    console.error("Error sending connection request:", e);
-    return { success: false, message: 'An unexpected error occurred.', reason: 'unknown' };
+  } catch (e: any) {
+    console.error("sendConnectionRequest error details:", {
+      code: e.code,
+      message: e.message,
+      name: e.name,
+      toString: e.toString()
+    });
+    return { success: false, message: `Error: ${e.code || e.message || 'Unknown error'}`, reason: 'unknown' };
   }
 }
 

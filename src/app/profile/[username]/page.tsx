@@ -73,15 +73,27 @@ export default function PublicProfilePage() {
     else if (requestReceived) buttonState = 'request_received';
     
     const handleSendRequest = async () => {
-        if (!currentUser) return;
+        if (!currentUser) {
+            console.error('handleSendRequest: currentUser is null');
+            return;
+        }
+        console.log('handleSendRequest: sending request from', currentUser.uid, 'to', profileUser.uid);
         const { success, message, reason } = await sendConnectionRequest(currentUser.uid, profileUser.uid);
+        console.log('sendConnectionRequest result:', { success, message, reason });
         if (success) {
             toast({ title: "Request Sent!" });
+            // Refresh the page to update button state
+            window.location.reload();
         } else if (reason === 'limit_reached') {
             setLimitDialogMessage(message || 'You have reached your connection limit.');
             setShowLimitDialog(true);
         } else {
-            toast({ title: "Error", description: message, variant: 'destructive' });
+            console.error('sendConnectionRequest error:', message);
+            toast({ 
+                title: "Error", 
+                description: message || "Failed to send connection request. Please check the browser console for details.", 
+                variant: 'destructive' 
+            });
         }
     };
     
@@ -90,6 +102,7 @@ export default function PublicProfilePage() {
         const { success } = await acceptConnectionRequest(currentUser.uid, profileUser.uid);
         if (success) {
             toast({ title: 'Connection Accepted' });
+            window.location.reload();
         } else {
             toast({ title: 'Error accepting request', variant: 'destructive' });
         }
@@ -100,6 +113,7 @@ export default function PublicProfilePage() {
         const { success } = await declineConnectionRequest(currentUser.uid, profileUser.uid);
         if (success) {
             toast({ title: 'Connection Declined' });
+            window.location.reload();
         } else {
             toast({ title: 'Error declining request', variant: 'destructive' });
         }

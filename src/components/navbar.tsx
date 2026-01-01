@@ -33,9 +33,9 @@ import { useFirebase } from '@/firebase/hooks';
 
 const NAV_ITEMS = [
   { href: '/challenge', label: 'Challenge' },
+  { href: '/connect', label: 'Connect' },
   { href: '/#pricing', label: 'Pricing' },
   { href: '/#about', label: 'About' },
-  { href: '/#connect', label: 'Connect' },
 ];
 
 export function Navbar() {
