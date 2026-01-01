@@ -50,3 +50,27 @@ function initializeFirebase() {
 
 // Export the function that initializes and returns the services.
 export { initializeFirebase };
+
+// Client helper: find a user by username using client Firestore
+import { collection, query, where, limit, getDocs } from 'firebase/firestore';
+
+export async function findUserByUsernameClient(username: string) {
+    const { app, auth, db, error } = initializeFirebase();
+    if (error || !db) {
+        console.error('findUserByUsernameClient: Firebase not initialized', error);
+        return null;
+    }
+
+    if (!username) return null;
+    try {
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('username', '==', username), limit(1));
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) return null;
+        const userDoc = querySnapshot.docs[0];
+        return { uid: userDoc.id, ...(userDoc.data() as any) };
+    } catch (e) {
+        console.error('findUserByUsernameClient error:', e);
+        return null;
+    }
+}

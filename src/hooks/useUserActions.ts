@@ -118,10 +118,26 @@ export function useUserActions() {
       const q = query(usersRef, where('__name__', 'in', uidsToQuery.map(uid => uid)));
 
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => doc.data() as UserProfile);
+      return querySnapshot.docs.map(doc => ({ uid: doc.id, ...(doc.data() as UserProfile) } as UserProfile));
     } catch (e: any) {
       console.error('Error getting users by IDs:', e.message);
       return [];
+    }
+  };
+
+  const findUserByUsername = async (username: string): Promise<UserProfile | null> => {
+    if (!db || !username) return null;
+
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('username', '==', username), limit(1));
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) return null;
+      const docSnap = querySnapshot.docs[0];
+      return { uid: docSnap.id, ...(docSnap.data() as UserProfile) } as UserProfile;
+    } catch (e: any) {
+      console.error('findUserByUsername error:', e?.message || e);
+      return null;
     }
   };
 
@@ -175,25 +191,110 @@ export function useUserActions() {
     }
   };
 
-  const sendConnectionRequest = async (fromUserId: string, toUserId: string): Promise<{ success: boolean; error?: string }> => {
+  const searchUsers = async (currentUserId: string, searchTerm: string): Promise<UserProfile[]> => {
+    if (!db || !searchTerm) return [];
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(
+        usersRef,
+        orderBy('username'),
+        where('username', '>=', searchTerm),
+        where('username', '<=', searchTerm + '\uf8ff'),
+        limit(10)
+      );
+      const querySnapshot = await getDocs(q);
+      const users = querySnapshot.docs
+        .map(doc => ({ uid: doc.id, ...(doc.data() as UserProfile) } as UserProfile))
+        .filter(u => u.uid !== currentUserId);
+      return users;
+    } catch (e: any) {
+      console.error('searchUsers error:', e?.message || e);
+      return [];
+    }
+  };
+
+  const getSuggestedUsers = async (currentUser: UserProfile): Promise<UserProfile[]> => {
+    if (!db) return [];
+
+    try {
+      const currentUserSkills = new Set(currentUser.skills || []);
+      const excludedIds = new Set([
+        currentUser.uid,
+        ...(currentUser.connections || []),
+        ...(currentUser.sentRequests || []),
+        ...(currentUser.pendingConnections || [])
+      ]);
+
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, limit(50));
+      const querySnapshot = await getDocs(q);
+
+      const scoredUsers: { user: UserProfile; score: number }[] = [];
+
+      querySnapshot.forEach(docSnap => {
+        const potentialMatch = { uid: docSnap.id, ...(docSnap.data() as UserProfile) } as UserProfile;
+        if (excludedIds.has(potentialMatch.uid)) return;
+        const matchSkills = new Set(potentialMatch.skills || []);
+        const commonSkillsCount = [...currentUserSkills].filter(skill => matchSkills.has(skill)).length;
+        if (commonSkillsCount > 0) scoredUsers.push({ user: potentialMatch, score: commonSkillsCount });
+      });
+
+      return scoredUsers
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10)
+        .map(item => item.user);
+    } catch (e: any) {
+      console.error('getSuggestedUsers error:', e?.message || e);
+      return [];
+    }
+  };
+
+  const isUsernameTaken = async (username: string): Promise<boolean> => {
+    if (!db || !username) return true;
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('username', '==', username), limit(1));
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
+    } catch (e: any) {
+      console.error('isUsernameTaken error:', e?.message || e);
+      return true;
+    }
+  };
+
+  const sendConnectionRequest = async (fromUserId: string, toUserId: string): Promise<{ success: boolean; message?: string; reason?: 'limit_reached' | 'already_connected' | 'unknown' }> => {
     if (!db) {
       console.error('sendConnectionRequest: db not initialized');
-      return { success: false, error: 'Firestore not initialized' };
+      return { success: false, message: 'Firestore not initialized', reason: 'unknown' };
     }
 
     try {
       console.log('sendConnectionRequest: sending request from', fromUserId, 'to', toUserId);
-      const batch = writeBatch(db);
-      
-      // Add to sender's sentRequests
+
       const fromUserRef = doc(db, 'users', fromUserId);
+      const fromSnap = await getDoc(fromUserRef);
+      if (!fromSnap.exists()) {
+        console.error('sendConnectionRequest: requester does not exist');
+        return { success: false, message: 'Requester does not exist', reason: 'unknown' };
+      }
+
+      const requesterData = fromSnap.data() as UserProfile;
+      const limitCount = requesterData.plan === 'pro' ? 50 : 10;
+      if ((requesterData.connections?.length || 0) >= limitCount) {
+        console.warn('sendConnectionRequest: Connection limit reached');
+        return { success: false, message: `You have reached your connection limit of ${limitCount}. Upgrade to Pro for more connections.`, reason: 'limit_reached' };
+      }
+
+      // Prevent duplicate connection attempts
+      if (requesterData.connections?.includes(toUserId)) {
+        return { success: false, message: 'Already connected', reason: 'already_connected' };
+      }
+
+      console.log('sendConnectionRequest: executing batch update...');
+      const batch = writeBatch(db);
       batch.update(fromUserRef, { sentRequests: arrayUnion(toUserId) });
-      
-      // Add to receiver's pendingConnections
       const toUserRef = doc(db, 'users', toUserId);
       batch.update(toUserRef, { pendingConnections: arrayUnion(fromUserId) });
-      
-      console.log('sendConnectionRequest: committing batch...');
       await batch.commit();
       console.log('sendConnectionRequest: success');
       return { success: true };
@@ -203,7 +304,7 @@ export function useUserActions() {
         message: e.message,
         name: e.name
       });
-      return { success: false, error: e.message };
+      return { success: false, message: e.message || 'Unknown error', reason: 'unknown' };
     }
   };
 
@@ -237,6 +338,27 @@ export function useUserActions() {
     }
   };
 
+  const declineConnectionRequest = async (userId: string, requesterId: string): Promise<{ success: boolean; error?: string }> => {
+    if (!db) {
+      return { success: false, error: 'Firestore not initialized' };
+    }
+
+    try {
+      const batch = writeBatch(db);
+      const userRef = doc(db, 'users', userId);
+      const requesterRef = doc(db, 'users', requesterId);
+
+      batch.update(userRef, { pendingConnections: arrayRemove(requesterId) });
+      batch.update(requesterRef, { sentRequests: arrayRemove(userId) });
+
+      await batch.commit();
+      return { success: true };
+    } catch (e: any) {
+      console.error('Error declining connection request:', e);
+      return { success: false, error: e.message };
+    }
+  };
+
   return {
     updateUserProfile,
     saveChallenge,
@@ -246,5 +368,9 @@ export function useUserActions() {
     getAllUsers,
     sendConnectionRequest,
     acceptConnectionRequest,
+    declineConnectionRequest,
+    searchUsers,
+    getSuggestedUsers,
+    isUsernameTaken,
   };
 }

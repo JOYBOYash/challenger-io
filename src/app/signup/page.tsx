@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { isUsernameTaken } from '@/app/actions/user';
+import { useUserActions } from '@/hooks/useUserActions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -28,12 +28,7 @@ const clientSchema = z.object({
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
 });
 
-const serverSchema = clientSchema.refine(async (data) => {
-    return !(await isUsernameTaken(data.username));
-}, {
-    message: 'This username is already taken.',
-    path: ['username'],
-});
+// Server-side username check will be performed during submit using client helper.
 
 
 export default function SignUpPage() {
@@ -47,6 +42,7 @@ export default function SignUpPage() {
     defaultValues: { username: '', email: '', password: '' },
     mode: 'onChange',
   });
+  const { isUsernameTaken } = useUserActions();
 
 
   const onSubmit = async (values: z.infer<typeof clientSchema>) => {
@@ -62,15 +58,12 @@ export default function SignUpPage() {
         return;
     }
 
-    // Server-side validation
-    const serverValidation = await serverSchema.safeParseAsync(values);
-    if (!serverValidation.success) {
-        const error = serverValidation.error.flatten().fieldErrors.username?.[0];
-        if (error) {
-            form.setError('username', { type: 'manual', message: error });
-        }
-        setIsLoading(false);
-        return;
+    // Server-like validation: check username availability
+    const taken = await isUsernameTaken(values.username);
+    if (taken) {
+      form.setError('username', { type: 'manual', message: 'This username is already taken.' });
+      setIsLoading(false);
+      return;
     }
 
 

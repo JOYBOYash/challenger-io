@@ -1,5 +1,5 @@
 
-'use client';
+ 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserPlus, Search, Hourglass, Eye, Users, Gem, Zap, Trophy, ArrowRight, Lock, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { searchUsers, getSuggestedUsers, sendConnectionRequest } from '@/app/actions/user';
+import { useUserActions } from '@/hooks/useUserActions';
 import { createOrder, verifyPayment } from '@/app/actions/razorpay';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -145,6 +145,7 @@ const proPlanDetails = {
 export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const { searchUsers, getSuggestedUsers, sendConnectionRequest } = useUserActions();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<UserProfile[]>([]);
@@ -170,7 +171,7 @@ export default function HomePage() {
     const handleSearch = async () => {
         if (debouncedSearchTerm.trim().length > 1 && user) {
             setIsSearching(true);
-            const users = await searchUsers(user.uid, debouncedSearchTerm);
+          const users = await searchUsers(user.uid, debouncedSearchTerm);
             setResults(users);
             setIsSearching(false);
         } else {

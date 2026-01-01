@@ -20,7 +20,7 @@ import { useUserActions } from '@/hooks/useUserActions';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { removeChallenge, getUsersByIds, acceptConnectionRequest, declineConnectionRequest } from '@/app/actions/user';
+// (hook import above)
 import { Edit, Save, Trash2, X, Eye, ExternalLink, User, Users, UserPlus, Check, UserX, Gem, Sparkles, Lock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ProblemDisplay } from '@/components/problem-display';
@@ -54,16 +54,29 @@ export const AVAILABLE_MEDALLIONS = [
 
 
 const ConnectionsList = ({ uids }: { uids: string[] }) => {
+    const { getUsersByIds } = useUserActions();
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (uids.length > 0) {
-            setIsLoading(true);
-            getUsersByIds(uids).then(setUsers).finally(() => setIsLoading(false));
-        } else {
-            setIsLoading(false);
-        }
+        const fetchUsers = async () => {
+            console.log('ConnectionsList: uids to fetch:', uids);
+            if (uids.length > 0) {
+                setIsLoading(true);
+                try {
+                    const res = await getUsersByIds(uids);
+                    console.log('ConnectionsList: fetched', res.length, 'users', res.map(r => r.uid));
+                    setUsers(res);
+                } catch (err) {
+                    console.error('ConnectionsList: error fetching users:', err);
+                } finally {
+                    setIsLoading(false);
+                }
+            } else {
+                setIsLoading(false);
+            }
+        };
+        fetchUsers();
     }, [uids]);
 
     if (isLoading) return <div className="text-muted-foreground text-center py-4">Loading connections...</div>;
@@ -112,17 +125,30 @@ const ConnectionsList = ({ uids }: { uids: string[] }) => {
 
 const PendingRequestsList = ({ uids }: { uids: string[] }) => {
     const { user } = useAuth();
+    const { getUsersByIds, acceptConnectionRequest, declineConnectionRequest } = useUserActions();
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
 
     useEffect(() => {
-        if (uids.length > 0) {
-            setIsLoading(true);
-            getUsersByIds(uids).then(setUsers).finally(() => setIsLoading(false));
-        } else {
-            setIsLoading(false);
-        }
+        const fetchUsers = async () => {
+            console.log('PendingRequestsList: uids to fetch:', uids);
+            if (uids.length > 0) {
+                setIsLoading(true);
+                try {
+                    const res = await getUsersByIds(uids);
+                    console.log('PendingRequestsList: fetched', res.length, 'users', res.map(r => r.uid));
+                    setUsers(res);
+                } catch (err) {
+                    console.error('PendingRequestsList: error fetching users:', err);
+                } finally {
+                    setIsLoading(false);
+                }
+            } else {
+                setIsLoading(false);
+            }
+        };
+        fetchUsers();
     }, [uids]);
     
     const handleAccept = async (requesterId: string) => {
@@ -198,7 +224,7 @@ export default function ProfilePage() {
     const { user, loading } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const { toast } = useToast();
-    const { updateUserProfile } = useUserActions();
+    const { updateUserProfile, removeChallenge } = useUserActions();
     const [selectedMedallions, setSelectedMedallions] = useState<string[]>([]);
     const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
     const router = useRouter();

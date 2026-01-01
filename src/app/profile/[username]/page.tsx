@@ -5,18 +5,19 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useAuth, type UserProfile, PRO_USER_EMAILS } from '@/context/auth-context';
+import { useUserActions } from '@/hooks/useUserActions';
 import Loading from '@/app/loading';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { findUserByUsername, sendConnectionRequest, acceptConnectionRequest, declineConnectionRequest } from '@/app/actions/user';
 import { UserPlus, Check, Hourglass, UserX, Users, Gem, ArrowLeft } from 'lucide-react';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AVAILABLE_MEDALLIONS } from '@/app/profile/page';
+import { findUserByUsernameClient } from '@/lib/firebase';
 
 
 export default function PublicProfilePage() {
@@ -30,11 +31,17 @@ export default function PublicProfilePage() {
     const { toast } = useToast();
     const router = useRouter();
 
+    const { sendConnectionRequest, acceptConnectionRequest, declineConnectionRequest, getUsersByIds } = useUserActions();
+
+    const [connectionsProfiles, setConnectionsProfiles] = useState<UserProfile[]>([]);
+    const [pendingProfiles, setPendingProfiles] = useState<UserProfile[]>([]);
+    const [sentProfiles, setSentProfiles] = useState<UserProfile[]>([]);
+
     useEffect(() => {
         const fetchUser = async () => {
             if (!username) return;
             setLoading(true);
-            const foundUser = await findUserByUsername(username);
+            const foundUser = await findUserByUsernameClient(username);
             if (!foundUser) {
                 notFound();
                 return;
@@ -45,6 +52,34 @@ export default function PublicProfilePage() {
             }
             setProfileUser(foundUser);
             setLoading(false);
+            // Fetch lists for the viewed user's connections/pending/sent
+            try {
+                if (foundUser.connections && foundUser.connections.length > 0) {
+                    const con = await getUsersByIds(foundUser.connections);
+                    console.log('Fetched connections profiles:', con.map(c=>c.username));
+                    setConnectionsProfiles(con);
+                } else {
+                    setConnectionsProfiles([]);
+                }
+
+                if (foundUser.pendingConnections && foundUser.pendingConnections.length > 0) {
+                    const pen = await getUsersByIds(foundUser.pendingConnections);
+                    console.log('Fetched pending profiles:', pen.map(c=>c.username));
+                    setPendingProfiles(pen);
+                } else {
+                    setPendingProfiles([]);
+                }
+
+                if (foundUser.sentRequests && foundUser.sentRequests.length > 0) {
+                    const sen = await getUsersByIds(foundUser.sentRequests);
+                    console.log('Fetched sent profiles:', sen.map(c=>c.username));
+                    setSentProfiles(sen);
+                } else {
+                    setSentProfiles([]);
+                }
+            } catch (e) {
+                console.error('Error fetching connection lists for profile user:', e);
+            }
         };
         fetchUser();
     }, [username]);
@@ -186,6 +221,59 @@ export default function PublicProfilePage() {
                             </div>
                             
                             <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Connections</p>
+                                        <p className="text-lg font-semibold">{profileUser.connections?.length || 0}</p>
+                                        <div className="flex items-center gap-2 mt-2">
+                                            {connectionsProfiles.slice(0,5).map(p => (
+                                                <button key={p.uid} onClick={() => router.push(`/profile/${p.username}`)} className="flex items-center gap-2">
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage src={p.photoURL} alt={p.username} />
+                                                        <AvatarFallback>{p.username?.charAt(0).toUpperCase()}</AvatarFallback>
+                                                    </Avatar>
+                                                </button>
+                                            ))}
+                                            { (profileUser.connections && profileUser.connections.length > 5) && (
+                                                <span className="text-xs text-muted-foreground">+{profileUser.connections.length - 5}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Pending</p>
+                                        <p className="text-lg font-semibold">{profileUser.pendingConnections?.length || 0}</p>
+                                        <div className="flex items-center gap-2 mt-2">
+                                            {pendingProfiles.slice(0,5).map(p => (
+                                                <button key={p.uid} onClick={() => router.push(`/profile/${p.username}`)} className="flex items-center gap-2">
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage src={p.photoURL} alt={p.username} />
+                                                        <AvatarFallback>{p.username?.charAt(0).toUpperCase()}</AvatarFallback>
+                                                    </Avatar>
+                                                </button>
+                                            ))}
+                                            { (profileUser.pendingConnections && profileUser.pendingConnections.length > 5) && (
+                                                <span className="text-xs text-muted-foreground">+{profileUser.pendingConnections.length - 5}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Requests Sent</p>
+                                        <p className="text-lg font-semibold">{profileUser.sentRequests?.length || 0}</p>
+                                        <div className="flex items-center gap-2 mt-2">
+                                            {sentProfiles.slice(0,5).map(p => (
+                                                <button key={p.uid} onClick={() => router.push(`/profile/${p.username}`)} className="flex items-center gap-2">
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage src={p.photoURL} alt={p.username} />
+                                                        <AvatarFallback>{p.username?.charAt(0).toUpperCase()}</AvatarFallback>
+                                                    </Avatar>
+                                                </button>
+                                            ))}
+                                            { (profileUser.sentRequests && profileUser.sentRequests.length > 5) && (
+                                                <span className="text-xs text-muted-foreground">+{profileUser.sentRequests.length - 5}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                                 <div>
                                     <p className="text-lg font-semibold">Domain</p>
                                     <p className="text-lg">{profileUser.domain || <span className="text-muted-foreground">Not set</span>}</p>
